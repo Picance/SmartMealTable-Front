@@ -1,0 +1,108 @@
+import api from "./api";
+import type {
+  ApiResponse,
+  AuthResponse,
+  LoginRequest,
+  SignupRequest,
+  SocialLoginRequest,
+} from "../types/api";
+
+export const authService = {
+  // 이메일 회원가입
+  async signup(data: SignupRequest): Promise<ApiResponse<AuthResponse>> {
+    const response = await api.post<ApiResponse<AuthResponse>>(
+      "/auth/signup/email",
+      data
+    );
+
+    // 회원가입 성공 시 자동 로그인
+    if (response.data.result === "SUCCESS" && response.data.data) {
+      const { accessToken, refreshToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+    }
+
+    return response.data;
+  },
+
+  // 이메일 로그인
+  async login(data: LoginRequest): Promise<ApiResponse<AuthResponse>> {
+    const response = await api.post<ApiResponse<AuthResponse>>(
+      "/auth/login/email",
+      data
+    );
+
+    if (response.data.result === "SUCCESS" && response.data.data) {
+      const { accessToken, refreshToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+    }
+
+    return response.data;
+  },
+
+  // 카카오 로그인
+  async kakaoLogin(
+    data: SocialLoginRequest
+  ): Promise<ApiResponse<AuthResponse>> {
+    const response = await api.post<ApiResponse<AuthResponse>>(
+      "/auth/login/kakao",
+      data
+    );
+
+    if (response.data.result === "SUCCESS" && response.data.data) {
+      const { accessToken, refreshToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+    }
+
+    return response.data;
+  },
+
+  // 구글 로그인
+  async googleLogin(
+    data: SocialLoginRequest
+  ): Promise<ApiResponse<AuthResponse>> {
+    const response = await api.post<ApiResponse<AuthResponse>>(
+      "/auth/login/google",
+      data
+    );
+
+    if (response.data.result === "SUCCESS" && response.data.data) {
+      const { accessToken, refreshToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+    }
+
+    return response.data;
+  },
+
+  // 로그아웃
+  async logout(): Promise<void> {
+    await api.post("/auth/logout");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+  },
+
+  // 이메일 중복 확인
+  async checkEmail(
+    email: string
+  ): Promise<{ available: boolean; message: string }> {
+    const response = await api.get<{ available: boolean; message: string }>(
+      `/auth/check-email?email=${encodeURIComponent(email)}`
+    );
+    return response.data;
+  },
+
+  // 토큰 갱신
+  async refreshToken(
+    refreshToken: string
+  ): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
+    const response = await api.post<{
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    }>("/auth/refresh", { refreshToken });
+    return response.data;
+  },
+};

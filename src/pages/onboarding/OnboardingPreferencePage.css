@@ -1,0 +1,366 @@
+.onboarding-preference-page {
+  min-height: 100vh;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding-preference-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.onboarding-preference-back-button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.onboarding-preference-header h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  flex: 1;
+}
+
+.onboarding-preference-content {
+  flex: 1;
+  padding: 2rem 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding-preference-intro {
+  margin-bottom: 2rem;
+}
+
+.onboarding-preference-intro h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.onboarding-preference-intro p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.onboarding-preference-form {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  flex: 1;
+}
+
+.onboarding-preference-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.onboarding-preference-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-preference-section-description {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.onboarding-preference-type-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.onboarding-preference-type-card {
+  background-color: #fff;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.onboarding-preference-type-card:hover {
+  border-color: #ff6b35;
+  background-color: #fff5f2;
+  transform: translateY(-2px);
+}
+
+.onboarding-preference-type-card.active {
+  border-color: #ff6b35;
+  background-color: #fff5f2;
+}
+
+.onboarding-preference-type-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.onboarding-preference-type-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-preference-type-description {
+  font-size: 0.75rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.onboarding-preference-category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.onboarding-preference-category-card {
+  background-color: #fff;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.onboarding-preference-category-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.onboarding-preference-category-card.like {
+  border-color: #4caf50;
+  background-color: #f1f8f4;
+}
+
+.onboarding-preference-category-card.dislike {
+  border-color: #f44336;
+  background-color: #ffebee;
+}
+
+.onboarding-preference-category-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+.onboarding-preference-category-badge.like {
+  background-color: #4caf50;
+  color: #fff;
+}
+
+.onboarding-preference-category-badge.dislike {
+  background-color: #f44336;
+  color: #fff;
+}
+
+.onboarding-preference-category-image {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  background-color: #f5f5f5;
+}
+
+.onboarding-preference-category-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-preference-category-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.onboarding-preference-category-action-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #e5e5e5;
+  background-color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: all 0.2s;
+}
+
+.onboarding-preference-category-action-btn:hover {
+  transform: scale(1.1);
+}
+
+.onboarding-preference-category-action-btn.like-btn:hover {
+  background-color: #4caf50;
+  border-color: #4caf50;
+}
+
+.onboarding-preference-category-action-btn.dislike-btn:hover {
+  background-color: #f44336;
+  border-color: #f44336;
+}
+
+.onboarding-preference-food-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.onboarding-preference-food-card {
+  background-color: #fff;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.onboarding-preference-food-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.onboarding-preference-food-card.selected {
+  border-color: #ff6b35;
+  background-color: #fff5f2;
+}
+
+.onboarding-preference-food-image {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  background-color: #f5f5f5;
+}
+
+.onboarding-preference-food-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.onboarding-preference-selected-count {
+  background-color: #e3f2fd;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #1976d2;
+  text-align: center;
+}
+
+.onboarding-preference-actions {
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.onboarding-preference-error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.onboarding-preference-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #999;
+}
+
+.onboarding-preference-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff6b35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 애니메이션 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-preference-content {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .onboarding-preference-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .onboarding-preference-intro h2 {
+    font-size: 1.25rem;
+  }
+
+  .onboarding-preference-type-selector {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-preference-category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .onboarding-preference-food-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

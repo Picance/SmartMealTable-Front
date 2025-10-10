@@ -1,0 +1,281 @@
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding-bottom: 2rem;
+}
+
+/* 헤더 */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: white;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.profile-header h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #212529;
+}
+
+/* 콘텐츠 */
+.profile-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* 사용자 정보 카드 */
+.user-info-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.user-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #212529;
+}
+
+.user-email {
+  font-size: 0.9rem;
+  color: #868e96;
+  margin: 0;
+}
+
+.user-group {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  background-color: #e7f5ff;
+  color: #1971c2;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: fit-content;
+}
+
+/* 메뉴 섹션 */
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0;
+  padding: 0 0.25rem;
+}
+
+.menu-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* 메뉴 아이템 */
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.menu-item:hover {
+  background-color: #f8f9fa;
+}
+
+.menu-item-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.menu-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f1f3f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #495057;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.menu-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.menu-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #212529;
+}
+
+.menu-description {
+  font-size: 0.875rem;
+  color: #868e96;
+}
+
+.menu-arrow {
+  color: #adb5bd;
+  font-size: 0.875rem;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: #f1f3f5;
+  margin: 0 1.25rem;
+}
+
+/* 토글 스위치 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #dee2e6;
+  transition: 0.3s;
+  border-radius: 28px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #ff6b35;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* 액션 버튼 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: white;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+.logout-button:hover {
+  background-color: #f8f9fa;
+}
+
+.delete-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: white;
+  color: #fa5252;
+  border: 1px solid #fa5252;
+}
+
+.delete-button:hover {
+  background-color: #fff5f5;
+}
+
+/* 앱 정보 */
+.app-info {
+  text-align: center;
+  padding: 1rem;
+  color: #adb5bd;
+  font-size: 0.875rem;
+}
+
+.app-info p {
+  margin: 0.25rem 0;
+}
+
+/* 반응형 */
+@media (min-width: 768px) {
+  .profile-page {
+    max-width: 768px;
+    margin: 0 auto;
+  }
+
+  .user-avatar {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+  }
+
+  .user-name {
+    font-size: 1.5rem;
+  }
+}
