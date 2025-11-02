@@ -21,10 +21,12 @@ import OnboardingPolicyPage from "./pages/onboarding/OnboardingPolicyPage";
 import HomePage from "./pages/home/HomePage";
 import RecommendationPage from "./pages/recommendation/RecommendationPage";
 import StoreDetailPage from "./pages/store/StoreDetailPage";
+import MenuDetailPage from "./pages/menu/MenuDetailPage";
 import CartPage from "./pages/cart/CartPage";
 import SpendingPage from "./pages/spending/SpendingPage";
 import CreateExpenditurePage from "./pages/spending/CreateExpenditurePage";
 import ExpenditureDetailPage from "./pages/spending/ExpenditureDetailPage";
+import ExpenditureSuccessPage from "./pages/spending/ExpenditureSuccessPage";
 import FavoritesPage from "./pages/favorites/FavoritesPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import BudgetManagementPage from "./pages/budget/BudgetManagementPage";
@@ -136,6 +138,14 @@ function App() {
             }
           />
           <Route
+            path="/menu/:menuId"
+            element={
+              <ProtectedRoute>
+                <MenuDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/cart"
             element={
               <ProtectedRoute>
@@ -164,6 +174,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ExpenditureDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/spending/success"
+            element={
+              <ProtectedRoute>
+                <ExpenditureSuccessPage />
               </ProtectedRoute>
             }
           />
