@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuthStore } from "./store/authStore";
+import { ThemeProvider } from "styled-components";
+// import { useAuthStore } from "./store/authStore";
+import { theme } from "./styles/theme";
+import { GlobalStyle } from "./styles/GlobalStyle";
 
 // Pages
 import SplashPage from "./pages/auth/SplashPage";
@@ -33,9 +36,9 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  requireOnboarding = true,
+  // requireOnboarding = true,
 }) => {
-  const { isAuthenticated, member } = useAuthStore();
+  // const { isAuthenticated, member } = useAuthStore();
 
   // if (!isAuthenticated) {
   //   return <Navigate to="/login-options" replace />;
@@ -50,134 +53,137 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Auth Routes */}
-        <Route path="/" element={<SplashPage />} />
-        <Route path="/login-options" element={<LoginOptionsPage />} />
-        <Route path="/login" element={<EmailLoginPage />} />
-        <Route path="/signup" element={<EmailSignupPage />} />
+    <ThemeProvider theme={theme}>
+      <GlobalStyle />
+      <BrowserRouter>
+        <Routes>
+          {/* Auth Routes */}
+          <Route path="/" element={<SplashPage />} />
+          <Route path="/login-options" element={<LoginOptionsPage />} />
+          <Route path="/login" element={<EmailLoginPage />} />
+          <Route path="/signup" element={<EmailSignupPage />} />
 
-        {/* Onboarding Routes */}
-        <Route
-          path="/onboarding/profile"
-          element={
-            <ProtectedRoute requireOnboarding={false}>
-              <OnboardingProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/onboarding/address"
-          element={
-            <ProtectedRoute requireOnboarding={false}>
-              <OnboardingAddressPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/onboarding/budget"
-          element={
-            <ProtectedRoute requireOnboarding={false}>
-              <OnboardingBudgetPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/onboarding/preference"
-          element={
-            <ProtectedRoute requireOnboarding={false}>
-              <OnboardingPreferencePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/onboarding/policy"
-          element={
-            <ProtectedRoute requireOnboarding={false}>
-              <OnboardingPolicyPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* Onboarding Routes */}
+          <Route
+            path="/onboarding/profile"
+            element={
+              <ProtectedRoute requireOnboarding={false}>
+                <OnboardingProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding/address"
+            element={
+              <ProtectedRoute requireOnboarding={false}>
+                <OnboardingAddressPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding/budget"
+            element={
+              <ProtectedRoute requireOnboarding={false}>
+                <OnboardingBudgetPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding/preference"
+            element={
+              <ProtectedRoute requireOnboarding={false}>
+                <OnboardingPreferencePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding/policy"
+            element={
+              <ProtectedRoute requireOnboarding={false}>
+                <OnboardingPolicyPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Main App Routes */}
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/recommendation"
-          element={
-            <ProtectedRoute>
-              <RecommendationPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/store/:storeId"
-          element={
-            <ProtectedRoute>
-              <StoreDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/spending"
-          element={
-            <ProtectedRoute>
-              <SpendingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/spending/create"
-          element={
-            <ProtectedRoute>
-              <CreateExpenditurePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/spending/:id"
-          element={
-            <ProtectedRoute>
-              <ExpenditureDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/favorites"
-          element={
-            <ProtectedRoute>
-              <FavoritesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+          {/* Main App Routes */}
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recommendation"
+            element={
+              <ProtectedRoute>
+                <RecommendationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/store/:storeId"
+            element={
+              <ProtectedRoute>
+                <StoreDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/spending"
+            element={
+              <ProtectedRoute>
+                <SpendingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/spending/create"
+            element={
+              <ProtectedRoute>
+                <CreateExpenditurePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/spending/:id"
+            element={
+              <ProtectedRoute>
+                <ExpenditureDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <FavoritesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
