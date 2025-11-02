@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { FiArrowLeft, FiSearch, FiSliders, FiChevronDown } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiSearch,
+  FiSliders,
+  FiChevronDown,
+} from "react-icons/fi";
 import { IoHeartOutline, IoHeartSharp } from "react-icons/io5";
 import { storeService, StoreSearchParams } from "../../services/store.service";
 import { categoryService } from "../../services/category.service";
@@ -79,13 +84,32 @@ const RecommendationPage = () => {
           averagePrice: 15000,
           isOpen: true,
           popularityTag: "영업중",
-          imageUrl: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
+          imageUrl:
+            "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
           address: "서울시 서대문구",
           isFavorite: false,
           menus: [
-            { foodId: 1, foodName: "후라이드 치킨", price: 18000, imageUrl: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop" },
-            { foodId: 2, foodName: "양념 치킨", price: 19000, imageUrl: "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop" },
-            { foodId: 3, foodName: "마늘 간장 치킨", price: 19500, imageUrl: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop" },
+            {
+              foodId: 1,
+              foodName: "후라이드 치킨",
+              price: 18000,
+              imageUrl:
+                "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop",
+            },
+            {
+              foodId: 2,
+              foodName: "양념 치킨",
+              price: 19000,
+              imageUrl:
+                "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop",
+            },
+            {
+              foodId: 3,
+              foodName: "마늘 간장 치킨",
+              price: 19500,
+              imageUrl:
+                "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop",
+            },
           ],
         },
         {
@@ -98,13 +122,32 @@ const RecommendationPage = () => {
           averagePrice: 15000,
           isOpen: true,
           popularityTag: "영업중",
-          imageUrl: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
+          imageUrl:
+            "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
           address: "서울시 서대문구",
           isFavorite: true,
           menus: [
-            { foodId: 4, foodName: "후라이드 치킨", price: 18000, imageUrl: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop" },
-            { foodId: 5, foodName: "양념 치킨", price: 19000, imageUrl: "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop" },
-            { foodId: 6, foodName: "마늘 간장 치킨", price: 19500, imageUrl: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop" },
+            {
+              foodId: 4,
+              foodName: "후라이드 치킨",
+              price: 18000,
+              imageUrl:
+                "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop",
+            },
+            {
+              foodId: 5,
+              foodName: "양념 치킨",
+              price: 19000,
+              imageUrl:
+                "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop",
+            },
+            {
+              foodId: 6,
+              foodName: "마늘 간장 치킨",
+              price: 19500,
+              imageUrl:
+                "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop",
+            },
           ],
         },
         {
@@ -117,13 +160,32 @@ const RecommendationPage = () => {
           averagePrice: 15000,
           isOpen: true,
           popularityTag: "영업중",
-          imageUrl: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
+          imageUrl:
+            "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
           address: "서울시 서대문구",
           isFavorite: false,
           menus: [
-            { foodId: 7, foodName: "후라이드 치킨", price: 18000, imageUrl: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop" },
-            { foodId: 8, foodName: "양념 치킨", price: 19000, imageUrl: "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop" },
-            { foodId: 9, foodName: "마늘 간장 치킨", price: 19500, imageUrl: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop" },
+            {
+              foodId: 7,
+              foodName: "후라이드 치킨",
+              price: 18000,
+              imageUrl:
+                "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop",
+            },
+            {
+              foodId: 8,
+              foodName: "양념 치킨",
+              price: 19000,
+              imageUrl:
+                "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop",
+            },
+            {
+              foodId: 9,
+              foodName: "마늘 간장 치킨",
+              price: 19500,
+              imageUrl:
+                "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop",
+            },
           ],
         },
       ];
@@ -151,9 +213,11 @@ const RecommendationPage = () => {
       } else {
         await storeService.addFavorite(storeId);
       }
-      setStores(stores.map(s => 
-        s.storeId === storeId ? { ...s, isFavorite: !s.isFavorite } : s
-      ));
+      setStores(
+        stores.map((s) =>
+          s.storeId === storeId ? { ...s, isFavorite: !s.isFavorite } : s
+        )
+      );
     } catch (err) {
       console.error("즐겨찾기 토글 실패:", err);
     }
@@ -222,21 +286,27 @@ const RecommendationPage = () => {
           <LoadingText>로딩 중...</LoadingText>
         ) : stores.length > 0 ? (
           stores.map((store) => (
-            <StoreCard key={store.storeId} onClick={() => handleStoreClick(store.storeId)}>
+            <StoreCard
+              key={store.storeId}
+              onClick={() => handleStoreClick(store.storeId)}
+            >
               {/* 상점 메인 이미지 */}
               <StoreImageContainer>
-                <StoreMainImage 
-                  src={store.imageUrl} 
+                <StoreMainImage
+                  src={store.imageUrl}
                   alt={store.storeName}
                   onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/800x400?text=No+Image";
+                    e.currentTarget.src =
+                      "https://via.placeholder.com/800x400?text=No+Image";
                   }}
                 />
                 <StoreNameOverlay>
                   <StoreName>{store.storeName}</StoreName>
                   <StoreLocation>{store.address}</StoreLocation>
                 </StoreNameOverlay>
-                <FavoriteButton onClick={(e) => handleFavoriteToggle(store.storeId, e)}>
+                <FavoriteButton
+                  onClick={(e) => handleFavoriteToggle(store.storeId, e)}
+                >
                   {store.isFavorite ? (
                     <IoHeartSharp size={28} color="#fff" />
                   ) : (
@@ -251,7 +321,7 @@ const RecommendationPage = () => {
                   <InfoItem>📍 {store.distance}km</InfoItem>
                   <InfoItem>💬 {store.reviewCount}개 리뷰</InfoItem>
                 </InfoRow>
-                
+
                 <BadgeRow>
                   <StatusBadge $isOpen={store.isOpen}>
                     {store.popularityTag}
@@ -459,7 +529,7 @@ const StoreNameOverlay = styled.div`
   left: 0;
   right: 0;
   padding: 20px;
-  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
 `;
 
 const StoreName = styled.h3`
@@ -522,7 +592,7 @@ const StatusBadge = styled.span<{ $isOpen: boolean }>`
   border-radius: 14px;
   font-size: 13px;
   font-weight: 600;
-  background-color: ${props => props.$isOpen ? '#ff6b35' : '#999'};
+  background-color: ${(props) => (props.$isOpen ? "#ff6b35" : "#999")};
   color: #fff;
 `;
 

@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { FiArrowLeft, FiShare2, FiShoppingCart, FiMinus, FiPlus } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiShare2,
+  FiShoppingCart,
+  FiMinus,
+  FiPlus,
+} from "react-icons/fi";
 import { useCartStore } from "../../store/cartStore";
 import type { Menu } from "../../types/api";
 
@@ -16,7 +22,7 @@ const MenuDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { items, addItem, getTotalPrice } = useCartStore();
-  
+
   // location.state에서 메뉴 정보 가져오기
   const menu = location.state?.menu as Menu;
   const storeName = location.state?.storeName as string;
@@ -42,7 +48,7 @@ const MenuDetailPage = () => {
     );
   }
 
-  const selectedOptionData = options.find(opt => opt.id === selectedOption);
+  const selectedOptionData = options.find((opt) => opt.id === selectedOption);
   const totalPrice = (selectedOptionData?.price || menu.price) * quantity;
   const cartTotal = getTotalPrice();
 
@@ -72,11 +78,13 @@ const MenuDetailPage = () => {
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: menu.foodName,
-        text: menu.description,
-        url: window.location.href,
-      }).catch(console.error);
+      navigator
+        .share({
+          title: menu.foodName,
+          text: menu.description,
+          url: window.location.href,
+        })
+        .catch(console.error);
     } else {
       alert("공유 기능을 지원하지 않는 브라우저입니다.");
     }
@@ -104,8 +112,8 @@ const MenuDetailPage = () => {
       <Content>
         {/* 메뉴 이미지 */}
         <MenuImageContainer>
-          <MenuImage 
-            src={menu.imageUrl || "/placeholder-menu.jpg"} 
+          <MenuImage
+            src={menu.imageUrl || "/placeholder-menu.jpg"}
             alt={menu.foodName}
             onError={(e) => {
               e.currentTarget.src = "/placeholder-menu.jpg";
@@ -117,7 +125,8 @@ const MenuDetailPage = () => {
         <MenuInfo>
           <MenuName>{menu.foodName}</MenuName>
           <MenuDescription>
-            {menu.description || "신선한 펩시 콜라로 상쾌함을 더하세요! 식사와 함께, 혹은 간식과 함께 즐기기 좋습니다. 언제든 시원하게 즐길 수 있는 최고의 선택."}
+            {menu.description ||
+              "신선한 펩시 콜라로 상쾌함을 더하세요! 식사와 함께, 혹은 간식과 함께 즐기기 좋습니다. 언제든 시원하게 즐길 수 있는 최고의 선택."}
           </MenuDescription>
         </MenuInfo>
 
@@ -150,11 +159,17 @@ const MenuDetailPage = () => {
         <QuantitySection>
           <SectionTitle>수량</SectionTitle>
           <QuantityControl>
-            <QuantityButton onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>
+            <QuantityButton
+              onClick={() => handleQuantityChange(-1)}
+              disabled={quantity <= 1}
+            >
               <FiMinus size={20} />
             </QuantityButton>
             <QuantityDisplay>{quantity}개</QuantityDisplay>
-            <QuantityButton onClick={() => handleQuantityChange(1)} disabled={quantity >= 99}>
+            <QuantityButton
+              onClick={() => handleQuantityChange(1)}
+              disabled={quantity >= 99}
+            >
               <FiPlus size={20} />
             </QuantityButton>
           </QuantityControl>
@@ -166,7 +181,8 @@ const MenuDetailPage = () => {
         <CartSummary>
           <CartLabel>현재 장바구니 총액</CartLabel>
           <CartAmount>
-            {cartTotal.toLocaleString()}원 + {totalPrice.toLocaleString()} = {(cartTotal + totalPrice).toLocaleString()}
+            {cartTotal.toLocaleString()}원 + {totalPrice.toLocaleString()} ={" "}
+            {(cartTotal + totalPrice).toLocaleString()}
           </CartAmount>
         </CartSummary>
         <AddToCartButton onClick={handleAddToCart}>

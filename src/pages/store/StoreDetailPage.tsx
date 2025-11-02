@@ -33,12 +33,12 @@ const StoreDetailPage = () => {
       if (storeResponse.result === "SUCCESS" && storeResponse.data) {
         setStore(storeResponse.data);
         setIsFavorite(storeResponse.data.isFavorite || false);
-        
+
         // 가게 상세에서 메뉴 가져오기
         if (storeResponse.data.menus) {
           const menus = storeResponse.data.menus;
           // 추천 메뉴는 isRecommended가 true인 것들
-          setRecommendedMenus(menus.filter(m => m.isRecommended).slice(0, 2));
+          setRecommendedMenus(menus.filter((m) => m.isRecommended).slice(0, 2));
           setAllMenus(menus);
         }
       }
@@ -47,7 +47,7 @@ const StoreDetailPage = () => {
       const menusResponse = await storeService.getStoreMenus(id);
       if (menusResponse.result === "SUCCESS" && menusResponse.data) {
         const menus = menusResponse.data;
-        setRecommendedMenus(menus.filter(m => m.isRecommended).slice(0, 2));
+        setRecommendedMenus(menus.filter((m) => m.isRecommended).slice(0, 2));
         setAllMenus(menus);
       }
 
@@ -97,12 +97,12 @@ const StoreDetailPage = () => {
             budgetDifference: 1000,
           },
         ];
-        setRecommendedMenus(dummyMenus.filter(m => m.isRecommended));
+        setRecommendedMenus(dummyMenus.filter((m) => m.isRecommended));
         setAllMenus(dummyMenus);
       }
     } catch (error) {
       console.error("Failed to load store data:", error);
-      
+
       // 에러 발생 시에도 더미 데이터 사용
       const dummyMenus: Menu[] = [
         {
@@ -148,7 +148,7 @@ const StoreDetailPage = () => {
           budgetDifference: 1000,
         },
       ];
-      setRecommendedMenus(dummyMenus.filter(m => m.isRecommended));
+      setRecommendedMenus(dummyMenus.filter((m) => m.isRecommended));
       setAllMenus(dummyMenus);
     } finally {
       setLoading(false);
@@ -179,12 +179,12 @@ const StoreDetailPage = () => {
         menu: menu,
         storeName: store.storeName,
         storeId: store.storeId,
-      }
+      },
     });
   };
 
   const getTotalAmount = () => {
-    return items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   };
 
   if (loading) {
@@ -213,7 +213,10 @@ const StoreDetailPage = () => {
     <PageContainer>
       {/* 상단 이미지 헤더 */}
       <StoreImageHeader>
-        <StoreImage src={store.imageUrl || "/placeholder-store.jpg"} alt={store.storeName} />
+        <StoreImage
+          src={store.imageUrl || "/placeholder-store.jpg"}
+          alt={store.storeName}
+        />
         <FavoriteButton onClick={handleFavoriteToggle} $isFavorite={isFavorite}>
           {isFavorite ? <IoHeartSharp size={24} /> : <FiHeart size={24} />}
         </FavoriteButton>
@@ -226,17 +229,25 @@ const StoreDetailPage = () => {
           <StoreMetaRow>
             <MetaText>{store.category}</MetaText>
             <MetaSeparator>•</MetaSeparator>
-            <MetaText>{store.distance ? `${(store.distance / 1000).toFixed(1)} km` : '0.8 km'}</MetaText>
+            <MetaText>
+              {store.distance
+                ? `${(store.distance / 1000).toFixed(1)} km`
+                : "0.8 km"}
+            </MetaText>
           </StoreMetaRow>
           <StoreBadgeRow>
-            <PriceBadge>평균 {store.averagePrice.toLocaleString()}원</PriceBadge>
+            <PriceBadge>
+              평균 {store.averagePrice.toLocaleString()}원
+            </PriceBadge>
             <StatusBadge $isOpen={store.isOpen}>
-              {store.isOpen ? '영업 중' : '영업 종료'}
+              {store.isOpen ? "영업 중" : "영업 종료"}
             </StatusBadge>
           </StoreBadgeRow>
           <PopularityBadge>
             <BadgeIcon>🔥</BadgeIcon>
-            <BadgeText>배달 인기 맛집 ({store.reviewCount || 1250} 리뷰)</BadgeText>
+            <BadgeText>
+              배달 인기 맛집 ({store.reviewCount || 1250} 리뷰)
+            </BadgeText>
           </PopularityBadge>
           <InfoButton onClick={() => setShowInfoModal(true)}>
             <FiInfo size={20} />
@@ -250,8 +261,14 @@ const StoreDetailPage = () => {
             <SectionTitle>추천 메뉴</SectionTitle>
             <RecommendedMenuGrid>
               {recommendedMenus.map((menu) => (
-                <RecommendedMenuCard key={menu.foodId} onClick={() => handleMenuClick(menu)}>
-                  <MenuImage src={menu.imageUrl || "/placeholder-menu.jpg"} alt={menu.foodName} />
+                <RecommendedMenuCard
+                  key={menu.foodId}
+                  onClick={() => handleMenuClick(menu)}
+                >
+                  <MenuImage
+                    src={menu.imageUrl || "/placeholder-menu.jpg"}
+                    alt={menu.foodName}
+                  />
                   <MenuName>{menu.foodName}</MenuName>
                   <MenuPriceRow>
                     <MenuPrice>₩{menu.price.toLocaleString()}</MenuPrice>
@@ -278,20 +295,31 @@ const StoreDetailPage = () => {
               <EmptyState>등록된 메뉴가 없습니다.</EmptyState>
             ) : (
               allMenus.map((menu) => (
-                <MenuListItem key={menu.foodId} onClick={() => handleMenuClick(menu)}>
-                  <MenuListImage src={menu.imageUrl || "/placeholder-menu.jpg"} alt={menu.foodName} />
+                <MenuListItem
+                  key={menu.foodId}
+                  onClick={() => handleMenuClick(menu)}
+                >
+                  <MenuListImage
+                    src={menu.imageUrl || "/placeholder-menu.jpg"}
+                    alt={menu.foodName}
+                  />
                   <MenuListInfo>
                     <MenuListName>{menu.foodName}</MenuListName>
                     <MenuListPriceRow>
-                      <MenuListPrice>₩{menu.price.toLocaleString()}</MenuListPrice>
+                      <MenuListPrice>
+                        ₩{menu.price.toLocaleString()}
+                      </MenuListPrice>
                       {menu.budgetDifference && (
                         <BudgetBadge $isPositive={menu.budgetDifference > 0}>
-                          {menu.budgetDifference > 0 ? '+' : '-'}₩{Math.abs(menu.budgetDifference).toLocaleString()}
+                          {menu.budgetDifference > 0 ? "+" : "-"}₩
+                          {Math.abs(menu.budgetDifference).toLocaleString()}
                         </BudgetBadge>
                       )}
                     </MenuListPriceRow>
                     {menu.description && (
-                      <MenuListDescription>{menu.description}</MenuListDescription>
+                      <MenuListDescription>
+                        {menu.description}
+                      </MenuListDescription>
                     )}
                   </MenuListInfo>
                 </MenuListItem>
@@ -308,14 +336,18 @@ const StoreDetailPage = () => {
             <CartLabel>현재 장바구니 내역:</CartLabel>
             <CartAmounts>
               <CartOriginal>냉은 원상 식비:</CartOriginal>
-              <CartOriginalAmount>₩{(getTotalAmount() + 15000).toLocaleString()}</CartOriginalAmount>
+              <CartOriginalAmount>
+                ₩{(getTotalAmount() + 15000).toLocaleString()}
+              </CartOriginalAmount>
             </CartAmounts>
             <CartAmounts>
               <CartSavings>정산 예상 금액:</CartSavings>
-              <CartSavingsAmount>₩{getTotalAmount().toLocaleString()}</CartSavingsAmount>
+              <CartSavingsAmount>
+                ₩{getTotalAmount().toLocaleString()}
+              </CartSavingsAmount>
             </CartAmounts>
           </CartInfo>
-          <CartButton onClick={() => navigate('/cart')}>
+          <CartButton onClick={() => navigate("/cart")}>
             장바구니 담기
           </CartButton>
         </CartBottomBar>
@@ -323,10 +355,7 @@ const StoreDetailPage = () => {
 
       {/* 매장 상세 정보 모달 */}
       {showInfoModal && store && (
-        <StoreInfoModal
-          store={store}
-          onClose={() => setShowInfoModal(false)}
-        />
+        <StoreInfoModal store={store} onClose={() => setShowInfoModal(false)} />
       )}
 
       {/* Bottom Navigation */}
@@ -355,7 +384,11 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
 
   const handleDirections = () => {
     // 네이버 지도 앱으로 길찾기
-    const naverMapUrl = `nmap://place?lat=${store.location?.latitude || 37.5665}&lng=${store.location?.longitude || 126.9780}&name=${encodeURIComponent(store.storeName)}&appname=com.smartmealtable`;
+    const naverMapUrl = `nmap://place?lat=${
+      store.location?.latitude || 37.5665
+    }&lng=${store.location?.longitude || 126.978}&name=${encodeURIComponent(
+      store.storeName
+    )}&appname=com.smartmealtable`;
     window.location.href = naverMapUrl;
   };
 
@@ -368,7 +401,7 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
 
         <ModalContent>
           <InfoSectionTitle>매장정보</InfoSectionTitle>
-          
+
           {/* 지도 영역 */}
           <MapPlaceholder>
             <MapIcon>📍</MapIcon>
@@ -472,8 +505,12 @@ const LoadingSpinner = styled.div`
   animation: spin 1s linear infinite;
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;
 
@@ -539,7 +576,7 @@ const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: ${props => props.$isFavorite ? '#ff6b35' : '#666'};
+  color: ${(props) => (props.$isFavorite ? "#ff6b35" : "#666")};
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
 
@@ -605,7 +642,7 @@ const PriceBadge = styled.span`
 const StatusBadge = styled.span<{ $isOpen: boolean }>`
   display: inline-block;
   padding: 4px 10px;
-  background-color: ${props => props.$isOpen ? '#ff6b35' : '#999'};
+  background-color: ${(props) => (props.$isOpen ? "#ff6b35" : "#999")};
   color: white;
   font-size: 13px;
   font-weight: 600;
@@ -710,8 +747,8 @@ const MenuPrice = styled.span`
 const BudgetBadge = styled.span<{ $isPositive: boolean }>`
   display: inline-block;
   padding: 2px 8px;
-  background-color: ${props => props.$isPositive ? '#ffe5e5' : '#e5f5ff'};
-  color: ${props => props.$isPositive ? '#ff4444' : '#0066ff'};
+  background-color: ${(props) => (props.$isPositive ? "#ffe5e5" : "#e5f5ff")};
+  color: ${(props) => (props.$isPositive ? "#ff4444" : "#0066ff")};
   font-size: 11px;
   font-weight: 600;
   border-radius: 10px;
@@ -934,7 +971,7 @@ const ModalHeader = styled.div`
   position: relative;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 8px;
     left: 50%;

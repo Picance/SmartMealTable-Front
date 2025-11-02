@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { FiArrowLeft, FiMinus, FiPlus, FiTrash2, FiTag, FiChevronDown } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiMinus,
+  FiPlus,
+  FiTrash2,
+  FiTag,
+  FiChevronDown,
+} from "react-icons/fi";
 import { useCartStore } from "../../store/cartStore";
 import BottomNav from "../../components/layout/BottomNav";
 
@@ -10,9 +17,10 @@ type MealType = "BREAKFAST" | "LUNCH" | "DINNER";
 const CartPage = () => {
   const navigate = useNavigate();
   const { items, removeItem, updateQuantity, getTotalPrice } = useCartStore();
-  
+
   const [couponCode, setCouponCode] = useState("");
-  const [selectedMealType, setSelectedMealType] = useState<MealType>("BREAKFAST");
+  const [selectedMealType, setSelectedMealType] =
+    useState<MealType>("BREAKFAST");
   const [showMealTypeDropdown, setShowMealTypeDropdown] = useState(false);
 
   // 예산 데이터 (실제로는 API에서 가져와야 함)
@@ -28,7 +36,11 @@ const CartPage = () => {
     { value: "DINNER" as MealType, label: "저녁" },
   ];
 
-  const handleQuantityChange = (foodId: number, currentQuantity: number, change: number) => {
+  const handleQuantityChange = (
+    foodId: number,
+    currentQuantity: number,
+    change: number
+  ) => {
     const newQuantity = currentQuantity + change;
     if (newQuantity >= 1 && newQuantity <= 99) {
       updateQuantity(foodId, newQuantity);
@@ -42,21 +54,32 @@ const CartPage = () => {
       alert("장바구니가 비어있습니다.");
       return;
     }
-    
+
     // 현재 날짜와 시간
     const now = new Date();
-    const dateStr = now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', '');
-    const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-    
+    const dateStr = now
+      .toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+      .replace(/\. /g, "-")
+      .replace(".", "");
+    const timeStr = now.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
     // 상점명 (첫 번째 아이템의 상점명 사용, 또는 모두 같은 상점이라 가정)
     const storeName = items[0]?.storeName || "상점명";
-    
+
     // 지출 등록 완료 페이지로 바로 이동
     navigate("/spending/success", {
       state: {
         expenditureData: {
           storeName: storeName,
-          items: items.map(item => ({
+          items: items.map((item) => ({
             foodName: item.foodName,
             quantity: item.quantity,
             price: item.price,
@@ -65,13 +88,16 @@ const CartPage = () => {
           mealType: selectedMealType,
           expendedDate: dateStr,
           expendedTime: timeStr,
-        }
-      }
+        },
+      },
     });
   };
 
   const getMealTypeLabel = () => {
-    return mealTypeOptions.find(opt => opt.value === selectedMealType)?.label || "아침";
+    return (
+      mealTypeOptions.find((opt) => opt.value === selectedMealType)?.label ||
+      "아침"
+    );
   };
 
   if (items.length === 0) {
@@ -113,19 +139,32 @@ const CartPage = () => {
         <CartItemList>
           {items.map((item) => (
             <CartItem key={item.foodId}>
-              <ItemImage src={item.imageUrl || "/placeholder-menu.jpg"} alt={item.foodName} />
+              <ItemImage
+                src={item.imageUrl || "/placeholder-menu.jpg"}
+                alt={item.foodName}
+              />
               <ItemInfo>
                 <ItemName>{item.foodName}</ItemName>
                 <ItemPrice>{item.price.toLocaleString()}원 / 개</ItemPrice>
-                <ItemTotalPrice>{(item.price * item.quantity).toLocaleString()}원</ItemTotalPrice>
+                <ItemTotalPrice>
+                  {(item.price * item.quantity).toLocaleString()}원
+                </ItemTotalPrice>
               </ItemInfo>
               <ItemControls>
                 <QuantityControl>
-                  <QuantityButton onClick={() => handleQuantityChange(item.foodId, item.quantity, -1)}>
+                  <QuantityButton
+                    onClick={() =>
+                      handleQuantityChange(item.foodId, item.quantity, -1)
+                    }
+                  >
                     <FiMinus size={16} />
                   </QuantityButton>
                   <QuantityDisplay>{item.quantity}</QuantityDisplay>
-                  <QuantityButton onClick={() => handleQuantityChange(item.foodId, item.quantity, 1)}>
+                  <QuantityButton
+                    onClick={() =>
+                      handleQuantityChange(item.foodId, item.quantity, 1)
+                    }
+                  >
                     <FiPlus size={16} />
                   </QuantityButton>
                 </QuantityControl>
@@ -151,7 +190,9 @@ const CartPage = () => {
         </CouponSection>
 
         {/* 식사 유형 선택 */}
-        <MealTypeSection onClick={() => setShowMealTypeDropdown(!showMealTypeDropdown)}>
+        <MealTypeSection
+          onClick={() => setShowMealTypeDropdown(!showMealTypeDropdown)}
+        >
           <MealTypeLabel>식사 유형: {getMealTypeLabel()}</MealTypeLabel>
           <FiChevronDown size={20} />
           {showMealTypeDropdown && (
@@ -185,16 +226,24 @@ const CartPage = () => {
           <Divider />
           <SummaryRow>
             <SummaryLabel $bold>총 장바구니 금액</SummaryLabel>
-            <SummaryValue $bold>{totalCartPrice.toLocaleString()}원</SummaryValue>
+            <SummaryValue $bold>
+              {totalCartPrice.toLocaleString()}원
+            </SummaryValue>
           </SummaryRow>
           <Divider />
           <SummaryRow>
             <SummaryLabel $highlight>구매 후 남은 일일 예산</SummaryLabel>
-            <SummaryValue $highlight>{remainingDailyAfterPurchase.toLocaleString()}원</SummaryValue>
+            <SummaryValue $highlight>
+              {remainingDailyAfterPurchase.toLocaleString()}원
+            </SummaryValue>
           </SummaryRow>
           <SummaryRow>
-            <SummaryLabel $negative>구매 후 남은 {getMealTypeLabel()} 식사 예산</SummaryLabel>
-            <SummaryValue $negative>{remainingMealAfterPurchase.toLocaleString()}원</SummaryValue>
+            <SummaryLabel $negative>
+              구매 후 남은 {getMealTypeLabel()} 식사 예산
+            </SummaryLabel>
+            <SummaryValue $negative>
+              {remainingMealAfterPurchase.toLocaleString()}원
+            </SummaryValue>
           </SummaryRow>
         </PriceSummary>
 
@@ -432,13 +481,13 @@ const MealTypeDropdown = styled.div`
 const MealTypeOption = styled.div<{ $active: boolean }>`
   padding: 12px 16px;
   font-size: 14px;
-  color: ${props => props.$active ? '#ff6b35' : '#000'};
-  font-weight: ${props => props.$active ? '600' : '400'};
-  background-color: ${props => props.$active ? '#fff5f0' : '#ffffff'};
+  color: ${(props) => (props.$active ? "#ff6b35" : "#000")};
+  font-weight: ${(props) => (props.$active ? "600" : "400")};
+  background-color: ${(props) => (props.$active ? "#fff5f0" : "#ffffff")};
   cursor: pointer;
 
   &:hover {
-    background-color: ${props => props.$active ? '#fff5f0' : '#f9f9f9'};
+    background-color: ${(props) => (props.$active ? "#fff5f0" : "#f9f9f9")};
   }
 
   &:not(:last-child) {
@@ -464,24 +513,33 @@ const SummaryRow = styled.div`
   }
 `;
 
-const SummaryLabel = styled.span<{ $bold?: boolean; $highlight?: boolean; $negative?: boolean }>`
+const SummaryLabel = styled.span<{
+  $bold?: boolean;
+  $highlight?: boolean;
+  $negative?: boolean;
+}>`
   font-size: 14px;
-  color: ${props => {
-    if (props.$highlight) return '#ff6b35';
-    if (props.$negative) return '#ff4444';
-    return '#666';
+  color: ${(props) => {
+    if (props.$highlight) return "#ff6b35";
+    if (props.$negative) return "#ff4444";
+    return "#666";
   }};
-  font-weight: ${props => props.$bold ? '600' : '400'};
+  font-weight: ${(props) => (props.$bold ? "600" : "400")};
 `;
 
-const SummaryValue = styled.span<{ $bold?: boolean; $highlight?: boolean; $negative?: boolean }>`
+const SummaryValue = styled.span<{
+  $bold?: boolean;
+  $highlight?: boolean;
+  $negative?: boolean;
+}>`
   font-size: 15px;
-  color: ${props => {
-    if (props.$highlight) return '#ff6b35';
-    if (props.$negative) return '#ff4444';
-    return '#000';
+  color: ${(props) => {
+    if (props.$highlight) return "#ff6b35";
+    if (props.$negative) return "#ff4444";
+    return "#000";
   }};
-  font-weight: ${props => props.$bold || props.$highlight || props.$negative ? '700' : '600'};
+  font-weight: ${(props) =>
+    props.$bold || props.$highlight || props.$negative ? "700" : "600"};
 `;
 
 const Divider = styled.div`

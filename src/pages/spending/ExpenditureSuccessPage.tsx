@@ -30,7 +30,7 @@ const ExpenditureSuccessPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { clearCart } = useCartStore();
-  
+
   const expenditureData = location.state?.expenditureData as ExpenditureData;
   const [budgetSummary] = useState<BudgetSummary>({
     mealSpent: expenditureData?.totalAmount || 18500,
@@ -56,10 +56,14 @@ const ExpenditureSuccessPage = () => {
 
   const getMealTypeLabel = () => {
     switch (expenditureData.mealType) {
-      case "BREAKFAST": return "아침";
-      case "LUNCH": return "점심";
-      case "DINNER": return "저녁";
-      default: return "식사";
+      case "BREAKFAST":
+        return "아침";
+      case "LUNCH":
+        return "점심";
+      case "DINNER":
+        return "저녁";
+      default:
+        return "식사";
     }
   };
 
@@ -97,28 +101,34 @@ const ExpenditureSuccessPage = () => {
               <InfoLabel>상점</InfoLabel>
               <InfoValue>{expenditureData.storeName}</InfoValue>
             </InfoRow>
-            
+
             <Divider />
-            
+
             <OrderTitle>주문 내역</OrderTitle>
             {expenditureData.items.map((item, index) => (
               <OrderItem key={index}>
                 <OrderItemInfo>
-                  <OrderItemName>{item.foodName} ({item.quantity}개)</OrderItemName>
+                  <OrderItemName>
+                    {item.foodName} ({item.quantity}개)
+                  </OrderItemName>
                 </OrderItemInfo>
-                <OrderItemPrice>₩{(item.price * item.quantity).toLocaleString()}</OrderItemPrice>
+                <OrderItemPrice>
+                  ₩{(item.price * item.quantity).toLocaleString()}
+                </OrderItemPrice>
               </OrderItem>
             ))}
-            
+
             <Divider />
-            
+
             <TotalRow>
               <TotalLabel>총 결제 금액</TotalLabel>
-              <TotalAmount>₩{expenditureData.totalAmount.toLocaleString()}</TotalAmount>
+              <TotalAmount>
+                ₩{expenditureData.totalAmount.toLocaleString()}
+              </TotalAmount>
             </TotalRow>
-            
+
             <Divider />
-            
+
             <InfoRow>
               <InfoLabel>결제 날짜</InfoLabel>
               <InfoValue>
@@ -135,39 +145,49 @@ const ExpenditureSuccessPage = () => {
           <BudgetCard>
             <BudgetRow>
               <BudgetLabel>{getMealTypeLabel()} 지출 식비</BudgetLabel>
-              <BudgetValue>₩{budgetSummary.mealSpent.toLocaleString()}</BudgetValue>
+              <BudgetValue>
+                ₩{budgetSummary.mealSpent.toLocaleString()}
+              </BudgetValue>
             </BudgetRow>
-            
+
             <BudgetRow $highlight>
-              <BudgetLabel $highlight>남은 {getMealTypeLabel()} 식비 예산</BudgetLabel>
-              <BudgetValue $highlight>₩{budgetSummary.mealRemaining.toLocaleString()}</BudgetValue>
+              <BudgetLabel $highlight>
+                남은 {getMealTypeLabel()} 식비 예산
+              </BudgetLabel>
+              <BudgetValue $highlight>
+                ₩{budgetSummary.mealRemaining.toLocaleString()}
+              </BudgetValue>
             </BudgetRow>
-            
+
             <BudgetDivider />
-            
+
             <BudgetRow>
               <BudgetLabel>오늘 지출 식비</BudgetLabel>
-              <BudgetValue>₩{budgetSummary.dailySpent.toLocaleString()}</BudgetValue>
+              <BudgetValue>
+                ₩{budgetSummary.dailySpent.toLocaleString()}
+              </BudgetValue>
             </BudgetRow>
-            
+
             <BudgetRow $highlight>
               <BudgetLabel $highlight>남은 일일 식비 예산</BudgetLabel>
-              <BudgetValue $highlight>₩{budgetSummary.dailyRemaining.toLocaleString()}</BudgetValue>
+              <BudgetValue $highlight>
+                ₩{budgetSummary.dailyRemaining.toLocaleString()}
+              </BudgetValue>
             </BudgetRow>
-            
+
             <BudgetDivider />
-            
+
             <BudgetRow $warning>
               <BudgetLabel $warning>남은 월별 식비 예산</BudgetLabel>
-              <BudgetValue $warning>₩{budgetSummary.monthlyRemaining.toLocaleString()}</BudgetValue>
+              <BudgetValue $warning>
+                ₩{budgetSummary.monthlyRemaining.toLocaleString()}
+              </BudgetValue>
             </BudgetRow>
           </BudgetCard>
         </Section>
 
         {/* 홈으로 돌아가기 버튼 */}
-        <HomeButton onClick={handleGoHome}>
-          홈으로 돌아가기
-        </HomeButton>
+        <HomeButton onClick={handleGoHome}>홈으로 돌아가기</HomeButton>
       </Content>
 
       <BottomNav activeTab="spending" />
@@ -390,20 +410,20 @@ const BudgetRow = styled.div<{ $highlight?: boolean; $warning?: boolean }>`
 
 const BudgetLabel = styled.span<{ $highlight?: boolean; $warning?: boolean }>`
   font-size: 14px;
-  color: ${props => {
-    if (props.$highlight) return '#ff6b35';
-    if (props.$warning) return '#ffd54f';
-    return '#666';
+  color: ${(props) => {
+    if (props.$highlight) return "#ff6b35";
+    if (props.$warning) return "#ffd54f";
+    return "#666";
   }};
   font-weight: 500;
 `;
 
 const BudgetValue = styled.span<{ $highlight?: boolean; $warning?: boolean }>`
   font-size: 15px;
-  color: ${props => {
-    if (props.$highlight) return '#ff6b35';
-    if (props.$warning) return '#ffa000';
-    return '#000';
+  color: ${(props) => {
+    if (props.$highlight) return "#ff6b35";
+    if (props.$warning) return "#ffa000";
+    return "#000";
   }};
   font-weight: 700;
 `;
