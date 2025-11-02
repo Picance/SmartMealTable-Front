@@ -13,25 +13,31 @@ interface BudgetCardProps {
 }
 
 const StyledCard = styled(Card)<{ $variant: string }>`
-  ${(props) => props.$variant === "secondary" && css`
-    background: linear-gradient(135deg, ${props.theme.colors.secondary} 0%, ${props.theme.colors.secondaryDark} 100%);
-    color: white;
-  `}
+  ${(props) =>
+    props.$variant === "secondary" &&
+    css`
+      background: linear-gradient(
+        135deg,
+        ${props.theme.colors.secondary} 0%,
+        ${props.theme.colors.secondaryDark} 100%
+      );
+      color: white;
+    `}
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: ${props => props.theme.spacing.lg};
+  margin-bottom: ${(props) => props.theme.spacing.lg};
 `;
 
 const Title = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  font-size: ${props => props.theme.typography.fontSize.lg};
-  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  gap: ${(props) => props.theme.spacing.sm};
+  font-size: ${(props) => props.theme.typography.fontSize.lg};
+  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
 `;
 
 const IconWrapper = styled.span`
@@ -43,49 +49,50 @@ const WarningIcon = styled.span`
   color: #ff4444;
   display: flex;
   align-items: center;
-  font-size: ${props => props.theme.typography.fontSize.xl};
+  font-size: ${(props) => props.theme.typography.fontSize.xl};
 `;
 
 const Amount = styled.div`
-  margin-bottom: ${props => props.theme.spacing.lg};
+  margin-bottom: ${(props) => props.theme.spacing.lg};
 `;
 
 const Spent = styled.span`
-  font-size: ${props => props.theme.typography.fontSize["3xl"]};
-  font-weight: ${props => props.theme.typography.fontWeight.bold};
+  font-size: ${(props) => props.theme.typography.fontSize["3xl"]};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
 `;
 
 const Budget = styled.span`
-  font-size: ${props => props.theme.typography.fontSize.lg};
+  font-size: ${(props) => props.theme.typography.fontSize.lg};
   opacity: 0.7;
-  margin-left: ${props => props.theme.spacing.xs};
+  margin-left: ${(props) => props.theme.spacing.xs};
 `;
 
 const ProgressContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.md};
-  margin-bottom: ${props => props.theme.spacing.lg};
+  gap: ${(props) => props.theme.spacing.md};
+  margin-bottom: ${(props) => props.theme.spacing.lg};
 `;
 
 const ProgressBar = styled.div`
   flex: 1;
   height: 8px;
-  background-color: ${props => props.theme.colors.gray[200]};
-  border-radius: ${props => props.theme.borderRadius.full};
+  background-color: ${(props) => props.theme.colors.gray[200]};
+  border-radius: ${(props) => props.theme.borderRadius.full};
   overflow: hidden;
 `;
 
 const ProgressFill = styled.div<{ $isOverBudget: boolean }>`
   height: 100%;
-  background-color: ${props => props.$isOverBudget ? "#ff4444" : props.theme.colors.primary};
-  border-radius: ${props => props.theme.borderRadius.full};
+  background-color: ${(props) =>
+    props.$isOverBudget ? "#ff4444" : props.theme.colors.primary};
+  border-radius: ${(props) => props.theme.borderRadius.full};
   transition: width 0.3s ease;
 `;
 
 const Percentage = styled.span`
-  font-size: ${props => props.theme.typography.fontSize.sm};
-  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
+  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
   min-width: 40px;
   text-align: right;
 `;
@@ -97,17 +104,17 @@ const Remaining = styled.div`
 `;
 
 const RemainingLabel = styled.span`
-  font-size: ${props => props.theme.typography.fontSize.sm};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
   opacity: 0.8;
 `;
 
 const RemainingAmount = styled.span<{ $negative: boolean }>`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.xs};
-  font-size: ${props => props.theme.typography.fontSize.base};
-  font-weight: ${props => props.theme.typography.fontWeight.semibold};
-  color: ${props => props.$negative ? "#ff4444" : "#4caf50"};
+  gap: ${(props) => props.theme.spacing.xs};
+  font-size: ${(props) => props.theme.typography.fontSize.base};
+  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
+  color: ${(props) => (props.$negative ? "#ff4444" : "#4caf50")};
 `;
 
 export const BudgetCard: React.FC<BudgetCardProps> = ({

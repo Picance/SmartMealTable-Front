@@ -31,9 +31,11 @@ const StyledButton = styled.button<{
   font-family: inherit;
   position: relative;
 
-  ${(props) => props.$fullWidth && css`
-    width: 100%;
-  `}
+  ${(props) =>
+    props.$fullWidth &&
+    css`
+      width: 100%;
+    `}
 
   ${(props) => {
     switch (props.$size) {
@@ -101,16 +103,18 @@ const StyledButton = styled.button<{
   }
 
   &:disabled {
-    background-color: ${props => props.theme.colors.gray[300]};
-    color: ${props => props.theme.colors.gray[500]};
+    background-color: ${(props) => props.theme.colors.gray[300]};
+    color: ${(props) => props.theme.colors.gray[500]};
     cursor: not-allowed;
-    border-color: ${props => props.theme.colors.gray[300]};
+    border-color: ${(props) => props.theme.colors.gray[300]};
   }
 
-  ${(props) => props.$loading && css`
-    pointer-events: none;
-    opacity: 0.7;
-  `}
+  ${(props) =>
+    props.$loading &&
+    css`
+      pointer-events: none;
+      opacity: 0.7;
+    `}
 `;
 
 const Spinner = styled.span`

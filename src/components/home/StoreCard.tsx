@@ -31,20 +31,21 @@ const StoreImage = styled.img`
 
 const Tag = styled.span`
   position: absolute;
-  top: ${props => props.theme.spacing.md};
-  left: ${props => props.theme.spacing.md};
-  background-color: ${props => props.theme.colors.accent};
+  top: ${(props) => props.theme.spacing.md};
+  left: ${(props) => props.theme.spacing.md};
+  background-color: ${(props) => props.theme.colors.accent};
   color: white;
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
-  border-radius: ${props => props.theme.borderRadius.sm};
-  font-size: ${props => props.theme.typography.fontSize.xs};
-  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  padding: ${(props) => props.theme.spacing.xs}
+    ${(props) => props.theme.spacing.sm};
+  border-radius: ${(props) => props.theme.borderRadius.sm};
+  font-size: ${(props) => props.theme.typography.fontSize.xs};
+  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
 `;
 
 const FavoriteButton = styled.button<{ $active: boolean }>`
   position: absolute;
-  top: ${props => props.theme.spacing.md};
-  right: ${props => props.theme.spacing.md};
+  top: ${(props) => props.theme.spacing.md};
+  right: ${(props) => props.theme.spacing.md};
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -57,10 +58,13 @@ const FavoriteButton = styled.button<{ $active: boolean }>`
   transition: all 0.2s ease;
 
   svg {
-    color: ${props => props.$active ? props.theme.colors.accent : props.theme.colors.gray[600]};
-    ${props => props.$active && css`
-      fill: ${props.theme.colors.accent};
-    `}
+    color: ${(props) =>
+      props.$active ? props.theme.colors.accent : props.theme.colors.gray[600]};
+    ${(props) =>
+      props.$active &&
+      css`
+        fill: ${props.theme.colors.accent};
+      `}
   }
 
   &:hover {
@@ -70,37 +74,37 @@ const FavoriteButton = styled.button<{ $active: boolean }>`
 `;
 
 const Content = styled.div`
-  padding: ${props => props.theme.spacing.lg};
+  padding: ${(props) => props.theme.spacing.lg};
   display: flex;
   flex-direction: column;
-  gap: ${props => props.theme.spacing.sm};
+  gap: ${(props) => props.theme.spacing.sm};
 `;
 
 const StoreName = styled.h3`
-  font-size: ${props => props.theme.typography.fontSize.lg};
-  font-weight: ${props => props.theme.typography.fontWeight.bold};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: ${(props) => props.theme.typography.fontSize.lg};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
+  color: ${(props) => props.theme.colors.text.primary};
   margin: 0;
 `;
 
 const Category = styled.p`
-  font-size: ${props => props.theme.typography.fontSize.sm};
-  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
+  color: ${(props) => props.theme.colors.text.tertiary};
   margin: 0;
 `;
 
 const Meta = styled.div`
   display: flex;
-  gap: ${props => props.theme.spacing.md};
-  margin-top: ${props => props.theme.spacing.xs};
+  gap: ${(props) => props.theme.spacing.md};
+  margin-top: ${(props) => props.theme.spacing.xs};
 `;
 
 const MetaItem = styled.span`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.xs};
-  font-size: ${props => props.theme.typography.fontSize.sm};
-  color: ${props => props.theme.colors.text.tertiary};
+  gap: ${(props) => props.theme.spacing.xs};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
+  color: ${(props) => props.theme.colors.text.tertiary};
 
   svg {
     width: 14px;
@@ -112,19 +116,20 @@ const Footer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: ${props => props.theme.spacing.sm};
+  margin-top: ${(props) => props.theme.spacing.sm};
 `;
 
 const Price = styled.span`
-  font-size: ${props => props.theme.typography.fontSize.base};
-  font-weight: ${props => props.theme.typography.fontWeight.semibold};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: ${(props) => props.theme.typography.fontSize.base};
+  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
+  color: ${(props) => props.theme.colors.text.primary};
 `;
 
 const Status = styled.span<{ $isOpen: boolean }>`
-  font-size: ${props => props.theme.typography.fontSize.sm};
-  font-weight: ${props => props.theme.typography.fontWeight.medium};
-  color: ${props => props.$isOpen ? "#4caf50" : props.theme.colors.gray[500]};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
+  font-weight: ${(props) => props.theme.typography.fontWeight.medium};
+  color: ${(props) =>
+    props.$isOpen ? "#4caf50" : props.theme.colors.gray[500]};
 `;
 
 export const StoreCard: React.FC<StoreCardProps> = ({

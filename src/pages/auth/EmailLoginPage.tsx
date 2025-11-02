@@ -133,9 +133,7 @@ const EmailLoginPage = () => {
               <FeatureCardTitle>식비 설정</FeatureCardTitle>
             </FeatureCardHeader>
             <FeatureCardSubtitle>목표한 금액을 설정하세요</FeatureCardSubtitle>
-            <FeatureCardDescription>
-              가용 식비 설정
-            </FeatureCardDescription>
+            <FeatureCardDescription>가용 식비 설정</FeatureCardDescription>
             <FeatureCardDescription>
               매달 목표한 금액을 설정하고 관리하여 절약 효과를 높여보세요
             </FeatureCardDescription>

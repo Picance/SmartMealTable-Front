@@ -15,66 +15,77 @@ const InputWrapper = styled.div<{ $fullWidth: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  ${(props) => props.$fullWidth && css`
-    width: 100%;
-  `}
+  ${(props) =>
+    props.$fullWidth &&
+    css`
+      width: 100%;
+    `}
 `;
 
 const Label = styled.label`
-  font-size: ${props => props.theme.typography.fontSize.sm};
-  font-weight: ${props => props.theme.typography.fontWeight.medium};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
+  font-weight: ${(props) => props.theme.typography.fontWeight.medium};
+  color: ${(props) => props.theme.colors.text.primary};
 `;
 
-const InputContainer = styled.div<{ $hasLeftIcon: boolean; $hasRightIcon: boolean }>`
+const InputContainer = styled.div<{
+  $hasLeftIcon: boolean;
+  $hasRightIcon: boolean;
+}>`
   position: relative;
   display: flex;
   align-items: center;
-  
-  ${(props) => props.$hasLeftIcon && css`
-    padding-left: 2.75rem;
-  `}
-  
-  ${(props) => props.$hasRightIcon && css`
-    padding-right: 2.75rem;
-  `}
+
+  ${(props) =>
+    props.$hasLeftIcon &&
+    css`
+      padding-left: 2.75rem;
+    `}
+
+  ${(props) =>
+    props.$hasRightIcon &&
+    css`
+      padding-right: 2.75rem;
+    `}
 `;
 
 const StyledInputField = styled.input<{ $hasError: boolean }>`
   width: 100%;
   height: 48px;
   padding: 0 1rem;
-  border: 1px solid ${(props) => props.$hasError ? "#ff4444" : props.theme.colors.gray[300]};
-  border-radius: ${props => props.theme.borderRadius.base};
-  font-size: ${props => props.theme.typography.fontSize.base};
-  color: ${props => props.theme.colors.text.primary};
-  background-color: ${props => props.theme.colors.background.primary};
+  border: 1px solid
+    ${(props) => (props.$hasError ? "#ff4444" : props.theme.colors.gray[300])};
+  border-radius: ${(props) => props.theme.borderRadius.base};
+  font-size: ${(props) => props.theme.typography.fontSize.base};
+  color: ${(props) => props.theme.colors.text.primary};
+  background-color: ${(props) => props.theme.colors.background.primary};
   transition: border-color 0.2s ease;
   font-family: inherit;
 
   &::placeholder {
-    color: ${props => props.theme.colors.gray[500]};
+    color: ${(props) => props.theme.colors.gray[500]};
   }
 
   &:focus {
     outline: none;
-    border-color: ${(props) => props.$hasError ? "#ff4444" : props.theme.colors.primary};
+    border-color: ${(props) =>
+      props.$hasError ? "#ff4444" : props.theme.colors.primary};
   }
 
   &:disabled {
-    background-color: ${props => props.theme.colors.gray[100]};
+    background-color: ${(props) => props.theme.colors.gray[100]};
     cursor: not-allowed;
   }
 `;
 
 const IconWrapper = styled.span<{ $position: "left" | "right" }>`
   position: absolute;
-  ${(props) => props.$position === "left" ? "left: 1rem" : "right: 1rem"};
+  ${(props) => (props.$position === "left" ? "left: 1rem" : "right: 1rem")};
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  color: ${props => props.theme.colors.gray[600]};
+  color: ${(props) => props.theme.colors.gray[600]};
   pointer-events: none;
 `;
 
@@ -85,25 +96,25 @@ const ToggleButton = styled.button`
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: ${props => props.theme.colors.gray[600]};
+  color: ${(props) => props.theme.colors.gray[600]};
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 0;
-  
+
   &:hover {
-    color: ${props => props.theme.colors.text.primary};
+    color: ${(props) => props.theme.colors.text.primary};
   }
 `;
 
 const ErrorText = styled.span`
-  font-size: ${props => props.theme.typography.fontSize.xs};
+  font-size: ${(props) => props.theme.typography.fontSize.xs};
   color: #ff4444;
 `;
 
 const HelperText = styled.span`
-  font-size: ${props => props.theme.typography.fontSize.xs};
-  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${(props) => props.theme.typography.fontSize.xs};
+  color: ${(props) => props.theme.colors.text.tertiary};
 `;
 
 export const Input: React.FC<InputProps> = ({

@@ -248,7 +248,7 @@ const spin = keyframes`
 const PageContainer = styled.div`
   min-height: 100vh;
   min-height: 100dvh;
-  background-color: ${props => props.theme.colors.background.secondary};
+  background-color: ${(props) => props.theme.colors.background.secondary};
 `;
 
 const LoadingContainer = styled.div`
@@ -257,70 +257,71 @@ const LoadingContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  gap: ${props => props.theme.spacing.lg};
+  gap: ${(props) => props.theme.spacing.lg};
 `;
 
 const Spinner = styled.div`
   width: 48px;
   height: 48px;
-  border: 4px solid ${props => props.theme.colors.gray[200]};
-  border-top-color: ${props => props.theme.colors.primary};
+  border: 4px solid ${(props) => props.theme.colors.gray[200]};
+  border-top-color: ${(props) => props.theme.colors.primary};
   border-radius: 50%;
   animation: ${spin} 0.8s linear infinite;
 `;
 
 const LoadingText = styled.p`
-  font-size: ${props => props.theme.typography.fontSize.base};
-  color: ${props => props.theme.colors.text.secondary};
+  font-size: ${(props) => props.theme.typography.fontSize.base};
+  color: ${(props) => props.theme.colors.text.secondary};
 `;
 
 const Header = styled.div`
-  background-color: ${props => props.theme.colors.background.primary};
-  padding: ${props => props.theme.spacing["2xl"]} ${props => props.theme.spacing.xl};
-  box-shadow: ${props => props.theme.shadows.sm};
+  background-color: ${(props) => props.theme.colors.background.primary};
+  padding: ${(props) => props.theme.spacing["2xl"]}
+    ${(props) => props.theme.spacing.xl};
+  box-shadow: ${(props) => props.theme.shadows.sm};
 `;
 
 const HeaderTop = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: ${props => props.theme.spacing.lg};
+  margin-bottom: ${(props) => props.theme.spacing.lg};
 `;
 
 const Greeting = styled.h1`
-  font-size: ${props => props.theme.typography.fontSize["2xl"]};
-  font-weight: ${props => props.theme.typography.fontWeight.normal};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: ${(props) => props.theme.typography.fontSize["2xl"]};
+  font-weight: ${(props) => props.theme.typography.fontWeight.normal};
+  color: ${(props) => props.theme.colors.text.primary};
   margin: 0;
   line-height: 1.3;
 `;
 
 const GreetingName = styled.span`
-  font-weight: ${props => props.theme.typography.fontWeight.bold};
-  color: ${props => props.theme.colors.primary};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
+  color: ${(props) => props.theme.colors.primary};
 `;
 
 const HeaderIcons = styled.div`
   display: flex;
-  gap: ${props => props.theme.spacing.sm};
+  gap: ${(props) => props.theme.spacing.sm};
 `;
 
 const IconButton = styled.button`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: ${props => props.theme.colors.background.secondary};
+  background-color: ${(props) => props.theme.colors.background.secondary};
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: ${props => props.theme.colors.text.primary};
-  font-size: ${props => props.theme.typography.fontSize.xl};
+  color: ${(props) => props.theme.colors.text.primary};
+  font-size: ${(props) => props.theme.typography.fontSize.xl};
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: ${props => props.theme.colors.gray[200]};
+    background-color: ${(props) => props.theme.colors.gray[200]};
   }
 
   &:active {
@@ -331,55 +332,55 @@ const IconButton = styled.button`
 const LocationButton = styled.button`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.xs};
+  gap: ${(props) => props.theme.spacing.xs};
   background: none;
   border: none;
-  color: ${props => props.theme.colors.text.tertiary};
-  font-size: ${props => props.theme.typography.fontSize.sm};
+  color: ${(props) => props.theme.colors.text.tertiary};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
   cursor: pointer;
-  padding: ${props => props.theme.spacing.xs} 0;
-  
+  padding: ${(props) => props.theme.spacing.xs} 0;
+
   &:hover {
-    color: ${props => props.theme.colors.text.primary};
+    color: ${(props) => props.theme.colors.text.primary};
   }
 `;
 
 const Content = styled.div`
-  padding: ${props => props.theme.spacing.xl};
+  padding: ${(props) => props.theme.spacing.xl};
   display: flex;
   flex-direction: column;
-  gap: ${props => props.theme.spacing["2xl"]};
+  gap: ${(props) => props.theme.spacing["2xl"]};
 `;
 
 const ErrorMessage = styled.div`
   background-color: #ffebee;
   color: #c62828;
-  padding: ${props => props.theme.spacing.lg};
-  border-radius: ${props => props.theme.borderRadius.base};
+  padding: ${(props) => props.theme.spacing.lg};
+  border-radius: ${(props) => props.theme.borderRadius.base};
   text-align: center;
 `;
 
 const BudgetSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${props => props.theme.spacing.lg};
+  gap: ${(props) => props.theme.spacing.lg};
 `;
 
 const BudgetGrid = styled.div`
   display: grid;
-  gap: ${props => props.theme.spacing.lg};
+  gap: ${(props) => props.theme.spacing.lg};
 `;
 
 const MealBudgets = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: ${props => props.theme.spacing.md};
+  gap: ${(props) => props.theme.spacing.md};
 `;
 
 const Section = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${props => props.theme.spacing.lg};
+  gap: ${(props) => props.theme.spacing.lg};
 `;
 
 const SectionHeader = styled.div`
@@ -389,21 +390,21 @@ const SectionHeader = styled.div`
 `;
 
 const SectionTitle = styled.h2`
-  font-size: ${props => props.theme.typography.fontSize.xl};
-  font-weight: ${props => props.theme.typography.fontWeight.bold};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: ${(props) => props.theme.typography.fontSize.xl};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
+  color: ${(props) => props.theme.colors.text.primary};
   margin: 0;
 `;
 
 const SectionLink = styled.a`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.xs};
-  color: ${props => props.theme.colors.primary};
-  font-size: ${props => props.theme.typography.fontSize.sm};
+  gap: ${(props) => props.theme.spacing.xs};
+  color: ${(props) => props.theme.colors.primary};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
   text-decoration: none;
-  font-weight: ${props => props.theme.typography.fontWeight.medium};
-  
+  font-weight: ${(props) => props.theme.typography.fontWeight.medium};
+
   &:hover {
     text-decoration: underline;
   }
@@ -411,21 +412,21 @@ const SectionLink = styled.a`
 
 const MenuScroll = styled.div`
   display: flex;
-  gap: ${props => props.theme.spacing.lg};
+  gap: ${(props) => props.theme.spacing.lg};
   overflow-x: auto;
-  padding-bottom: ${props => props.theme.spacing.sm};
-  
+  padding-bottom: ${(props) => props.theme.spacing.sm};
+
   &::-webkit-scrollbar {
     height: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
-    background: ${props => props.theme.colors.gray[100]};
+    background: ${(props) => props.theme.colors.gray[100]};
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
-    background: ${props => props.theme.colors.gray[400]};
+    background: ${(props) => props.theme.colors.gray[400]};
     border-radius: 3px;
   }
 
@@ -437,7 +438,7 @@ const MenuScroll = styled.div`
 const StoreGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: ${props => props.theme.spacing.lg};
+  gap: ${(props) => props.theme.spacing.lg};
 `;
 
 const EmptyState = styled.div`
@@ -445,17 +446,18 @@ const EmptyState = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: ${props => props.theme.spacing["3xl"]} ${props => props.theme.spacing.xl};
-  gap: ${props => props.theme.spacing.lg};
+  padding: ${(props) => props.theme.spacing["3xl"]}
+    ${(props) => props.theme.spacing.xl};
+  gap: ${(props) => props.theme.spacing.lg};
 `;
 
 const EmptyIcon = styled.div`
-  font-size: ${props => props.theme.typography.fontSize["4xl"]};
+  font-size: ${(props) => props.theme.typography.fontSize["4xl"]};
 `;
 
 const EmptyText = styled.p`
-  font-size: ${props => props.theme.typography.fontSize.base};
-  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${(props) => props.theme.typography.fontSize.base};
+  color: ${(props) => props.theme.colors.text.tertiary};
   margin: 0;
 `;
 

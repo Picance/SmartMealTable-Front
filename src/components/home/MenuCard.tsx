@@ -32,47 +32,48 @@ const MenuImage = styled.img`
 
 const Badge = styled.span`
   position: absolute;
-  bottom: ${props => props.theme.spacing.md};
-  left: ${props => props.theme.spacing.md};
-  background-color: ${props => props.theme.colors.secondary};
+  bottom: ${(props) => props.theme.spacing.md};
+  left: ${(props) => props.theme.spacing.md};
+  background-color: ${(props) => props.theme.colors.secondary};
   color: white;
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
-  border-radius: ${props => props.theme.borderRadius.sm};
-  font-size: ${props => props.theme.typography.fontSize.xs};
-  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  padding: ${(props) => props.theme.spacing.xs}
+    ${(props) => props.theme.spacing.md};
+  border-radius: ${(props) => props.theme.borderRadius.sm};
+  font-size: ${(props) => props.theme.typography.fontSize.xs};
+  font-weight: ${(props) => props.theme.typography.fontWeight.semibold};
 `;
 
 const Content = styled.div`
-  padding: ${props => props.theme.spacing.lg};
+  padding: ${(props) => props.theme.spacing.lg};
   display: flex;
   flex-direction: column;
-  gap: ${props => props.theme.spacing.xs};
+  gap: ${(props) => props.theme.spacing.xs};
 `;
 
 const MenuName = styled.h4`
-  font-size: ${props => props.theme.typography.fontSize.base};
-  font-weight: ${props => props.theme.typography.fontWeight.bold};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: ${(props) => props.theme.typography.fontSize.base};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
+  color: ${(props) => props.theme.colors.text.primary};
   margin: 0;
 `;
 
 const StoreName = styled.p`
-  font-size: ${props => props.theme.typography.fontSize.sm};
-  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${(props) => props.theme.typography.fontSize.sm};
+  color: ${(props) => props.theme.colors.text.tertiary};
   margin: 0;
 `;
 
 const Distance = styled.p`
-  font-size: ${props => props.theme.typography.fontSize.xs};
-  color: ${props => props.theme.colors.gray[500]};
+  font-size: ${(props) => props.theme.typography.fontSize.xs};
+  color: ${(props) => props.theme.colors.gray[500]};
   margin: 0;
 `;
 
 const Price = styled.div`
-  font-size: ${props => props.theme.typography.fontSize.lg};
-  font-weight: ${props => props.theme.typography.fontWeight.bold};
-  color: ${props => props.theme.colors.primary};
-  margin-top: ${props => props.theme.spacing.xs};
+  font-size: ${(props) => props.theme.typography.fontSize.lg};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
+  color: ${(props) => props.theme.colors.primary};
+  margin-top: ${(props) => props.theme.spacing.xs};
 `;
 
 export const MenuCard: React.FC<MenuCardProps> = ({
