@@ -1,228 +1,273 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiCheck } from "react-icons/fi";
-import { Button } from "../../components/common/Button";
-import { onboardingService } from "../../services/onboarding.service";
-import { useAuthStore } from "../../store/authStore";
-
-interface Policy {
-  policyId: number;
-  title: string;
-  description: string;
-  required: boolean;
-  content: string;
-}
-
-const POLICIES: Policy[] = [
-  {
-    policyId: 1,
-    title: "서비스 이용약관",
-    description: "알뜰식탁 서비스 이용을 위한 기본 약관입니다.",
-    required: true,
-    content: "서비스 이용약관 전문...",
-  },
-  {
-    policyId: 2,
-    title: "개인정보 처리방침",
-    description: "회원님의 개인정보 수집 및 이용에 관한 약관입니다.",
-    required: true,
-    content: "개인정보 처리방침 전문...",
-  },
-  {
-    policyId: 3,
-    title: "위치정보 이용약관",
-    description: "근처 맛집 추천을 위한 위치정보 이용 약관입니다.",
-    required: true,
-    content: "위치정보 이용약관 전문...",
-  },
-  {
-    policyId: 4,
-    title: "마케팅 정보 수신 동의",
-    description: "이벤트, 프로모션 등 마케팅 정보 수신 동의입니다.",
-    required: false,
-    content: "마케팅 정보 수신 동의 전문...",
-  },
-];
+import styled from "styled-components";
+import { theme } from "../../styles/theme";
 
 const OnboardingPolicyPage = () => {
   const navigate = useNavigate();
-  const updateMember = useAuthStore((state) => state.updateMember);
-  const [agreements, setAgreements] = useState<Set<number>>(new Set());
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  
+  // 동의 상태
+  const [serviceAgree, setServiceAgree] = useState(false);
+  const [privacyAgree, setPrivacyAgree] = useState(false);
+  const [pushAgree, setPushAgree] = useState(false);
 
-  // 전체 동의
-  const handleAllAgree = () => {
-    if (agreements.size === POLICIES.length) {
-      // 전체 해제
-      setAgreements(new Set());
-    } else {
-      // 전체 선택
-      setAgreements(new Set(POLICIES.map((p) => p.policyId)));
+  // 가입 완료
+  const handleComplete = () => {
+    if (serviceAgree && privacyAgree && pushAgree) {
+      // TODO: API 호출
+      navigate("/home", { replace: true });
     }
   };
 
-  // 개별 동의
-  const handlePolicyAgree = (policyId: number) => {
-    const newAgreements = new Set(agreements);
-    if (newAgreements.has(policyId)) {
-      newAgreements.delete(policyId);
-    } else {
-      newAgreements.add(policyId);
-    }
-    setAgreements(newAgreements);
-  };
-
-  // 필수 약관 모두 동의했는지 확인
-  const isRequiredAgreed = () => {
-    const requiredPolicyIds = POLICIES.filter((p) => p.required).map(
-      (p) => p.policyId
-    );
-    return requiredPolicyIds.every((id) => agreements.has(id));
-  };
-
-  // 완료
-  const handleComplete = async () => {
-    setError("");
-
-    // 필수 약관 확인
-    if (!isRequiredAgreed()) {
-      setError("필수 약관에 모두 동의해주세요.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const agreementList = Array.from(agreements).map((policyId) => ({
-        policyId,
-        agreed: true,
-        agreedAt: new Date().toISOString(),
-      }));
-
-      const response = await onboardingService.savePolicyAgreements({
-        agreements: agreementList,
-      });
-
-      if (response.result === "SUCCESS") {
-        // 온보딩 완료 상태 업데이트
-        updateMember({ isOnboardingComplete: true });
-
-        // 홈으로 이동
-        navigate("/home", { replace: true });
-      } else {
-        setError(response.error?.message || "약관 동의 저장에 실패했습니다.");
-      }
-    } catch (err: any) {
-      console.error("약관 동의 저장 실패:", err);
-      setError(
-        err.response?.data?.error?.message ||
-          "약관 동의 저장 중 오류가 발생했습니다."
-      );
-    } finally {
-      setIsSubmitting(false);
+  // 가입 취소
+  const handleCancel = () => {
+    if (window.confirm("회원가입을 취소하시겠습니까?")) {
+      navigate("/login-options", { replace: true });
     }
   };
 
   return (
-    <div className="onboarding-policy-page">
-      <div className="onboarding-policy-header">
-        <button
-          className="onboarding-policy-back-button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로 가기"
-        >
-          <FiArrowLeft />
-        </button>
-        <h1>약관 동의</h1>
-      </div>
+    <Container>
+      <Header>
+        <Title>신규 회원 가입(이용 약관 동의)</Title>
+      </Header>
 
-      <div className="onboarding-policy-content">
-        <div className="onboarding-policy-intro">
-          <h2>거의 다 왔어요! 📝</h2>
-          <p>서비스 이용을 위해 약관에 동의해주세요.</p>
-        </div>
-
-        <form
-          className="onboarding-policy-form"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          {/* 전체 동의 */}
-          <div
-            className={`onboarding-policy-all-agree ${
-              agreements.size === POLICIES.length ? "checked" : ""
-            }`}
-            onClick={handleAllAgree}
-          >
-            <div className="onboarding-policy-checkbox">
-              {agreements.size === POLICIES.length && <FiCheck />}
-            </div>
-            <div className="onboarding-policy-all-agree-text">
-              전체 동의하기
-            </div>
-          </div>
-
-          <div className="onboarding-policy-divider" />
-
-          {/* 개별 약관 */}
-          <div className="onboarding-policy-list">
-            {POLICIES.map((policy) => (
-              <div
-                key={policy.policyId}
-                className={`onboarding-policy-item ${
-                  agreements.has(policy.policyId) ? "checked" : ""
-                }`}
-                onClick={() => handlePolicyAgree(policy.policyId)}
-              >
-                <div className="onboarding-policy-item-checkbox">
-                  {agreements.has(policy.policyId) && <FiCheck />}
-                </div>
-                <div className="onboarding-policy-item-content">
-                  <div className="onboarding-policy-item-header">
-                    <span className="onboarding-policy-item-title">
-                      {policy.title}
-                    </span>
-                    {policy.required && (
-                      <span className="onboarding-policy-item-required">
-                        (필수)
-                      </span>
-                    )}
-                  </div>
-                  <div className="onboarding-policy-item-description">
-                    {policy.description}
-                  </div>
-                  <span
-                    className="onboarding-policy-item-link"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // TODO: 약관 상세 보기 모달
-                      alert(`${policy.title} 전문을 보여줍니다.`);
-                    }}
-                  >
-                    전문 보기
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {error && <div className="onboarding-policy-error">{error}</div>}
-
-          <div className="onboarding-policy-actions">
-            <Button
-              variant="primary"
-              size="large"
-              fullWidth
-              onClick={handleComplete}
-              disabled={!isRequiredAgreed() || isSubmitting}
-              loading={isSubmitting}
+      <Content>
+        <Section>
+          <SectionTitle>서비스 이용 약관</SectionTitle>
+          <AgreementRow>
+            <AgreementCard
+              active={serviceAgree}
+              onClick={() => setServiceAgree(true)}
             >
-              완료
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <CheckIcon active={serviceAgree}>✓</CheckIcon>
+              <AgreementLabel>동의함</AgreementLabel>
+            </AgreementCard>
+            <AgreementCard
+              active={!serviceAgree}
+              onClick={() => setServiceAgree(false)}
+              decline
+            >
+              <CheckIcon active={!serviceAgree} decline>✕</CheckIcon>
+              <AgreementLabel>동의안함</AgreementLabel>
+            </AgreementCard>
+          </AgreementRow>
+        </Section>
+
+        <Section>
+          <SectionTitle>개인정보 수집 동의</SectionTitle>
+          <AgreementRow>
+            <AgreementCard
+              light
+              active={privacyAgree}
+              onClick={() => setPrivacyAgree(true)}
+            >
+              <CheckIcon active={privacyAgree}>✓</CheckIcon>
+              <AgreementLabel>동의함</AgreementLabel>
+            </AgreementCard>
+            <AgreementCard
+              light
+              active={!privacyAgree}
+              onClick={() => setPrivacyAgree(false)}
+              decline
+            >
+              <CheckIcon active={!privacyAgree} decline>✕</CheckIcon>
+              <AgreementLabel>동의안함</AgreementLabel>
+            </AgreementCard>
+          </AgreementRow>
+        </Section>
+
+        <Section>
+          <SectionTitle>푸시 알림 동의</SectionTitle>
+          <AgreementRow>
+            <AgreementCard
+              light
+              active={pushAgree}
+              onClick={() => setPushAgree(true)}
+            >
+              <CheckIcon active={pushAgree}>✓</CheckIcon>
+              <AgreementLabel>동의함</AgreementLabel>
+            </AgreementCard>
+            <AgreementCard
+              light
+              active={!pushAgree}
+              onClick={() => setPushAgree(false)}
+              decline
+            >
+              <CheckIcon active={!pushAgree} decline>✕</CheckIcon>
+              <AgreementLabel>동의안함</AgreementLabel>
+            </AgreementCard>
+          </AgreementRow>
+        </Section>
+
+        <ButtonGroup>
+          <CompleteButton
+            onClick={handleComplete}
+            disabled={!serviceAgree || !privacyAgree || !pushAgree}
+          >
+            가입완료
+          </CompleteButton>
+          <CancelButton onClick={handleCancel}>
+            가입취소
+          </CancelButton>
+        </ButtonGroup>
+      </Content>
+    </Container>
   );
 };
+
+// Styled Components
+const Container = styled.div`
+  min-height: 100vh;
+  background-color: #fafafa;
+  padding-bottom: ${theme.spacing.xl};
+`;
+
+const Header = styled.header`
+  background-color: white;
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  border-bottom: 1px solid #e0e0e0;
+`;
+
+const Title = styled.h1`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0;
+  text-align: center;
+`;
+
+const Content = styled.div`
+  padding: ${theme.spacing.xl} ${theme.spacing.lg};
+`;
+
+const Section = styled.section`
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const SectionTitle = styled.h2`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: #212121;
+  margin: 0 0 ${theme.spacing.md} 0;
+`;
+
+const AgreementRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing.md};
+`;
+
+const AgreementCard = styled.div<{ active?: boolean; light?: boolean; decline?: boolean }>`
+  background-color: ${props => {
+    if (!props.active) return "white";
+    if (props.light) return "white";
+    return theme.colors.accent;
+  }};
+  border: 2px solid ${props => {
+    if (props.active && !props.light) return theme.colors.accent;
+    return "#e0e0e0";
+  }};
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.xl} ${theme.spacing.lg};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: ${theme.spacing.md};
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: ${props => (props.active ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "none")};
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const CheckIcon = styled.div<{ active?: boolean; decline?: boolean }>`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: ${props => {
+    if (!props.active) return "transparent";
+    if (props.decline) return "white";
+    return "white";
+  }};
+  border: 2px solid ${props => {
+    if (!props.active) return "#e0e0e0";
+    if (props.decline) return "#e0e0e0";
+    return "white";
+  }};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${props => {
+    if (!props.active) return "transparent";
+    if (props.decline) return "#ff5252";
+    return theme.colors.accent;
+  }};
+  transition: all 0.2s;
+`;
+
+const AgreementLabel = styled.span`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: #212121;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.md};
+  margin-top: ${theme.spacing['3xl']};
+`;
+
+const CompleteButton = styled.button<{ disabled?: boolean }>`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  background-color: ${props => (props.disabled ? "#e0e0e0" : theme.colors.accent)};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: ${props => (props.disabled ? "not-allowed" : "pointer")};
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: ${props => (props.disabled ? "#e0e0e0" : "#e55a2b")};
+  }
+
+  &:active {
+    transform: ${props => (props.disabled ? "none" : "scale(0.98)")};
+  }
+`;
+
+const CancelButton = styled.button`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  background-color: white;
+  color: #424242;
+  border: 1px solid #e0e0e0;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
 
 export default OnboardingPolicyPage;

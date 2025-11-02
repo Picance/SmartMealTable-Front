@@ -1,322 +1,560 @@
-import { useState, ChangeEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiSearch } from "react-icons/fi";
-import { Input } from "../../components/common/Input";
-import { Button } from "../../components/common/Button";
-import { onboardingService } from "../../services/onboarding.service";
+import styled from "styled-components";
+import { FiSearch, FiMapPin, FiEdit2, FiTrash2 } from "react-icons/fi";
 
-interface AddressSearchResult {
-  roadAddress: string;
-  jibunAddress: string;
-  x: string; // longitude
-  y: string; // latitude
+interface SavedAddress {
+  id: number;
+  type: "home" | "work" | "school";
+  address: string;
+  icon: string;
 }
 
 const OnboardingAddressPage = () => {
   const navigate = useNavigate();
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [addresses, setAddresses] = useState<AddressSearchResult[]>([]);
-  const [selectedAddress, setSelectedAddress] =
-    useState<AddressSearchResult | null>(null);
-  const [showResults, setShowResults] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [addressType, setAddressType] = useState<"HOME" | "WORK" | "ETC">(
-    "HOME"
-  );
-  const [addressAlias, setAddressAlias] = useState("");
-  const [detailedAddress, setDetailedAddress] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([
+    {
+      id: 1,
+      type: "home",
+      address: "서울시 강남구 테헤란로 123, 스마트빌딩 5층",
+      icon: "🏠",
+    },
+    {
+      id: 2,
+      type: "work",
+      address: "부산시 해운대구 마린시티2로 38, 오션타워 15층",
+      icon: "🏢",
+    },
+    {
+      id: 3,
+      type: "school",
+      address: "대구시 북구 대학로 80, 대구대학교 공학관",
+      icon: "🎓",
+    },
+  ]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number>(1);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
-  // 주소 검색
-  const handleSearchAddress = async () => {
-    if (!searchKeyword.trim()) {
-      return;
-    }
+  // 주소 수정
+  const handleEdit = (id: number) => {
+    console.log("Edit address:", id);
+    // TODO: 주소 수정 로직
+  };
 
-    setIsSearching(true);
-    setError("");
-    try {
-      const response = await onboardingService.searchAddress(searchKeyword);
-      if (response.result === "SUCCESS" && response.data) {
-        setAddresses(response.data.addresses);
-        setShowResults(true);
-      } else {
-        setAddresses([]);
-        setError("주소 검색에 실패했습니다.");
-      }
-    } catch (err: any) {
-      console.error("주소 검색 실패:", err);
-      setError(
-        err.response?.data?.error?.message ||
-          "주소 검색 중 오류가 발생했습니다."
-      );
-      setAddresses([]);
-    } finally {
-      setIsSearching(false);
+  // 주소 삭제
+  const handleDelete = (id: number) => {
+    setSavedAddresses(savedAddresses.filter((addr) => addr.id !== id));
+    if (selectedAddressId === id && savedAddresses.length > 1) {
+      const remaining = savedAddresses.filter((addr) => addr.id !== id);
+      setSelectedAddressId(remaining[0].id);
     }
   };
 
-  // 주소 선택
-  const handleSelectAddress = (address: AddressSearchResult) => {
-    setSelectedAddress(address);
-    setShowResults(false);
-    setSearchKeyword("");
+  // 계속하기
+  const handleContinue = () => {
+    navigate("/onboarding/budget");
   };
 
-  // 주소 타입 변경
-  const handleAddressTypeChange = (type: "HOME" | "WORK" | "ETC") => {
-    setAddressType(type);
-    // 타입에 따라 기본 별칭 설정
-    if (type === "HOME") {
-      setAddressAlias("집");
-    } else if (type === "WORK") {
-      setAddressAlias("회사");
-    } else {
-      setAddressAlias("");
-    }
-  };
-
-  // 다음 단계로
-  const handleNext = async () => {
-    setError("");
-
-    // 주소 선택 확인
-    if (!selectedAddress) {
-      setError("주소를 선택해주세요.");
-      return;
-    }
-
-    // 별칭 확인
-    if (!addressAlias.trim()) {
-      setError("주소 별칭을 입력해주세요.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await onboardingService.saveAddress({
-        addressAlias: addressAlias.trim(),
-        addressType,
-        streetNameAddress: selectedAddress.roadAddress,
-        lotNumberAddress: selectedAddress.jibunAddress,
-        detailedAddress: detailedAddress.trim() || undefined,
-        latitude: parseFloat(selectedAddress.y),
-        longitude: parseFloat(selectedAddress.x),
-        isPrimary: true,
-      });
-
-      if (response.result === "SUCCESS") {
-        navigate("/onboarding/budget");
-      } else {
-        setError(response.error?.message || "주소 저장에 실패했습니다.");
-      }
-    } catch (err: any) {
-      console.error("주소 저장 실패:", err);
-      setError(
-        err.response?.data?.error?.message ||
-          "주소 저장 중 오류가 발생했습니다."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+  // 건너뛰기
+  const handleSkip = () => {
+    navigate("/onboarding/budget");
   };
 
   return (
-    <div className="onboarding-address-page">
-      <div className="onboarding-address-header">
-        <button
-          className="onboarding-address-back-button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로 가기"
-        >
-          <FiArrowLeft />
-        </button>
-        <h1>주소 설정</h1>
-      </div>
+    <PageContainer>
+      <ContentContainer>
+        <Header>
+          <Title>신규 회원 주소 등록</Title>
+        </Header>
 
-      <div className="onboarding-address-content">
-        <div className="onboarding-address-intro">
-          <h2>주소를 설정해주세요 📍</h2>
-          <p>근처 맛집을 추천받기 위해 주소가 필요합니다.</p>
-        </div>
+        <InfoText>지구 방문하는 곳의 주소를 등록해보세요</InfoText>
 
-        <form
-          className="onboarding-address-form"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          {/* 주소 검색 */}
-          <div className="onboarding-address-form-section">
-            <label className="onboarding-address-form-label">주소 검색 *</label>
-            <div className="onboarding-address-search-container">
-              <div className="onboarding-address-search-input-wrapper">
-                <Input
-                  type="text"
-                  value={searchKeyword}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setSearchKeyword(e.target.value)
-                  }
-                  placeholder="도로명, 지번, 건물명으로 검색"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleSearchAddress();
-                    }
-                  }}
+        <Section>
+          <SectionLabel>주소 추가</SectionLabel>
+          <SearchInputWrapper>
+            <SearchIcon>
+              <FiSearch />
+            </SearchIcon>
+            <SearchInput
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="주소 검색..."
+            />
+          </SearchInputWrapper>
+
+          <LocationButton onClick={() => setShowLocationModal(true)}>
+            <FiMapPin />
+            현재 위치로 찾기
+          </LocationButton>
+        </Section>
+
+        <Section>
+          <SectionLabel>저장된 주소</SectionLabel>
+          <AddressList>
+            {savedAddresses.map((address) => (
+              <AddressItem key={address.id}>
+                <Radio
+                  type="radio"
+                  checked={selectedAddressId === address.id}
+                  onChange={() => setSelectedAddressId(address.id)}
                 />
-                <Button
-                  variant="primary"
-                  size="medium"
-                  onClick={handleSearchAddress}
-                  loading={isSearching}
-                  icon={<FiSearch />}
-                >
-                  검색
-                </Button>
-              </div>
+                <AddressContent>
+                  <AddressHeader>
+                    <AddressIcon>{address.icon}</AddressIcon>
+                    <AddressType>
+                      {address.type === "home"
+                        ? "집"
+                        : address.type === "work"
+                        ? "직장"
+                        : "학교"}
+                    </AddressType>
+                  </AddressHeader>
+                  <AddressText>{address.address}</AddressText>
+                </AddressContent>
+                <ActionButtons>
+                  <ActionButton onClick={() => handleEdit(address.id)}>
+                    <FiEdit2 />
+                    수정
+                  </ActionButton>
+                  <DeleteButton onClick={() => handleDelete(address.id)}>
+                    <FiTrash2 />
+                    삭제
+                  </DeleteButton>
+                </ActionButtons>
+              </AddressItem>
+            ))}
+          </AddressList>
+        </Section>
 
-              {showResults && (
-                <div className="onboarding-address-search-results">
-                  {addresses.length > 0 ? (
-                    addresses.map((address, index) => (
-                      <div
-                        key={index}
-                        className="onboarding-address-search-result-item"
-                        onClick={() => handleSelectAddress(address)}
-                      >
-                        <div className="onboarding-address-search-result-road">
-                          {address.roadAddress}
-                        </div>
-                        {address.jibunAddress && (
-                          <div className="onboarding-address-search-result-jibun">
-                            지번: {address.jibunAddress}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="onboarding-address-search-empty">
-                      검색 결과가 없습니다.
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+        <ButtonGroup>
+          <ContinueButton onClick={handleContinue}>계속</ContinueButton>
+          <SkipButton onClick={handleSkip}>건너뛰기</SkipButton>
+        </ButtonGroup>
+      </ContentContainer>
 
-          {/* 선택된 주소 표시 */}
-          {selectedAddress && (
-            <>
-              <div className="onboarding-address-form-section">
-                <label className="onboarding-address-form-label">
-                  선택한 주소
-                </label>
-                <div className="onboarding-address-selected-address">
-                  <div className="onboarding-address-selected-address-road">
-                    {selectedAddress.roadAddress}
-                  </div>
-                  {selectedAddress.jibunAddress && (
-                    <div className="onboarding-address-selected-address-jibun">
-                      지번: {selectedAddress.jibunAddress}
-                    </div>
-                  )}
-                </div>
+      {/* 현재 위치 찾기 모달 */}
+      {showLocationModal && (
+        <Modal onClick={() => setShowLocationModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>현재 위치로 찾기</ModalTitle>
+              <CloseButton onClick={() => setShowLocationModal(false)}>
+                ×
+              </CloseButton>
+            </ModalHeader>
 
-                {/* 지도 영역 (추후 네이버 지도 API 연동) */}
-                <div className="onboarding-address-map-container">
-                  <span>지도 영역 (네이버 지도 API 연동 예정)</span>
-                </div>
-              </div>
+            <ModalBody>
+              <MapPlaceholder>
+                <MapIcon>🗺️</MapIcon>
+                <MapText>지도 영역</MapText>
+              </MapPlaceholder>
 
-              {/* 주소 타입 선택 */}
-              <div className="onboarding-address-form-section">
-                <label className="onboarding-address-form-label">
-                  주소 타입 *
-                </label>
-                <div className="onboarding-address-type-selector">
-                  <button
-                    type="button"
-                    className={`onboarding-address-type-button ${
-                      addressType === "HOME" ? "active" : ""
-                    }`}
-                    onClick={() => handleAddressTypeChange("HOME")}
-                  >
-                    🏠 집
-                  </button>
-                  <button
-                    type="button"
-                    className={`onboarding-address-type-button ${
-                      addressType === "WORK" ? "active" : ""
-                    }`}
-                    onClick={() => handleAddressTypeChange("WORK")}
-                  >
-                    🏢 회사
-                  </button>
-                  <button
-                    type="button"
-                    className={`onboarding-address-type-button ${
-                      addressType === "ETC" ? "active" : ""
-                    }`}
-                    onClick={() => handleAddressTypeChange("ETC")}
-                  >
-                    📍 기타
-                  </button>
-                </div>
-              </div>
+              <LocationInfo>
+                <LocationAddress>서울 노원구 공릉로 179</LocationAddress>
+                <LocationDetail>서울 노원구 공릉동 419-43</LocationDetail>
+                <LocationWarning>
+                  지도의 표시와 실제 주소가 맞는지 확인해주세요.
+                </LocationWarning>
+              </LocationInfo>
 
-              {/* 주소 별칭 */}
-              <div className="onboarding-address-form-section">
-                <label className="onboarding-address-form-label">
-                  주소 별칭 *
-                </label>
-                <Input
-                  type="text"
-                  value={addressAlias}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setAddressAlias(e.target.value)
-                  }
-                  placeholder="예: 우리집, 회사, 자취방 등"
-                  maxLength={20}
-                />
-              </div>
-
-              {/* 상세 주소 */}
-              <div className="onboarding-address-form-section">
-                <label className="onboarding-address-form-label">
-                  상세 주소 (선택)
-                </label>
-                <Input
-                  type="text"
-                  value={detailedAddress}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setDetailedAddress(e.target.value)
-                  }
-                  placeholder="동, 호수 등 상세 주소를 입력하세요"
-                  maxLength={100}
-                />
-              </div>
-            </>
-          )}
-
-          {error && <div className="onboarding-address-error">{error}</div>}
-
-          <div className="onboarding-address-actions">
-            <Button
-              variant="primary"
-              size="large"
-              fullWidth
-              onClick={handleNext}
-              disabled={
-                !selectedAddress || !addressAlias.trim() || isSubmitting
-              }
-              loading={isSubmitting}
-            >
-              다음
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <RegisterButton onClick={() => setShowLocationModal(false)}>
+                이 위치로 주소 등록
+              </RegisterButton>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
+    </PageContainer>
   );
 };
+
+// Styled Components
+const PageContainer = styled.div`
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background-color: #ffffff;
+  width: 100%;
+`;
+
+const ContentContainer = styled.div`
+  width: 100%;
+  max-width: 390px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const Header = styled.div`
+  padding: 1rem 0;
+`;
+
+const Title = styled.h1`
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+  text-align: center;
+`;
+
+const InfoText = styled.p`
+  font-size: 0.875rem;
+  color: #666666;
+  margin: -0.5rem 0 0 0;
+  text-align: center;
+`;
+
+const Section = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const SectionLabel = styled.label`
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #000000;
+`;
+
+const SearchInputWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const SearchIcon = styled.div`
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999999;
+  display: flex;
+  align-items: center;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  height: 48px;
+  padding: 0 1rem 0 3rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #000000;
+
+  &::placeholder {
+    color: #999999;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #ff6b35;
+  }
+`;
+
+const LocationButton = styled.button`
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #ff6b35;
+    background-color: #fff5f0;
+  }
+`;
+
+const AddressList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const AddressItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+`;
+
+const Radio = styled.input`
+  width: 20px;
+  height: 20px;
+  margin-top: 0.25rem;
+  cursor: pointer;
+  accent-color: #ff6b35;
+`;
+
+const AddressContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const AddressHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const AddressIcon = styled.span`
+  font-size: 1.25rem;
+`;
+
+const AddressType = styled.span`
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #000000;
+`;
+
+const AddressText = styled.p`
+  font-size: 0.875rem;
+  color: #666666;
+  margin: 0;
+  line-height: 1.4;
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #666666;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #ff6b35;
+    color: #ff6b35;
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+`;
+
+const DeleteButton = styled(ActionButton)`
+  &:hover {
+    border-color: #ff4444;
+    color: #ff4444;
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+`;
+
+const ContinueButton = styled.button`
+  width: 100%;
+  height: 56px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #ff5722;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const SkipButton = styled.button`
+  width: 100%;
+  height: 56px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+// Modal Styles
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+`;
+
+const ModalContent = styled.div`
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 390px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+`;
+
+const ModalTitle = styled.h2`
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+`;
+
+const CloseButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #666666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+`;
+
+const MapPlaceholder = styled.div`
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+`;
+
+const MapIcon = styled.div`
+  font-size: 3rem;
+`;
+
+const MapText = styled.p`
+  font-size: 0.875rem;
+  color: #666666;
+  margin: 0;
+`;
+
+const LocationInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const LocationAddress = styled.h3`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+`;
+
+const LocationDetail = styled.p`
+  font-size: 0.875rem;
+  color: #666666;
+  margin: 0;
+`;
+
+const LocationWarning = styled.p`
+  font-size: 0.75rem;
+  color: #ff6b35;
+  background-color: #fff5f0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin: 0.5rem 0 0 0;
+`;
+
+const RegisterButton = styled.button`
+  width: 100%;
+  height: 56px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+
+  &:hover {
+    background-color: #ff5722;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
 
 export default OnboardingAddressPage;

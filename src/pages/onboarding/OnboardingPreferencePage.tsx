@@ -1,362 +1,483 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
-import { Button } from "../../components/common/Button";
-import { onboardingService } from "../../services/onboarding.service";
-import { categoryService } from "../../services/category.service";
-import type { Category, Food } from "../../types/api";
+import styled from "styled-components";
+import { theme } from "../../styles/theme";
 
-type RecommendationType = "SAVER" | "ADVENTURER" | "BALANCED";
-type PreferenceWeight = 100 | 0 | -100;
+// 임시 음식 이미지 데이터
+const FOOD_IMAGES = [
+  { id: 1, name: "후라이드 치킨", image: "🍗", category: "치킨" },
+  { id: 2, name: "양념 치킨", image: "🍖", category: "치킨" },
+  { id: 3, name: "마라 간장 치킨", image: "🍗", category: "치킨" },
+  { id: 4, name: "피자", image: "🍕", category: "피자" },
+  { id: 5, name: "햄버거", image: "🍔", category: "버거" },
+  { id: 6, name: "파스타", image: "🍝", category: "파스타" },
+];
 
 const OnboardingPreferencePage = () => {
   const navigate = useNavigate();
-  const [recommendationType, setRecommendationType] =
-    useState<RecommendationType>("BALANCED");
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [categoryPreferences, setCategoryPreferences] = useState<
-    Map<number, PreferenceWeight>
-  >(new Map());
-  const [foods, setFoods] = useState<Food[]>([]);
-  const [selectedFoodIds, setSelectedFoodIds] = useState<Set<number>>(
-    new Set()
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [step, setStep] = useState(1); // 1: 카테고리 선택, 2: 음식 선택
+  
+  // Step 1: 카테고리 선호도
+  const [likedCategories, setLikedCategories] = useState<string[]>([]);
+  const [dislikedCategories, setDislikedCategories] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Step 2: 음식 선택
+  const [selectedFoods, setSelectedFoods] = useState<number[]>([]);
 
-  // 데이터 로드
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [categoriesRes, foodsRes] = await Promise.all([
-        categoryService.getCategories(),
-        categoryService.getAllFoods(),
-      ]);
-
-      if (categoriesRes.result === "SUCCESS" && categoriesRes.data) {
-        setCategories(categoriesRes.data);
-      }
-
-      if (foodsRes.result === "SUCCESS" && foodsRes.data) {
-        setFoods(foodsRes.data);
-      }
-    } catch (err) {
-      console.error("데이터 로드 실패:", err);
-      setError("데이터를 불러오는 중 오류가 발생했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 카테고리 선호도 설정
-  const handleCategoryPreference = (
-    categoryId: number,
-    weight: PreferenceWeight
-  ) => {
-    const newPreferences = new Map(categoryPreferences);
-    if (newPreferences.get(categoryId) === weight) {
-      // 같은 버튼 클릭 시 취소
-      newPreferences.delete(categoryId);
+  // 선호 카테고리 토글
+  const toggleLikeCategory = (category: string) => {
+    if (likedCategories.includes(category)) {
+      setLikedCategories(likedCategories.filter((c) => c !== category));
     } else {
-      newPreferences.set(categoryId, weight);
+      setLikedCategories([...likedCategories, category]);
+      // 불호에서 제거
+      setDislikedCategories(dislikedCategories.filter((c) => c !== category));
     }
-    setCategoryPreferences(newPreferences);
   };
 
-  // 음식 선택/해제
-  const handleFoodSelection = (foodId: number) => {
-    const newSelected = new Set(selectedFoodIds);
-    if (newSelected.has(foodId)) {
-      newSelected.delete(foodId);
+  // 불호 카테고리 토글
+  const toggleDislikeCategory = (category: string) => {
+    if (dislikedCategories.includes(category)) {
+      setDislikedCategories(dislikedCategories.filter((c) => c !== category));
     } else {
-      newSelected.add(foodId);
-    }
-    setSelectedFoodIds(newSelected);
-  };
-
-  // 다음 단계로
-  const handleNext = async () => {
-    setError("");
-
-    // 카테고리 선호도가 하나도 없으면 경고
-    if (categoryPreferences.size === 0) {
-      setError("최소 1개 이상의 카테고리 선호도를 설정해주세요.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // 1. 카테고리 선호도 저장
-      const preferences = Array.from(categoryPreferences.entries()).map(
-        ([categoryId, weight]) => ({
-          categoryId,
-          weight,
-        })
-      );
-
-      const preferencesRes = await onboardingService.savePreferences({
-        recommendationType,
-        preferences,
-      });
-
-      if (preferencesRes.result !== "SUCCESS") {
-        throw new Error(
-          preferencesRes.error?.message || "취향 설정 저장에 실패했습니다."
-        );
-      }
-
-      // 2. 선택한 음식 저장 (선택 사항)
-      if (selectedFoodIds.size > 0) {
-        const foodPreferencesRes = await onboardingService.saveFoodPreferences({
-          preferredFoodIds: Array.from(selectedFoodIds),
-        });
-
-        if (foodPreferencesRes.result !== "SUCCESS") {
-          console.warn("음식 선호도 저장 실패:", foodPreferencesRes.error);
-        }
-      }
-
-      // 다음 단계로 이동
-      navigate("/onboarding/policy");
-    } catch (err: any) {
-      console.error("취향 설정 저장 실패:", err);
-      setError(
-        err.response?.data?.error?.message ||
-          err.message ||
-          "취향 설정 저장 중 오류가 발생했습니다."
-      );
-    } finally {
-      setIsSubmitting(false);
+      setDislikedCategories([...dislikedCategories, category]);
+      // 선호에서 제거
+      setLikedCategories(likedCategories.filter((c) => c !== category));
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="onboarding-preference-page">
-        <div className="onboarding-preference-header">
-          <button
-            className="onboarding-preference-back-button"
-            onClick={() => navigate(-1)}
-          >
-            <FiArrowLeft />
-          </button>
-          <h1>취향 설정</h1>
-        </div>
-        <div className="onboarding-preference-loading">
-          <div className="onboarding-preference-loading-spinner" />
-        </div>
-      </div>
-    );
-  }
+  // 음식 선택 토글
+  const toggleFoodSelection = (foodId: number) => {
+    if (selectedFoods.includes(foodId)) {
+      setSelectedFoods(selectedFoods.filter((id) => id !== foodId));
+    } else {
+      setSelectedFoods([...selectedFoods, foodId]);
+    }
+  };
+
+  // Step 1 -> Step 2
+  const handleStep1Next = () => {
+    if (likedCategories.length > 0 || dislikedCategories.length > 0) {
+      setStep(2);
+    }
+  };
+
+  // Step 2 -> 완료
+  const handleStep2Next = () => {
+    // TODO: API 호출
+    navigate("/onboarding/policy");
+  };
 
   return (
-    <div className="onboarding-preference-page">
-      <div className="onboarding-preference-header">
-        <button
-          className="onboarding-preference-back-button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로 가기"
-        >
-          <FiArrowLeft />
-        </button>
-        <h1>취향 설정</h1>
-      </div>
+    <Container>
+      <Header>
+        <Title>음식 취향 {step === 1 ? "설정" : "선택"}</Title>
+      </Header>
 
-      <div className="onboarding-preference-content">
-        <div className="onboarding-preference-intro">
-          <h2>음식 취향을 알려주세요 🍽️</h2>
-          <p>더 정확한 맞춤 추천을 위해 음식 취향을 설정합니다.</p>
-        </div>
+      {step === 1 && (
+        <>
+          <Section>
+            <SectionTitle>신규 회원 가입 (음식 선호/불호)</SectionTitle>
+            <SectionDescription>
+              완벽한 서비스 제공을 위해 음식 취향을 설정해주세요.
+            </SectionDescription>
+          </Section>
 
-        <form
-          className="onboarding-preference-form"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          {/* 추천 유형 선택 */}
-          <div className="onboarding-preference-section">
-            <h3 className="onboarding-preference-section-title">추천 유형</h3>
-            <p className="onboarding-preference-section-description">
-              원하는 추천 스타일을 선택해주세요.
-            </p>
-            <div className="onboarding-preference-type-selector">
-              <div
-                className={`onboarding-preference-type-card ${
-                  recommendationType === "SAVER" ? "active" : ""
-                }`}
-                onClick={() => setRecommendationType("SAVER")}
+          <Section>
+            <SubTitle>선호하는 음식 카테고리 (우선순위 순서)</SubTitle>
+            <CategoryButtonGroup>
+              <CategoryButton
+                active={likedCategories.includes("한식")}
+                color="orange"
+                onClick={() => toggleLikeCategory("한식")}
               >
-                <div className="onboarding-preference-type-icon">💰</div>
-                <div className="onboarding-preference-type-name">알뜰형</div>
-                <div className="onboarding-preference-type-description">
-                  예산 내에서 가성비 좋은 메뉴 추천
-                </div>
-              </div>
-
-              <div
-                className={`onboarding-preference-type-card ${
-                  recommendationType === "BALANCED" ? "active" : ""
-                }`}
-                onClick={() => setRecommendationType("BALANCED")}
+                한식
+              </CategoryButton>
+              <CategoryButton
+                active={likedCategories.includes("중식")}
+                color="orange"
+                onClick={() => toggleLikeCategory("중식")}
               >
-                <div className="onboarding-preference-type-icon">⚖️</div>
-                <div className="onboarding-preference-type-name">균형형</div>
-                <div className="onboarding-preference-type-description">
-                  가성비와 다양성을 고려한 추천
-                </div>
-              </div>
-
-              <div
-                className={`onboarding-preference-type-card ${
-                  recommendationType === "ADVENTURER" ? "active" : ""
-                }`}
-                onClick={() => setRecommendationType("ADVENTURER")}
+                중식
+              </CategoryButton>
+              <CategoryButton
+                active={likedCategories.includes("양식")}
+                color="orange"
+                onClick={() => toggleLikeCategory("양식")}
               >
-                <div className="onboarding-preference-type-icon">🎯</div>
-                <div className="onboarding-preference-type-name">모험가형</div>
-                <div className="onboarding-preference-type-description">
-                  새로운 음식과 맛집 탐험 추천
-                </div>
-              </div>
-            </div>
-          </div>
+                양식
+              </CategoryButton>
+            </CategoryButtonGroup>
+          </Section>
 
-          {/* 카테고리 선호도 */}
-          <div className="onboarding-preference-section">
-            <h3 className="onboarding-preference-section-title">
-              카테고리 선호도 *
-            </h3>
-            <p className="onboarding-preference-section-description">
-              좋아하거나 싫어하는 음식 카테고리를 선택해주세요.
-            </p>
-            <div className="onboarding-preference-category-grid">
-              {categories.map((category) => {
-                const preference = categoryPreferences.get(category.categoryId);
-                return (
-                  <div
-                    key={category.categoryId}
-                    className={`onboarding-preference-category-card ${
-                      preference === 100
-                        ? "like"
-                        : preference === -100
-                        ? "dislike"
-                        : ""
-                    }`}
-                  >
-                    {preference && (
-                      <div
-                        className={`onboarding-preference-category-badge ${
-                          preference === 100 ? "like" : "dislike"
-                        }`}
-                      >
-                        {preference === 100 ? "👍" : "👎"}
-                      </div>
-                    )}
-                    <img
-                      src={category.imageUrl || "/placeholder-food.png"}
-                      alt={category.categoryName}
-                      className="onboarding-preference-category-image"
-                      onError={(e) => {
-                        e.currentTarget.src = "/placeholder-food.png";
-                      }}
-                    />
-                    <div className="onboarding-preference-category-name">
-                      {category.categoryName}
-                    </div>
-                    <div className="onboarding-preference-category-actions">
-                      <button
-                        type="button"
-                        className="onboarding-preference-category-action-btn like-btn"
-                        onClick={() =>
-                          handleCategoryPreference(category.categoryId, 100)
-                        }
-                      >
-                        <FiThumbsUp />
-                      </button>
-                      <button
-                        type="button"
-                        className="onboarding-preference-category-action-btn dislike-btn"
-                        onClick={() =>
-                          handleCategoryPreference(category.categoryId, -100)
-                        }
-                      >
-                        <FiThumbsDown />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <Section>
+            <SubTitle>불호하는 음식 카테고리 (우선순위 순서)</SubTitle>
+            <CategoryButtonGroup>
+              <CategoryButton
+                active={dislikedCategories.includes("해산물")}
+                color="yellow"
+                onClick={() => toggleDislikeCategory("해산물")}
+              >
+                해산물
+              </CategoryButton>
+              <CategoryButton
+                active={dislikedCategories.includes("매운 음식")}
+                color="yellow"
+                onClick={() => toggleDislikeCategory("매운 음식")}
+              >
+                매운 음식
+              </CategoryButton>
+              <CategoryButton
+                active={dislikedCategories.includes("달콤한 음식")}
+                color="yellow"
+                onClick={() => toggleDislikeCategory("달콤한 음식")}
+              >
+                달콤한 음식
+              </CategoryButton>
+            </CategoryButtonGroup>
+          </Section>
 
-          {/* 선호 음식 선택 */}
-          <div className="onboarding-preference-section">
-            <h3 className="onboarding-preference-section-title">
-              선호 음식 (선택)
-            </h3>
-            <p className="onboarding-preference-section-description">
-              특별히 좋아하는 음식을 선택해주세요. (최대 20개)
-            </p>
-            {selectedFoodIds.size > 0 && (
-              <div className="onboarding-preference-selected-count">
-                선택된 음식: {selectedFoodIds.size}개
-              </div>
-            )}
-            <div className="onboarding-preference-food-grid">
-              {foods.slice(0, 30).map((food) => (
-                <div
-                  key={food.foodId}
-                  className={`onboarding-preference-food-card ${
-                    selectedFoodIds.has(food.foodId) ? "selected" : ""
-                  }`}
-                  onClick={() => {
-                    if (
-                      !selectedFoodIds.has(food.foodId) &&
-                      selectedFoodIds.size >= 20
-                    ) {
-                      return;
-                    }
-                    handleFoodSelection(food.foodId);
-                  }}
-                >
-                  <img
-                    src={food.imageUrl || "/placeholder-food.png"}
-                    alt={food.foodName}
-                    className="onboarding-preference-food-image"
-                    onError={(e) => {
-                      e.currentTarget.src = "/placeholder-food.png";
-                    }}
-                  />
-                  <div className="onboarding-preference-food-name">
-                    {food.foodName}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Section>
+            <SubTitle>드래그 앤 드롭으로 지정해주세요</SubTitle>
+            <SearchInput
+              type="text"
+              placeholder="🔍  카테고리 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <DragDropGrid>
+              <DragDropButton>≡ 일식</DragDropButton>
+              <DragDropButton>≡ 이탈리안</DragDropButton>
+              <DragDropButton>≡ 베트남</DragDropButton>
+              <DragDropButton>≡ 인도</DragDropButton>
+              <DragDropButton>≡ 멕시칸</DragDropButton>
+              <DragDropButton>≡ 태국</DragDropButton>
+              <DragDropButton>≡ 퓨전</DragDropButton>
+              <DragDropButton>≡ 지중해</DragDropButton>
+              <DragDropButton>≡ 아랍</DragDropButton>
+              <DragDropButton>≡ 프랑스</DragDropButton>
+              <DragDropButton>≡ 지중해</DragDropButton>
+              <DragDropButton>≡ 디저트</DragDropButton>
+              <DragDropButton>≡ 패스트푸드</DragDropButton>
+              <DragDropButton>≡ 건강식</DragDropButton>
+              <DragDropButton>≡ 스낵</DragDropButton>
+            </DragDropGrid>
+          </Section>
 
-          {error && <div className="onboarding-preference-error">{error}</div>}
-
-          <div className="onboarding-preference-actions">
-            <Button
-              variant="primary"
-              size="large"
-              fullWidth
-              onClick={handleNext}
-              disabled={categoryPreferences.size === 0 || isSubmitting}
-              loading={isSubmitting}
+          <ButtonGroup>
+            <SubmitButton
+              onClick={handleStep1Next}
+              disabled={likedCategories.length === 0 && dislikedCategories.length === 0}
             >
-              다음
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+              저장하기
+            </SubmitButton>
+            <SkipButton onClick={() => navigate("/onboarding/policy")}>
+              건너뛰기
+            </SkipButton>
+          </ButtonGroup>
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <Section>
+            <SectionTitle>선호하는 음식을 선택해주세요</SectionTitle>
+            <SectionDescription>
+              취향에 맞는 음식 추천을 위해 선택해주세요.
+            </SectionDescription>
+          </Section>
+
+          <FoodGrid>
+            {FOOD_IMAGES.map((food) => (
+              <FoodCard
+                key={food.id}
+                selected={selectedFoods.includes(food.id)}
+                onClick={() => toggleFoodSelection(food.id)}
+              >
+                <FoodImage>{food.image}</FoodImage>
+                <FoodName>{food.name}</FoodName>
+                <Checkbox checked={selectedFoods.includes(food.id)}>
+                  {selectedFoods.includes(food.id) && "✓"}
+                </Checkbox>
+              </FoodCard>
+            ))}
+          </FoodGrid>
+
+          <NextButton onClick={handleStep2Next}>
+            다음
+          </NextButton>
+        </>
+      )}
+    </Container>
   );
 };
+
+// Styled Components
+const Container = styled.div`
+  min-height: 100vh;
+  background-color: #fafafa;
+  padding-bottom: ${theme.spacing.xl};
+`;
+
+const Header = styled.header`
+  background-color: white;
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  border-bottom: 1px solid #e0e0e0;
+`;
+
+const Title = styled.h1`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0;
+  text-align: center;
+`;
+
+const Section = styled.section`
+  padding: ${theme.spacing.lg};
+`;
+
+const SectionTitle = styled.h2`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0 0 ${theme.spacing.sm} 0;
+`;
+
+const SectionDescription = styled.p`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
+  margin: 0;
+  line-height: 1.5;
+`;
+
+const SubTitle = styled.h3`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: #212121;
+  margin: 0 0 ${theme.spacing.md} 0;
+`;
+
+const CategoryButtonGroup = styled.div`
+  display: flex;
+  gap: ${theme.spacing.sm};
+  flex-wrap: wrap;
+`;
+
+const CategoryButton = styled.button<{ active?: boolean; color?: "orange" | "yellow" }>`
+  padding: ${theme.spacing.sm} ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.full};
+  border: none;
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  background-color: ${props =>
+    props.active
+      ? props.color === "orange"
+        ? theme.colors.accent
+        : theme.colors.secondary
+      : "white"};
+  color: ${props => (props.active ? "white" : "#424242")};
+  box-shadow: ${props => (props.active ? "none" : "0 1px 3px rgba(0, 0, 0, 0.1)")};
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  border: 1px solid #e0e0e0;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  background-color: white;
+  margin-top: ${theme.spacing.md};
+
+  &:focus {
+    outline: none;
+    border-color: ${theme.colors.primary};
+  }
+
+  &::placeholder {
+    color: #9e9e9e;
+  }
+`;
+
+const DragDropGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: ${theme.spacing.sm};
+  margin-top: ${theme.spacing.md};
+`;
+
+const DragDropButton = styled.button`
+  padding: ${theme.spacing.md};
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.sm};
+  color: #424242;
+  cursor: move;
+  transition: all 0.2s;
+  text-align: left;
+
+  &:hover {
+    background-color: #f5f5f5;
+    border-color: #bdbdbd;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+`;
+
+const ButtonGroup = styled.div`
+  padding: 0 ${theme.spacing.lg};
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.md};
+  margin-top: ${theme.spacing.xl};
+`;
+
+const SubmitButton = styled.button<{ disabled?: boolean }>`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  background-color: ${props => (props.disabled ? "#e0e0e0" : theme.colors.accent)};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: ${props => (props.disabled ? "not-allowed" : "pointer")};
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: ${props => (props.disabled ? "#e0e0e0" : "#e55a2b")};
+  }
+
+  &:active {
+    transform: ${props => (props.disabled ? "none" : "scale(0.98)")};
+  }
+`;
+
+const SkipButton = styled.button`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  background-color: transparent;
+  color: #757575;
+  border: 1px solid #e0e0e0;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+// Step 2 Styles
+const FoodGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: ${theme.spacing.lg};
+  padding: ${theme.spacing.lg};
+`;
+
+const FoodCard = styled.div<{ selected?: boolean }>`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.lg};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  cursor: pointer;
+  border: 2px solid ${props => (props.selected ? theme.colors.accent : "transparent")};
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const FoodImage = styled.div`
+  font-size: 80px;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  border-radius: ${theme.borderRadius.md};
+`;
+
+const FoodName = styled.p`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  color: #212121;
+  margin: 0;
+  text-align: center;
+`;
+
+const Checkbox = styled.div<{ checked?: boolean }>`
+  position: absolute;
+  bottom: ${theme.spacing.md};
+  right: ${theme.spacing.md};
+  width: 24px;
+  height: 24px;
+  border: 2px solid ${props => (props.checked ? theme.colors.accent : "#e0e0e0")};
+  border-radius: ${theme.borderRadius.sm};
+  background-color: ${props => (props.checked ? theme.colors.accent : "white")};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.bold};
+`;
+
+const NextButton = styled.button`
+  width: calc(100% - ${theme.spacing.lg} * 2);
+  margin: ${theme.spacing.xl} ${theme.spacing.lg};
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.secondary};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #ff9f3a;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
 
 export default OnboardingPreferencePage;
