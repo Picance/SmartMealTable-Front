@@ -5,7 +5,6 @@ import { expenditureService } from "../../services/expenditure.service";
 import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Card";
 import type { Expenditure } from "../../types/api";
-import "./ExpenditureDetailPage.css";
 
 const ExpenditureDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

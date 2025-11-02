@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import styled, { keyframes } from "styled-components";
 import {
   FiMapPin,
   FiBell,
@@ -17,7 +18,6 @@ import { BudgetCard } from "../../components/home/BudgetCard";
 import { StoreCard } from "../../components/home/StoreCard";
 import { MenuCard } from "../../components/home/MenuCard";
 import type { RecommendedMenu } from "../../services/recommendation.service";
-import "./HomePage.css";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -88,59 +88,46 @@ const HomePage = () => {
 
   if (isLoading) {
     return (
-      <div className="home-page">
-        <div className="home-loading">
-          <div className="home-loading-spinner" />
-          <p>데이터를 불러오는 중...</p>
-        </div>
-      </div>
+      <PageContainer>
+        <LoadingContainer>
+          <Spinner />
+          <LoadingText>데이터를 불러오는 중...</LoadingText>
+        </LoadingContainer>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="home-page">
-      {/* 헤더 */}
-      <div className="home-header">
-        <div className="home-header-top">
-          <h1 className="home-header-greeting">
+    <PageContainer>
+      <Header>
+        <HeaderTop>
+          <Greeting>
             안녕하세요,
             <br />
-            <span className="home-header-greeting-name">
-              {member?.nickname || member?.name}님
-            </span>
-          </h1>
-          <div className="home-header-icons">
-            <button
-              className="home-header-icon-button"
-              onClick={() => navigate("/notifications")}
-            >
+            <GreetingName>{member?.nickname || member?.name}님</GreetingName>
+          </Greeting>
+          <HeaderIcons>
+            <IconButton onClick={() => navigate("/notifications")}>
               <FiBell />
-            </button>
-            <button
-              className="home-header-icon-button"
-              onClick={() => navigate("/settings")}
-            >
+            </IconButton>
+            <IconButton onClick={() => navigate("/settings")}>
               <FiSettings />
-            </button>
-          </div>
-        </div>
-        <div
-          className="home-header-location"
-          onClick={() => navigate("/address")}
-        >
+            </IconButton>
+          </HeaderIcons>
+        </HeaderTop>
+        <LocationButton onClick={() => navigate("/address")}>
           <FiMapPin />
           <span>현재 위치</span>
           <FiChevronRight style={{ fontSize: "0.75rem" }} />
-        </div>
-      </div>
+        </LocationButton>
+      </Header>
 
-      <div className="home-content">
-        {error && <div className="home-error">{error}</div>}
+      <Content>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
 
-        {/* 예산 현황 */}
         {budgetStatus && (
-          <div className="home-budget-section">
-            <div className="home-budget-grid">
+          <BudgetSection>
+            <BudgetGrid>
               <BudgetCard
                 title="오늘의 예산"
                 budget={budgetStatus.dailyBudget}
@@ -148,9 +135,9 @@ const HomePage = () => {
                 remaining={budgetStatus.dailyRemaining}
                 variant="primary"
               />
-            </div>
+            </BudgetGrid>
 
-            <div className="home-meal-budgets">
+            <MealBudgets>
               <BudgetCard
                 title="아침"
                 budget={budgetStatus.mealBudgets.BREAKFAST.budget}
@@ -175,28 +162,26 @@ const HomePage = () => {
                 icon={<FiMoon />}
                 variant="secondary"
               />
-            </div>
-          </div>
+            </MealBudgets>
+          </BudgetSection>
         )}
 
-        {/* 추천 메뉴 */}
-        <div className="home-section">
-          <div className="home-section-header">
-            <h2 className="home-section-title">오늘의 추천 메뉴</h2>
-            <a
+        <Section>
+          <SectionHeader>
+            <SectionTitle>오늘의 추천 메뉴</SectionTitle>
+            <SectionLink
               href="#"
-              className="home-section-link"
               onClick={(e) => {
                 e.preventDefault();
                 navigate("/recommendation");
               }}
             >
               전체보기 <FiChevronRight />
-            </a>
-          </div>
+            </SectionLink>
+          </SectionHeader>
 
           {recommendedMenus.length > 0 ? (
-            <div className="home-menu-scroll">
+            <MenuScroll>
               {recommendedMenus.map((menu) => (
                 <MenuCard
                   key={menu.menuId}
@@ -209,33 +194,31 @@ const HomePage = () => {
                   onClick={() => handleStoreClick(menu.storeId)}
                 />
               ))}
-            </div>
+            </MenuScroll>
           ) : (
-            <div className="home-empty">
-              <div className="home-empty-icon">🍽️</div>
-              <p className="home-empty-text">추천할 메뉴가 없습니다</p>
-            </div>
+            <EmptyState>
+              <EmptyIcon>🍽️</EmptyIcon>
+              <EmptyText>추천할 메뉴가 없습니다</EmptyText>
+            </EmptyState>
           )}
-        </div>
+        </Section>
 
-        {/* 추천 가게 */}
-        <div className="home-section">
-          <div className="home-section-header">
-            <h2 className="home-section-title">근처 맛집</h2>
-            <a
+        <Section>
+          <SectionHeader>
+            <SectionTitle>근처 맛집</SectionTitle>
+            <SectionLink
               href="#"
-              className="home-section-link"
               onClick={(e) => {
                 e.preventDefault();
                 navigate("/recommendation");
               }}
             >
               전체보기 <FiChevronRight />
-            </a>
-          </div>
+            </SectionLink>
+          </SectionHeader>
 
           {recommendedStores.length > 0 ? (
-            <div className="home-store-grid">
+            <StoreGrid>
               {recommendedStores.slice(0, 6).map((store) => (
                 <StoreCard
                   key={store.storeId}
@@ -244,17 +227,236 @@ const HomePage = () => {
                   onFavoriteClick={() => handleFavoriteToggle(store.storeId)}
                 />
               ))}
-            </div>
+            </StoreGrid>
           ) : (
-            <div className="home-empty">
-              <div className="home-empty-icon">🏪</div>
-              <p className="home-empty-text">추천할 가게가 없습니다</p>
-            </div>
+            <EmptyState>
+              <EmptyIcon>🏪</EmptyIcon>
+              <EmptyText>추천할 가게가 없습니다</EmptyText>
+            </EmptyState>
           )}
-        </div>
-      </div>
-    </div>
+        </Section>
+      </Content>
+    </PageContainer>
   );
 };
+
+// Styled Components
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+const PageContainer = styled.div`
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: ${props => props.theme.colors.background.secondary};
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: ${props => props.theme.spacing.lg};
+`;
+
+const Spinner = styled.div`
+  width: 48px;
+  height: 48px;
+  border: 4px solid ${props => props.theme.colors.gray[200]};
+  border-top-color: ${props => props.theme.colors.primary};
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+`;
+
+const LoadingText = styled.p`
+  font-size: ${props => props.theme.typography.fontSize.base};
+  color: ${props => props.theme.colors.text.secondary};
+`;
+
+const Header = styled.div`
+  background-color: ${props => props.theme.colors.background.primary};
+  padding: ${props => props.theme.spacing["2xl"]} ${props => props.theme.spacing.xl};
+  box-shadow: ${props => props.theme.shadows.sm};
+`;
+
+const HeaderTop = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: ${props => props.theme.spacing.lg};
+`;
+
+const Greeting = styled.h1`
+  font-size: ${props => props.theme.typography.fontSize["2xl"]};
+  font-weight: ${props => props.theme.typography.fontWeight.normal};
+  color: ${props => props.theme.colors.text.primary};
+  margin: 0;
+  line-height: 1.3;
+`;
+
+const GreetingName = styled.span`
+  font-weight: ${props => props.theme.typography.fontWeight.bold};
+  color: ${props => props.theme.colors.primary};
+`;
+
+const HeaderIcons = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing.sm};
+`;
+
+const IconButton = styled.button`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: ${props => props.theme.colors.background.secondary};
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: ${props => props.theme.colors.text.primary};
+  font-size: ${props => props.theme.typography.fontSize.xl};
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${props => props.theme.colors.gray[200]};
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const LocationButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.xs};
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${props => props.theme.typography.fontSize.sm};
+  cursor: pointer;
+  padding: ${props => props.theme.spacing.xs} 0;
+  
+  &:hover {
+    color: ${props => props.theme.colors.text.primary};
+  }
+`;
+
+const Content = styled.div`
+  padding: ${props => props.theme.spacing.xl};
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing["2xl"]};
+`;
+
+const ErrorMessage = styled.div`
+  background-color: #ffebee;
+  color: #c62828;
+  padding: ${props => props.theme.spacing.lg};
+  border-radius: ${props => props.theme.borderRadius.base};
+  text-align: center;
+`;
+
+const BudgetSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing.lg};
+`;
+
+const BudgetGrid = styled.div`
+  display: grid;
+  gap: ${props => props.theme.spacing.lg};
+`;
+
+const MealBudgets = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: ${props => props.theme.spacing.md};
+`;
+
+const Section = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing.lg};
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const SectionTitle = styled.h2`
+  font-size: ${props => props.theme.typography.fontSize.xl};
+  font-weight: ${props => props.theme.typography.fontWeight.bold};
+  color: ${props => props.theme.colors.text.primary};
+  margin: 0;
+`;
+
+const SectionLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.xs};
+  color: ${props => props.theme.colors.primary};
+  font-size: ${props => props.theme.typography.fontSize.sm};
+  text-decoration: none;
+  font-weight: ${props => props.theme.typography.fontWeight.medium};
+  
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const MenuScroll = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing.lg};
+  overflow-x: auto;
+  padding-bottom: ${props => props.theme.spacing.sm};
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${props => props.theme.colors.gray[100]};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${props => props.theme.colors.gray[400]};
+    border-radius: 3px;
+  }
+
+  & > * {
+    flex: 0 0 280px;
+  }
+`;
+
+const StoreGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: ${props => props.theme.spacing.lg};
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: ${props => props.theme.spacing["3xl"]} ${props => props.theme.spacing.xl};
+  gap: ${props => props.theme.spacing.lg};
+`;
+
+const EmptyIcon = styled.div`
+  font-size: ${props => props.theme.typography.fontSize["4xl"]};
+`;
+
+const EmptyText = styled.p`
+  font-size: ${props => props.theme.typography.fontSize.base};
+  color: ${props => props.theme.colors.text.tertiary};
+  margin: 0;
+`;
 
 export default HomePage;

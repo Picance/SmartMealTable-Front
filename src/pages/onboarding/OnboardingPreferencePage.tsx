@@ -5,7 +5,6 @@ import { Button } from "../../components/common/Button";
 import { onboardingService } from "../../services/onboarding.service";
 import { categoryService } from "../../services/category.service";
 import type { Category, Food } from "../../types/api";
-import "./OnboardingPreferencePage.css";
 
 type RecommendationType = "SAVER" | "ADVENTURER" | "BALANCED";
 type PreferenceWeight = 100 | 0 | -100;

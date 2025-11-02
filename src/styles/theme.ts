@@ -10,11 +10,26 @@ export const theme = {
   // 색상 팔레트
   colors: {
     primary: "#00796b",
+    primaryLight: "#4db6ac",
+    primaryDark: "#004d40",
     secondary: "#ffa726",
+    secondaryDark: "#f57c00",
     accent: "#ff6b35",
     kakao: "#fee500",
     google: "#ffffff",
     googleBorder: "#dadce0",
+    gray: {
+      50: "#fafafa",
+      100: "#f5f5f5",
+      200: "#eeeeee",
+      300: "#e0e0e0",
+      400: "#bdbdbd",
+      500: "#9e9e9e",
+      600: "#757575",
+      700: "#616161",
+      800: "#424242",
+      900: "#212121",
+    },
     text: {
       primary: "#000000",
       secondary: "#3c4043",

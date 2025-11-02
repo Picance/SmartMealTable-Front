@@ -13,7 +13,6 @@ import { expenditureService } from "../../services/expenditure.service";
 import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Card";
 import type { Expenditure } from "../../types/api";
-import "./SpendingPage.css";
 
 type ViewMode = "monthly" | "daily";
 type MealFilter = "ALL" | "BREAKFAST" | "LUNCH" | "DINNER";

@@ -14,7 +14,6 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { Card } from "../../components/common/Card";
 import { Button } from "../../components/common/Button";
-import "./ProfilePage.css";
 
 interface MenuItem {
   icon: React.ReactElement;

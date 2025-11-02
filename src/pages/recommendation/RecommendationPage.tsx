@@ -7,7 +7,6 @@ import { StoreCard } from "../../components/home/StoreCard";
 import { storeService, StoreSearchParams } from "../../services/store.service";
 import { categoryService } from "../../services/category.service";
 import type { Store, Category } from "../../types/api";
-import "./RecommendationPage.css";
 
 type SortBy = "DISTANCE" | "PRICE" | "RATING" | "POPULARITY";
 

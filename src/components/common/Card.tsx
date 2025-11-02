@@ -1,5 +1,5 @@
 import React from "react";
-import "./Card.css";
+import styled, { css } from "styled-components";
 
 interface CardProps {
   children: React.ReactNode;
@@ -8,24 +8,45 @@ interface CardProps {
   hoverable?: boolean;
 }
 
+const StyledCard = styled.div<{ $hoverable: boolean; $clickable: boolean }>`
+  background-color: ${props => props.theme.colors.background.primary};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: ${props => props.theme.spacing.xl};
+  box-shadow: ${props => props.theme.shadows.base};
+  transition: all 0.2s ease;
+
+  ${(props) => props.$clickable && css`
+    cursor: pointer;
+  `}
+
+  ${(props) => props.$hoverable && css`
+    &:hover {
+      box-shadow: ${props.theme.shadows.md};
+      transform: translateY(-2px);
+    }
+  `}
+
+  ${(props) => props.$clickable && css`
+    &:active {
+      transform: scale(0.98);
+    }
+  `}
+`;
+
 export const Card: React.FC<CardProps> = ({
   children,
-  className = "",
+  className,
   onClick,
   hoverable = false,
 }) => {
-  const cardClass = [
-    "card",
-    hoverable && "card-hoverable",
-    onClick && "card-clickable",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
-    <div className={cardClass} onClick={onClick}>
+    <StyledCard
+      className={className}
+      onClick={onClick}
+      $hoverable={hoverable}
+      $clickable={!!onClick}
+    >
       {children}
-    </div>
+    </StyledCard>
   );
 };

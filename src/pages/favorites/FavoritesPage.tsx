@@ -22,7 +22,6 @@ import { storeService } from "../../services/store.service";
 import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Card";
 import type { Store } from "../../types/api";
-import "./FavoritesPage.css";
 
 interface SortableItemProps {
   id: number;

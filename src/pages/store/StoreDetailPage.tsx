@@ -15,7 +15,6 @@ import { useCartStore } from "../../store/cartStore";
 import type { StoreDetail, Menu } from "../../types/api";
 import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Card";
-import "./StoreDetailPage.css";
 
 const StoreDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

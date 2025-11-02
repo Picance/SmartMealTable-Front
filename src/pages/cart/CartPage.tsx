@@ -4,7 +4,6 @@ import { FaArrowLeft, FaTrash, FaMinus, FaPlus } from "react-icons/fa";
 import { useCartStore } from "../../store/cartStore";
 import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Card";
-import "./CartPage.css";
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();

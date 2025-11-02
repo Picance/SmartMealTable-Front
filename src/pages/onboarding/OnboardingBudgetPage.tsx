@@ -4,7 +4,6 @@ import { FiArrowLeft, FiInfo } from "react-icons/fi";
 import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { onboardingService } from "../../services/onboarding.service";
-import "./OnboardingBudgetPage.css";
 
 const OnboardingBudgetPage = () => {
   const navigate = useNavigate();

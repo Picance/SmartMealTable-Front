@@ -4,7 +4,6 @@ import { FiArrowLeft, FiCheck } from "react-icons/fi";
 import { Button } from "../../components/common/Button";
 import { onboardingService } from "../../services/onboarding.service";
 import { useAuthStore } from "../../store/authStore";
-import "./OnboardingPolicyPage.css";
 
 interface Policy {
   policyId: number;

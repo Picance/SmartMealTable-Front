@@ -5,7 +5,6 @@ import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { onboardingService } from "../../services/onboarding.service";
 import type { Group } from "../../types/api";
-import "./OnboardingProfilePage.css";
 
 const OnboardingProfilePage = () => {
   const navigate = useNavigate();

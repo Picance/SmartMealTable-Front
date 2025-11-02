@@ -9,7 +9,6 @@ import { Button } from "../../components/common/Button";
 import { Input } from "../../components/common/Input";
 import { Card } from "../../components/common/Card";
 import type { Category } from "../../types/api";
-import "./CreateExpenditurePage.css";
 
 const CreateExpenditurePage: React.FC = () => {
   const navigate = useNavigate();

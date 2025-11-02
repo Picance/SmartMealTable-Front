@@ -4,7 +4,6 @@ import { FiArrowLeft, FiSearch } from "react-icons/fi";
 import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { onboardingService } from "../../services/onboarding.service";
-import "./OnboardingAddressPage.css";
 
 interface AddressSearchResult {
   roadAddress: string;
