@@ -1,464 +1,365 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styled, { keyframes } from "styled-components";
-import {
-  FiMapPin,
-  FiBell,
-  FiSettings,
-  FiChevronRight,
-  FiSunrise,
-  FiSun,
-  FiMoon,
-} from "react-icons/fi";
-import { useAuthStore } from "../../store/authStore";
-import { budgetService, BudgetStatus } from "../../services/budget.service";
-import { storeService, RecommendedStore } from "../../services/store.service";
-import { recommendationService } from "../../services/recommendation.service";
-import { BudgetCard } from "../../components/home/BudgetCard";
-import { StoreCard } from "../../components/home/StoreCard";
-import { MenuCard } from "../../components/home/MenuCard";
-import type { RecommendedMenu } from "../../services/recommendation.service";
+import styled from "styled-components";
+import { theme } from "../../styles/theme";
+import { FiChevronDown, FiMapPin } from "react-icons/fi";
+import BottomNav from "../../components/layout/BottomNav";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const member = useAuthStore((state) => state.member);
-  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null);
-  const [recommendedMenus, setRecommendedMenus] = useState<RecommendedMenu[]>(
-    []
-  );
-  const [recommendedStores, setRecommendedStores] = useState<
-    RecommendedStore[]
-  >([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<"popular" | "healthy">("popular");
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // 샘플 데이터
+  const todaySpent = 80000;
+  const remainingBudget = 20000;
+  const totalBudget = 100000;
 
-  const loadData = async () => {
-    setIsLoading(true);
-    setError("");
+  const popularMenus = [
+    { id: 1, name: "맛있는 햄버거", price: 7500, image: "🍔" },
+    { id: 2, name: "코코넛 샐러드", price: 6000, image: "🥗" },
+  ];
 
-    try {
-      // 병렬로 데이터 로드
-      const [budgetRes, menusRes, storesRes] = await Promise.all([
-        budgetService.getBudgetStatus(),
-        recommendationService.getPersonalizedMenus({ limit: 10 }),
-        storeService.getRecommendedStores(),
-      ]);
-
-      if (budgetRes.result === "SUCCESS" && budgetRes.data) {
-        setBudgetStatus(budgetRes.data);
-      }
-
-      if (menusRes.result === "SUCCESS" && menusRes.data) {
-        setRecommendedMenus(menusRes.data);
-      }
-
-      if (storesRes.result === "SUCCESS" && storesRes.data) {
-        setRecommendedStores(storesRes.data);
-      }
-    } catch (err: any) {
-      console.error("데이터 로드 실패:", err);
-      setError("데이터를 불러오는 중 오류가 발생했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStoreClick = (storeId: number) => {
-    navigate(`/store/${storeId}`);
-  };
-
-  const handleFavoriteToggle = async (storeId: number) => {
-    try {
-      const store = recommendedStores.find((s) => s.storeId === storeId);
-      if (store?.isFavorite) {
-        await storeService.removeFavorite(storeId);
-      } else {
-        await storeService.addFavorite(storeId);
-      }
-      // 목록 새로고침
-      loadData();
-    } catch (err) {
-      console.error("즐겨찾기 토글 실패:", err);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <LoadingContainer>
-          <Spinner />
-          <LoadingText>데이터를 불러오는 중...</LoadingText>
-        </LoadingContainer>
-      </PageContainer>
-    );
-  }
+  const restaurants = [
+    { id: 1, name: "임식 레스토랑", icon: "🍽️", tag: "도보 5분 거리" },
+    { id: 2, name: "피자 가게", icon: "🍕", tag: "학교 근처" },
+  ];
 
   return (
-    <PageContainer>
+    <Container>
       <Header>
-        <HeaderTop>
-          <Greeting>
-            안녕하세요,
-            <br />
-            <GreetingName>{member?.nickname || member?.name}님</GreetingName>
-          </Greeting>
-          <HeaderIcons>
-            <IconButton onClick={() => navigate("/notifications")}>
-              <FiBell />
-            </IconButton>
-            <IconButton onClick={() => navigate("/settings")}>
-              <FiSettings />
-            </IconButton>
-          </HeaderIcons>
-        </HeaderTop>
-        <LocationButton onClick={() => navigate("/address")}>
-          <FiMapPin />
-          <span>현재 위치</span>
-          <FiChevronRight style={{ fontSize: "0.75rem" }} />
+        <Logo>알뜰식탁</Logo>
+        <LocationButton>
+          <FiMapPin size={16} />
+          <span>현재 위치: 서울시 노원구 공릉동</span>
+          <FiChevronDown size={16} />
         </LocationButton>
       </Header>
 
       <Content>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-
-        {budgetStatus && (
-          <BudgetSection>
-            <BudgetGrid>
-              <BudgetCard
-                title="오늘의 예산"
-                budget={budgetStatus.dailyBudget}
-                spent={budgetStatus.dailySpent}
-                remaining={budgetStatus.dailyRemaining}
-                variant="primary"
-              />
-            </BudgetGrid>
-
-            <MealBudgets>
-              <BudgetCard
-                title="아침"
-                budget={budgetStatus.mealBudgets.BREAKFAST.budget}
-                spent={budgetStatus.mealBudgets.BREAKFAST.spent}
-                remaining={budgetStatus.mealBudgets.BREAKFAST.remaining}
-                icon={<FiSunrise />}
-                variant="secondary"
-              />
-              <BudgetCard
-                title="점심"
-                budget={budgetStatus.mealBudgets.LUNCH.budget}
-                spent={budgetStatus.mealBudgets.LUNCH.spent}
-                remaining={budgetStatus.mealBudgets.LUNCH.remaining}
-                icon={<FiSun />}
-                variant="secondary"
-              />
-              <BudgetCard
-                title="저녁"
-                budget={budgetStatus.mealBudgets.DINNER.budget}
-                spent={budgetStatus.mealBudgets.DINNER.spent}
-                remaining={budgetStatus.mealBudgets.DINNER.remaining}
-                icon={<FiMoon />}
-                variant="secondary"
-              />
-            </MealBudgets>
-          </BudgetSection>
-        )}
-
-        <Section>
+        {/* 식비 예산 현황 */}
+        <BudgetSection>
           <SectionHeader>
-            <SectionTitle>오늘의 추천 메뉴</SectionTitle>
-            <SectionLink
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/recommendation");
-              }}
-            >
-              전체보기 <FiChevronRight />
-            </SectionLink>
+            <SectionTitle>식비 예산 현황</SectionTitle>
+            <ManageButton onClick={() => navigate("/profile/budget")}>
+              관리
+            </ManageButton>
           </SectionHeader>
+          <BudgetCards>
+            <BudgetCard>
+              <BudgetLabel>오늘 소비 금액</BudgetLabel>
+              <BudgetAmount>{todaySpent.toLocaleString()}원</BudgetAmount>
+            </BudgetCard>
+            <BudgetCard>
+              <BudgetLabel>남은 식비</BudgetLabel>
+              <BudgetAmount>{remainingBudget.toLocaleString()}원</BudgetAmount>
+              <BudgetSubtext>설정한 식비: {totalBudget.toLocaleString()}원</BudgetSubtext>
+            </BudgetCard>
+          </BudgetCards>
+        </BudgetSection>
 
-          {recommendedMenus.length > 0 ? (
-            <MenuScroll>
-              {recommendedMenus.map((menu) => (
-                <MenuCard
-                  key={menu.menuId}
-                  menuName={menu.menuName}
-                  price={menu.price}
-                  imageUrl={menu.imageUrl}
-                  storeName={menu.storeName}
-                  distance={menu.distance}
-                  recommendationReason={menu.recommendationReason}
-                  onClick={() => handleStoreClick(menu.storeId)}
-                />
-              ))}
-            </MenuScroll>
-          ) : (
-            <EmptyState>
-              <EmptyIcon>🍽️</EmptyIcon>
-              <EmptyText>추천할 메뉴가 없습니다</EmptyText>
-            </EmptyState>
-          )}
-        </Section>
-
-        <Section>
-          <SectionHeader>
-            <SectionTitle>근처 맛집</SectionTitle>
-            <SectionLink
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/recommendation");
-              }}
+        {/* 추천 메뉴 */}
+        <RecommendSection>
+          <SectionTitle>추천 메뉴</SectionTitle>
+          <TabContainer>
+            <Tab 
+              active={activeTab === "popular"} 
+              onClick={() => setActiveTab("popular")}
             >
-              전체보기 <FiChevronRight />
-            </SectionLink>
-          </SectionHeader>
+              인기 메뉴
+            </Tab>
+            <Tab 
+              active={activeTab === "healthy"} 
+              onClick={() => setActiveTab("healthy")}
+            >
+              건강한 선택
+            </Tab>
+          </TabContainer>
+          <MenuGrid>
+            {popularMenus.map((menu) => (
+              <MenuCard key={menu.id} onClick={() => navigate(`/menu/${menu.id}`)}>
+                <MenuImage>{menu.image}</MenuImage>
+                <MenuInfo>
+                  <MenuName>{menu.name}</MenuName>
+                  <MenuPrice>{menu.price.toLocaleString()}원</MenuPrice>
+                </MenuInfo>
+              </MenuCard>
+            ))}
+          </MenuGrid>
+        </RecommendSection>
 
-          {recommendedStores.length > 0 ? (
-            <StoreGrid>
-              {recommendedStores.slice(0, 6).map((store) => (
-                <StoreCard
-                  key={store.storeId}
-                  store={store}
-                  onClick={() => handleStoreClick(store.storeId)}
-                  onFavoriteClick={() => handleFavoriteToggle(store.storeId)}
-                />
-              ))}
-            </StoreGrid>
-          ) : (
-            <EmptyState>
-              <EmptyIcon>🏪</EmptyIcon>
-              <EmptyText>추천할 가게가 없습니다</EmptyText>
-            </EmptyState>
-          )}
-        </Section>
+        {/* 식사 추천 */}
+        <RestaurantSection>
+          <SectionTitle>식사 추천</SectionTitle>
+          <RestaurantList>
+            {restaurants.map((restaurant) => (
+              <RestaurantCard 
+                key={restaurant.id}
+                onClick={() => navigate(`/store/${restaurant.id}`)}
+              >
+                <RestaurantIcon>{restaurant.icon}</RestaurantIcon>
+                <RestaurantInfo>
+                  <RestaurantName>{restaurant.name}</RestaurantName>
+                  <RestaurantTag>{restaurant.tag}</RestaurantTag>
+                </RestaurantInfo>
+              </RestaurantCard>
+            ))}
+          </RestaurantList>
+        </RestaurantSection>
       </Content>
-    </PageContainer>
+
+      <BottomNav activeTab="home" />
+    </Container>
   );
 };
 
 // Styled Components
-const spin = keyframes`
-  to { transform: rotate(360deg); }
-`;
-
-const PageContainer = styled.div`
+const Container = styled.div`
   min-height: 100vh;
-  min-height: 100dvh;
-  background-color: ${(props) => props.theme.colors.background.secondary};
+  background-color: #f5f5f5;
+  padding-bottom: 80px;
 `;
 
-const LoadingContainer = styled.div`
+const Header = styled.header`
+  background-color: white;
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  gap: ${(props) => props.theme.spacing.lg};
-`;
-
-const Spinner = styled.div`
-  width: 48px;
-  height: 48px;
-  border: 4px solid ${(props) => props.theme.colors.gray[200]};
-  border-top-color: ${(props) => props.theme.colors.primary};
-  border-radius: 50%;
-  animation: ${spin} 0.8s linear infinite;
-`;
-
-const LoadingText = styled.p`
-  font-size: ${(props) => props.theme.typography.fontSize.base};
-  color: ${(props) => props.theme.colors.text.secondary};
-`;
-
-const Header = styled.div`
-  background-color: ${(props) => props.theme.colors.background.primary};
-  padding: ${(props) => props.theme.spacing["2xl"]}
-    ${(props) => props.theme.spacing.xl};
-  box-shadow: ${(props) => props.theme.shadows.sm};
-`;
-
-const HeaderTop = styled.div`
-  display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: ${(props) => props.theme.spacing.lg};
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 `;
 
-const Greeting = styled.h1`
-  font-size: ${(props) => props.theme.typography.fontSize["2xl"]};
-  font-weight: ${(props) => props.theme.typography.fontWeight.normal};
-  color: ${(props) => props.theme.colors.text.primary};
+const Logo = styled.h1`
+  font-size: 20px;
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
   margin: 0;
-  line-height: 1.3;
-`;
-
-const GreetingName = styled.span`
-  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
-  color: ${(props) => props.theme.colors.primary};
-`;
-
-const HeaderIcons = styled.div`
-  display: flex;
-  gap: ${(props) => props.theme.spacing.sm};
-`;
-
-const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: ${(props) => props.theme.colors.background.secondary};
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: ${(props) => props.theme.colors.text.primary};
-  font-size: ${(props) => props.theme.typography.fontSize.xl};
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: ${(props) => props.theme.colors.gray[200]};
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
 `;
 
 const LocationButton = styled.button`
   display: flex;
   align-items: center;
-  gap: ${(props) => props.theme.spacing.xs};
-  background: none;
+  gap: 6px;
+  background: transparent;
   border: none;
-  color: ${(props) => props.theme.colors.text.tertiary};
-  font-size: ${(props) => props.theme.typography.fontSize.sm};
+  font-size: 12px;
+  color: #666;
   cursor: pointer;
-  padding: ${(props) => props.theme.spacing.xs} 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
 
   &:hover {
-    color: ${(props) => props.theme.colors.text.primary};
+    background-color: #f5f5f5;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
   }
 `;
 
 const Content = styled.div`
-  padding: ${(props) => props.theme.spacing.xl};
-  display: flex;
-  flex-direction: column;
-  gap: ${(props) => props.theme.spacing["2xl"]};
+  padding: ${theme.spacing.lg};
 `;
 
-const ErrorMessage = styled.div`
-  background-color: #ffebee;
-  color: #c62828;
-  padding: ${(props) => props.theme.spacing.lg};
-  border-radius: ${(props) => props.theme.borderRadius.base};
-  text-align: center;
-`;
-
-const BudgetSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${(props) => props.theme.spacing.lg};
-`;
-
-const BudgetGrid = styled.div`
-  display: grid;
-  gap: ${(props) => props.theme.spacing.lg};
-`;
-
-const MealBudgets = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: ${(props) => props.theme.spacing.md};
-`;
-
-const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${(props) => props.theme.spacing.lg};
+const BudgetSection = styled.section`
+  margin-bottom: ${theme.spacing.xl};
 `;
 
 const SectionHeader = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  margin-bottom: ${theme.spacing.md};
 `;
 
 const SectionTitle = styled.h2`
-  font-size: ${(props) => props.theme.typography.fontSize.xl};
-  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
-  color: ${(props) => props.theme.colors.text.primary};
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
   margin: 0;
 `;
 
-const SectionLink = styled.a`
-  display: flex;
-  align-items: center;
-  gap: ${(props) => props.theme.spacing.xs};
-  color: ${(props) => props.theme.colors.primary};
-  font-size: ${(props) => props.theme.typography.fontSize.sm};
-  text-decoration: none;
-  font-weight: ${(props) => props.theme.typography.fontWeight.medium};
+const ManageButton = styled.button`
+  background-color: ${theme.colors.accent};
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: all 0.2s;
 
   &:hover {
-    text-decoration: underline;
+    background-color: #e55a2b;
   }
 `;
 
-const MenuScroll = styled.div`
-  display: flex;
-  gap: ${(props) => props.theme.spacing.lg};
-  overflow-x: auto;
-  padding-bottom: ${(props) => props.theme.spacing.sm};
-
-  &::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: ${(props) => props.theme.colors.gray[100]};
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: ${(props) => props.theme.colors.gray[400]};
-    border-radius: 3px;
-  }
-
-  & > * {
-    flex: 0 0 280px;
-  }
-`;
-
-const StoreGrid = styled.div`
+const BudgetCards = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: ${(props) => props.theme.spacing.lg};
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing.md};
 `;
 
-const EmptyState = styled.div`
+const BudgetCard = styled.div`
+  background-color: white;
+  padding: ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.lg};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+`;
+
+const BudgetLabel = styled.div`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #666;
+  margin-bottom: ${theme.spacing.xs};
+`;
+
+const BudgetAmount = styled.div`
+  font-size: 24px;
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin-bottom: 4px;
+`;
+
+const BudgetSubtext = styled.div`
+  font-size: 11px;
+  color: #999;
+`;
+
+const RecommendSection = styled.section`
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.md};
+  margin-top: ${theme.spacing.md};
+`;
+
+const Tab = styled.button<{ active: boolean }>`
+  flex: 1;
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  background-color: ${props => props.active ? "white" : "#f5f5f5"};
+  border: 1px solid ${props => props.active ? theme.colors.accent : "#e0e0e0"};
+  border-radius: 8px;
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${props => props.active ? theme.typography.fontWeight.semibold : theme.typography.fontWeight.medium};
+  color: ${props => props.active ? theme.colors.accent : "#666"};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: ${theme.colors.accent};
+  }
+`;
+
+const MenuGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing.md};
+`;
+
+const MenuCard = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.md};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const MenuImage = styled.div`
+  font-size: 60px;
+  margin-bottom: ${theme.spacing.sm};
+`;
+
+const MenuInfo = styled.div`
+  text-align: center;
+`;
+
+const MenuName = styled.div`
+  font-size: ${theme.typography.fontSize.base};
+  color: #666;
+  margin-bottom: 4px;
+`;
+
+const MenuPrice = styled.div`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+`;
+
+const RestaurantSection = styled.section`
+  margin-bottom: ${theme.spacing.lg};
+`;
+
+const RestaurantList = styled.div`
   display: flex;
   flex-direction: column;
+  gap: ${theme.spacing.md};
+  margin-top: ${theme.spacing.md};
+`;
+
+const RestaurantCard = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.lg};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.md};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+`;
+
+const RestaurantIcon = styled.div`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #FFF3E0;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: ${(props) => props.theme.spacing["3xl"]}
-    ${(props) => props.theme.spacing.xl};
-  gap: ${(props) => props.theme.spacing.lg};
+  font-size: 28px;
+  flex-shrink: 0;
 `;
 
-const EmptyIcon = styled.div`
-  font-size: ${(props) => props.theme.typography.fontSize["4xl"]};
+const RestaurantInfo = styled.div`
+  flex: 1;
 `;
 
-const EmptyText = styled.p`
-  font-size: ${(props) => props.theme.typography.fontSize.base};
-  color: ${(props) => props.theme.colors.text.tertiary};
-  margin: 0;
+const RestaurantName = styled.div`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: #212121;
+  margin-bottom: 4px;
+`;
+
+const RestaurantTag = styled.div`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #999;
 `;
 
 export default HomePage;

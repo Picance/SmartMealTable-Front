@@ -1,311 +1,439 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaPlus } from "react-icons/fa";
+import styled from "styled-components";
+import { theme } from "../../styles/theme";
 import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-  addMonths,
-} from "date-fns";
-import { ko } from "date-fns/locale";
-import { expenditureService } from "../../services/expenditure.service";
-import { Button } from "../../components/common/Button";
-import { Card } from "../../components/common/Card";
-import type { Expenditure } from "../../types/api";
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+import BottomNav from "../../components/layout/BottomNav";
 
-type ViewMode = "monthly" | "daily";
-type MealFilter = "ALL" | "BREAKFAST" | "LUNCH" | "DINNER";
-
-const SpendingPage: React.FC = () => {
+const SpendingPage = () => {
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<ViewMode>("monthly");
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [expenditures, setExpenditures] = useState<Expenditure[]>([]);
-  const [monthlyStats, setMonthlyStats] = useState<{
-    totalSpent: number;
-    dailyAverage: number;
-    mealBreakdown: Record<string, number>;
-    dailySpending: Array<{ date: string; amount: number }>;
-  } | null>(null);
-  const [mealFilter, setMealFilter] = useState<MealFilter>("ALL");
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (viewMode === "monthly") {
-      loadMonthlyData();
-    } else {
-      loadDailyData();
-    }
-  }, [currentDate, viewMode, mealFilter]);
+  // 필터 상태
+  const [period, setPeriod] = useState("월주일");
+  const [year, setYear] = useState("2025");
+  const [month, setMonth] = useState("10월");
+  const [dateRange, setDateRange] = useState("1일 ~ 7일");
 
-  const loadMonthlyData = async () => {
-    setLoading(true);
-    try {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
+  // 차트 데이터
+  const chartData = [
+    { date: "10월 17일", budget: 20000, spending: 15000 },
+    { date: "10월 19일", budget: 20000, spending: 65000 },
+    { date: "10월 21일", budget: 20000, spending: 35000 },
+    { date: "10월 23일", budget: 20000, spending: 10000 },
+    { date: "10월 26일", budget: 20000, spending: 50000 },
+  ];
 
-      // 월별 통계 조회
-      const statsResponse = await expenditureService.getMonthlyStats(
-        year,
-        month
-      );
-      if (statsResponse.result === "SUCCESS" && statsResponse.data) {
-        setMonthlyStats(statsResponse.data);
-      }
-
-      // 지출 목록 조회
-      const startDate = format(startOfMonth(currentDate), "yyyy-MM-dd");
-      const endDate = format(endOfMonth(currentDate), "yyyy-MM-dd");
-
-      const listResponse = await expenditureService.getExpenditures({
-        startDate,
-        endDate,
-        mealType: mealFilter === "ALL" ? undefined : mealFilter,
-      });
-
-      if (listResponse.result === "SUCCESS" && listResponse.data) {
-        setExpenditures(listResponse.data);
-      }
-    } catch (error) {
-      console.error("Failed to load monthly data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadDailyData = async () => {
-    setLoading(true);
-    try {
-      const dateStr = format(currentDate, "yyyy-MM-dd");
-      const response = await expenditureService.getDailyStats(dateStr);
-
-      if (response.result === "SUCCESS" && response.data) {
-        setExpenditures(response.data.expenditures);
-      }
-    } catch (error) {
-      console.error("Failed to load daily data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePrevPeriod = () => {
-    if (viewMode === "monthly") {
-      setCurrentDate(subMonths(currentDate, 1));
-    } else {
-      setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
-    }
-  };
-
-  const handleNextPeriod = () => {
-    if (viewMode === "monthly") {
-      setCurrentDate(addMonths(currentDate, 1));
-    } else {
-      setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
-    }
-  };
-
-  const handleToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  const filteredExpenditures =
-    mealFilter === "ALL"
-      ? expenditures
-      : expenditures.filter((exp) => exp.mealType === mealFilter);
-
-  const totalAmount = filteredExpenditures.reduce(
-    (sum, exp) => sum + exp.amount,
-    0
-  );
+  // 지출 내역 데이터
+  const expenditures = [
+    {
+      id: 1,
+      icon: "☕",
+      name: "스타벅스",
+      category: "아침",
+      date: "2023-10-26 08:00",
+      amount: 5500,
+      bgColor: "#FFF3E0",
+    },
+    {
+      id: 2,
+      icon: "🛒",
+      name: "이마트",
+      category: "점심",
+      date: "2023-10-25 12:00",
+      amount: 28000,
+      bgColor: "#FFF9C4",
+    },
+    {
+      id: 3,
+      icon: "☕",
+      name: "스타벅스",
+      category: "저녁",
+      date: "2023-10-26 18:00",
+      amount: 5500,
+      bgColor: "#FFF3E0",
+    },
+    {
+      id: 4,
+      icon: "🏪",
+      name: "GS25",
+      category: "기타",
+      date: "2023-10-26 22:00",
+      amount: 5500,
+      bgColor: "#FFF3E0",
+    },
+  ];
 
   return (
-    <div className="spending-page">
-      {/* 헤더 */}
-      <header className="spending-header">
-        <h1>지출 내역</h1>
-        <button
-          className="add-button"
-          onClick={() => navigate("/spending/create")}
-        >
-          <FaPlus />
-        </button>
-      </header>
+    <Container>
+      <Header>
+        <Title>지출 내역</Title>
+      </Header>
 
-      {/* 기간 선택 */}
-      <div className="period-selector">
-        <button className="nav-button" onClick={handlePrevPeriod}>
-          ◀
-        </button>
-        <div className="period-display">
-          {viewMode === "monthly"
-            ? format(currentDate, "yyyy년 MM월", { locale: ko })
-            : format(currentDate, "yyyy년 MM월 dd일", { locale: ko })}
-        </div>
-        <button className="nav-button" onClick={handleNextPeriod}>
-          ▶
-        </button>
-        <button className="today-button" onClick={handleToday}>
-          오늘
-        </button>
-      </div>
+      <Content>
+        {/* 필터 섹션 */}
+        <FilterSection>
+          <FilterTitle>필터</FilterTitle>
+          <FilterRow>
+            <FilterLabel>간격</FilterLabel>
+            <Select value={period} onChange={(e) => setPeriod(e.target.value)}>
+              <option>월주일</option>
+              <option>주간</option>
+              <option>일간</option>
+            </Select>
+          </FilterRow>
+          <FilterRow>
+            <Select value={year} onChange={(e) => setYear(e.target.value)}>
+              <option>2025</option>
+              <option>2024</option>
+              <option>2023</option>
+            </Select>
+            <Select value={month} onChange={(e) => setMonth(e.target.value)}>
+              <option>10월</option>
+              <option>11월</option>
+              <option>12월</option>
+            </Select>
+          </FilterRow>
+          <FilterRow>
+            <Select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              style={{ width: "100%" }}
+            >
+              <option>1일 ~ 7일</option>
+              <option>8일 ~ 14일</option>
+              <option>15일 ~ 21일</option>
+              <option>22일 ~ 31일</option>
+            </Select>
+          </FilterRow>
+        </FilterSection>
 
-      {/* 뷰 모드 전환 */}
-      <div className="view-mode-toggle">
-        <button
-          className={`mode-button ${viewMode === "monthly" ? "active" : ""}`}
-          onClick={() => setViewMode("monthly")}
-        >
-          월별
-        </button>
-        <button
-          className={`mode-button ${viewMode === "daily" ? "active" : ""}`}
-          onClick={() => setViewMode("daily")}
-        >
-          일별
-        </button>
-      </div>
-
-      {/* 월별 통계 */}
-      {viewMode === "monthly" && monthlyStats && (
-        <Card className="stats-card">
-          <div className="stats-grid">
-            <div className="stat-item">
-              <span className="stat-label">총 지출</span>
-              <span className="stat-value">
-                {monthlyStats.totalSpent.toLocaleString()}원
-              </span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">일평균</span>
-              <span className="stat-value">
-                {Math.round(monthlyStats.dailyAverage).toLocaleString()}원
-              </span>
-            </div>
-          </div>
-
-          <div className="meal-breakdown">
-            <h3>식사별 지출</h3>
-            <div className="meal-bars">
-              {Object.entries(monthlyStats.mealBreakdown).map(
-                ([meal, amount]) => {
-                  const percentage =
-                    monthlyStats.totalSpent > 0
-                      ? (amount / monthlyStats.totalSpent) * 100
-                      : 0;
-                  const mealLabel =
-                    {
-                      BREAKFAST: "아침",
-                      LUNCH: "점심",
-                      DINNER: "저녁",
-                      SNACK: "간식",
-                    }[meal] || meal;
-
-                  return (
-                    <div key={meal} className="meal-bar">
-                      <div className="meal-bar-label">
-                        <span>{mealLabel}</span>
-                        <span>{amount.toLocaleString()}원</span>
-                      </div>
-                      <div className="meal-bar-track">
-                        <div
-                          className={`meal-bar-fill ${meal.toLowerCase()}`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* 필터 */}
-      <div className="filters">
-        <div className="meal-filters">
-          {(["ALL", "BREAKFAST", "LUNCH", "DINNER"] as MealFilter[]).map(
-            (meal) => (
-              <button
-                key={meal}
-                className={`filter-button ${
-                  mealFilter === meal ? "active" : ""
-                }`}
-                onClick={() => setMealFilter(meal)}
+        {/* 차트 섹션 */}
+        <ChartSection>
+          <ChartTitle>지출 현황</ChartTitle>
+          <Legend>
+            <LegendItem>
+              <LegendColor color="#5B9BD5" />
+              <span>파랜선 : 예산 목표</span>
+            </LegendItem>
+            <LegendItem>
+              <LegendColor color="#FF6B35" />
+              <span>주황선 : 지출 내역</span>
+            </LegendItem>
+          </Legend>
+          <ChartWrapper>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
               >
-                {meal === "ALL"
-                  ? "전체"
-                  : meal === "BREAKFAST"
-                  ? "아침"
-                  : meal === "LUNCH"
-                  ? "점심"
-                  : "저녁"}
-              </button>
-            )
-          )}
-        </div>
-      </div>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11, fill: "#999" }}
+                  stroke="#e0e0e0"
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "#999" }}
+                  stroke="#e0e0e0"
+                  tickLine={false}
+                  domain={[0, 60000]}
+                  ticks={[0, 15000, 30000, 45000, 60000]}
+                  tickFormatter={(value: number) => `${value / 1000}k`}
+                />
+                <Tooltip
+                  formatter={(value: number) => `${value.toLocaleString()}원`}
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "8px",
+                    padding: "8px 12px",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="budget"
+                  stroke="#5B9BD5"
+                  strokeWidth={2.5}
+                  dot={{ fill: "#5B9BD5", r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="spending"
+                  stroke="#FF6B35"
+                  strokeWidth={2.5}
+                  dot={{ fill: "#FF6B35", r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        </ChartSection>
 
-      {/* 지출 목록 */}
-      <div className="expenditure-list">
-        <div className="list-header">
-          <h2>지출 목록</h2>
-          <span className="total-amount">{totalAmount.toLocaleString()}원</span>
-        </div>
+        {/* 지출 내역 리스트 */}
+        <ExpenditureSection>
+          <SectionTitle>지출 내역</SectionTitle>
+          <ExpenditureList>
+            {expenditures.map((item) => (
+              <ExpenditureItem
+                key={item.id}
+                onClick={() => navigate(`/spending/${item.id}`)}
+              >
+                <IconWrapper bgColor={item.bgColor}>{item.icon}</IconWrapper>
+                <ExpenditureInfo>
+                  <ExpendName>{item.name}</ExpendName>
+                  <ExpendMeta>
+                    {item.category} • {item.date}
+                  </ExpendMeta>
+                </ExpenditureInfo>
+                <ExpenditureAmount isExpanded={item.id === 2}>
+                  {item.amount.toLocaleString()}원
+                  {item.id === 2 && <ExpandIcon>˅</ExpandIcon>}
+                </ExpenditureAmount>
+              </ExpenditureItem>
+            ))}
+          </ExpenditureList>
+        </ExpenditureSection>
 
-        {loading ? (
-          <div className="loading">로딩 중...</div>
-        ) : filteredExpenditures.length === 0 ? (
-          <div className="empty-state">
-            <p>지출 내역이 없습니다</p>
-            <Button
-              variant="primary"
-              onClick={() => navigate("/spending/create")}
-            >
-              지출 등록하기
-            </Button>
-          </div>
-        ) : (
-          filteredExpenditures.map((expenditure) => (
-            <Card
-              key={expenditure.expenditureId}
-              className="expenditure-item"
-              onClick={() => navigate(`/spending/${expenditure.expenditureId}`)}
-            >
-              <div className="expenditure-header">
-                <div className="expenditure-info">
-                  <h3 className="store-name">{expenditure.storeName}</h3>
-                  <span className="category-badge">
-                    {expenditure.categoryName}
-                  </span>
-                </div>
-                <span className="amount">
-                  {expenditure.amount.toLocaleString()}원
-                </span>
-              </div>
+        {/* 지출 등록 버튼 */}
+        <RegisterButton onClick={() => navigate("/spending/create")}>
+          지출 내역 등록하기
+        </RegisterButton>
+      </Content>
 
-              <div className="expenditure-meta">
-                <span className="meal-type">
-                  {expenditure.mealType === "BREAKFAST"
-                    ? "아침"
-                    : expenditure.mealType === "LUNCH"
-                    ? "점심"
-                    : "저녁"}
-                </span>
-                <span className="date-time">
-                  {expenditure.expendedDate} {expenditure.expendedTime}
-                </span>
-              </div>
-
-              {expenditure.memo && <p className="memo">{expenditure.memo}</p>}
-            </Card>
-          ))
-        )}
-      </div>
-    </div>
+      <BottomNav activeTab="spending" />
+    </Container>
   );
 };
+
+// Styled Components
+const Container = styled.div`
+  min-height: 100vh;
+  background-color: #fafafa;
+  padding-bottom: 80px;
+`;
+
+const Header = styled.header`
+  background-color: white;
+  padding: ${theme.spacing.lg};
+  border-bottom: 1px solid #e0e0e0;
+  text-align: center;
+`;
+
+const Title = styled.h1`
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0;
+`;
+
+const Content = styled.div`
+  padding: ${theme.spacing.lg};
+`;
+
+const FilterSection = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.lg};
+  margin-bottom: ${theme.spacing.lg};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+`;
+
+const FilterTitle = styled.h2`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0 0 ${theme.spacing.lg} 0;
+`;
+
+const FilterRow = styled.div`
+  display: flex;
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.md};
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const FilterLabel = styled.label`
+  font-size: ${theme.typography.fontSize.base};
+  color: #424242;
+  min-width: 45px;
+  display: flex;
+  align-items: center;
+  font-weight: ${theme.typography.fontWeight.medium};
+`;
+
+const Select = styled.select`
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: ${theme.typography.fontSize.base};
+  color: #212121;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+
+  &:focus {
+    outline: none;
+    border-color: ${theme.colors.accent};
+  }
+`;
+
+const ChartSection = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.lg};
+  margin-bottom: ${theme.spacing.lg};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+`;
+
+const ChartTitle = styled.h2`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0 0 ${theme.spacing.md} 0;
+`;
+
+const Legend = styled.div`
+  display: flex;
+  gap: ${theme.spacing.lg};
+  margin-bottom: ${theme.spacing.md};
+  font-size: ${theme.typography.fontSize.sm};
+`;
+
+const LegendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
+  color: #757575;
+`;
+
+const LegendColor = styled.div<{ color: string }>`
+  width: 20px;
+  height: 3px;
+  background-color: ${(props) => props.color};
+  border-radius: 2px;
+`;
+
+const ChartWrapper = styled.div`
+  width: 100%;
+  height: 250px;
+`;
+
+const ExpenditureSection = styled.div`
+  margin-bottom: ${theme.spacing.lg};
+`;
+
+const SectionTitle = styled.h2`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0 0 ${theme.spacing.md} 0;
+`;
+
+const ExpenditureList = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+`;
+
+const ExpenditureItem = styled.div`
+  display: flex;
+  align-items: center;
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: #fafafa;
+  }
+`;
+
+const IconWrapper = styled.div<{ bgColor?: string }>`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: ${(props) => props.bgColor || "#FFF3E0"};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-right: ${theme.spacing.md};
+`;
+
+const ExpenditureInfo = styled.div`
+  flex: 1;
+`;
+
+const ExpendName = styled.div`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: #212121;
+  margin-bottom: 4px;
+`;
+
+const ExpendMeta = styled.div`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
+`;
+
+const ExpenditureAmount = styled.div<{ isExpanded?: boolean }>`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.accent};
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
+`;
+
+const ExpandIcon = styled.span`
+  font-size: ${theme.typography.fontSize.sm};
+  color: ${theme.colors.accent};
+`;
+
+const RegisterButton = styled.button`
+  width: 100%;
+  padding: 16px;
+  background-color: ${theme.colors.accent};
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+
+  &:hover {
+    background-color: #e55a2b;
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
 
 export default SpendingPage;
