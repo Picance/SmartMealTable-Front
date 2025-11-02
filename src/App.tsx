@@ -27,6 +27,11 @@ import CreateExpenditurePage from "./pages/spending/CreateExpenditurePage";
 import ExpenditureDetailPage from "./pages/spending/ExpenditureDetailPage";
 import FavoritesPage from "./pages/favorites/FavoritesPage";
 import ProfilePage from "./pages/profile/ProfilePage";
+import BudgetManagementPage from "./pages/budget/BudgetManagementPage";
+import FoodPreferencePage from "./pages/preference/FoodPreferencePage";
+import SettingsPage from "./pages/settings/SettingsPage";
+import AffiliationPage from "./pages/profile/AffiliationPage";
+import AddressManagementPage from "./pages/address/AddressManagementPage";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -175,6 +180,46 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/budget"
+            element={
+              <ProtectedRoute>
+                <BudgetManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/preference"
+            element={
+              <ProtectedRoute>
+                <FoodPreferencePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/affiliation"
+            element={
+              <ProtectedRoute>
+                <AffiliationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/address/management"
+            element={
+              <ProtectedRoute>
+                <AddressManagementPage />
               </ProtectedRoute>
             }
           />

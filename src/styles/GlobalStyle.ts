@@ -35,6 +35,7 @@ export const GlobalStyle = createGlobalStyle`
       width: 100%;
       background-color: #ffffff;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
   }
 

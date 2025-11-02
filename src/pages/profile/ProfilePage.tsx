@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiChevronRight } from "react-icons/fi";
+import BottomNavigation from "../../components/layout/BottomNav";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  
+
   // 임시 사용자 데이터
-  const [user] = useState({
+  const [user, setUser] = useState({
     name: "김민준",
     email: "minjun.kim@example.com",
     nickname: "김민준",
@@ -17,6 +18,47 @@ const ProfilePage = () => {
     address: "서울시 강남구 테헤란로 123",
   });
 
+  // 모달 상태
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+
+  // 닉네임 변경
+  const [newNickname, setNewNickname] = useState("");
+
+  // 비밀번호 변경
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // 음식 추천 유형
+  const [recommendationType, setRecommendationType] = useState<
+    "절약형" | "모험형" | "균형형"
+  >("절약형");
+
+  const handleNicknameUpdate = () => {
+    if (newNickname.trim()) {
+      setUser({ ...user, nickname: newNickname });
+      setShowNicknameModal(false);
+      setNewNickname("");
+    }
+  };
+
+  const handlePasswordChange = () => {
+    if (currentPassword && newPassword && confirmPassword) {
+      if (newPassword === confirmPassword) {
+        // TODO: API 호출
+        setShowPasswordModal(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        alert("비밀번호가 변경되었습니다.");
+      } else {
+        alert("새 비밀번호가 일치하지 않습니다.");
+      }
+    }
+  };
+
   const handleLogout = () => {
     if (window.confirm("로그아웃 하시겠습니까?")) {
       navigate("/login-options");
@@ -24,7 +66,9 @@ const ProfilePage = () => {
   };
 
   const handleDeleteAccount = () => {
-    if (window.confirm("정말로 회원 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.")) {
+    if (
+      window.confirm("정말로 회원 탈퇴하시겠습니까?\n모든 데이터가 삭제됩니다.")
+    ) {
       navigate("/login-options");
     }
   };
@@ -59,10 +103,10 @@ const ProfilePage = () => {
             <InfoValue>{user.email}</InfoValue>
           </InfoBox>
           <ButtonRow>
-            <ActionButton outline onClick={() => navigate("/profile/nickname")}>
+            <ActionButton outline onClick={() => setShowNicknameModal(true)}>
               닉네임 업데이트
             </ActionButton>
-            <ActionButton outline onClick={() => navigate("/profile/password")}>
+            <ActionButton outline onClick={() => setShowPasswordModal(true)}>
               비밀번호 변경
             </ActionButton>
           </ButtonRow>
@@ -93,7 +137,7 @@ const ProfilePage = () => {
         <Section>
           <SectionTitle>사용자 정보</SectionTitle>
           <MenuList>
-            <MenuItem onClick={() => navigate("/profile/affiliation")}>
+            <MenuItem onClick={() => navigate("/affiliation")}>
               <MenuItemIcon>📄</MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>소속</MenuItemLabel>
@@ -103,8 +147,8 @@ const ProfilePage = () => {
                 <FiChevronRight />
               </MenuItemArrow>
             </MenuItem>
-            
-            <MenuItem onClick={() => navigate("/profile/address")}>
+
+            <MenuItem onClick={() => navigate("/address/management")}>
               <MenuItemIcon>🏠</MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>대표 주소</MenuItemLabel>
@@ -114,7 +158,7 @@ const ProfilePage = () => {
                 <FiChevronRight />
               </MenuItemArrow>
             </MenuItem>
-            
+
             <MenuItem onClick={() => navigate("/profile/preference")}>
               <MenuItemIcon>≡</MenuItemIcon>
               <MenuItemContent>
@@ -124,19 +168,21 @@ const ProfilePage = () => {
                 <FiChevronRight />
               </MenuItemArrow>
             </MenuItem>
-            
+
             <MenuItem onClick={() => navigate("/profile/budget")}>
               <MenuItemIcon>📅</MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>예산 관리</MenuItemLabel>
-                <MenuItemDescription>월별 예산 및 지출 확인</MenuItemDescription>
+                <MenuItemDescription>
+                  월별 예산 및 지출 확인
+                </MenuItemDescription>
               </MenuItemContent>
               <MenuItemArrow>
                 <FiChevronRight />
               </MenuItemArrow>
             </MenuItem>
-            
-            <MenuItem onClick={() => navigate("/profile/recommendation")}>
+
+            <MenuItem onClick={() => setShowRecommendationModal(true)}>
               <MenuItemIcon>🍴</MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>음식 추천 시스템 선택</MenuItemLabel>
@@ -167,12 +213,8 @@ const ProfilePage = () => {
         {/* 기타 */}
         <Section>
           <SectionTitle>기타</SectionTitle>
-          <LogoutButton onClick={handleLogout}>
-            로그아웃
-          </LogoutButton>
-          <DeleteButton onClick={handleDeleteAccount}>
-            회원 탈퇴
-          </DeleteButton>
+          <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
+          <DeleteButton onClick={handleDeleteAccount}>회원 탈퇴</DeleteButton>
         </Section>
 
         {/* 앱 버전 */}
@@ -180,28 +222,175 @@ const ProfilePage = () => {
       </Content>
 
       {/* 하단 네비게이션 */}
-      <BottomNav>
-        <NavItem onClick={() => navigate("/home")}>
-          <NavIcon>🏠</NavIcon>
-          <NavLabel>홈</NavLabel>
-        </NavItem>
-        <NavItem onClick={() => navigate("/spending")}>
-          <NavIcon>📋</NavIcon>
-          <NavLabel>지출 내역</NavLabel>
-        </NavItem>
-        <NavItem onClick={() => navigate("/recommendation")}>
-          <NavIcon>🍽️</NavIcon>
-          <NavLabel>음식 추천</NavLabel>
-        </NavItem>
-        <NavItem onClick={() => navigate("/favorites")}>
-          <NavIcon>❤️</NavIcon>
-          <NavLabel>즐겨 찾는 가게</NavLabel>
-        </NavItem>
-        <NavItem active>
-          <NavIcon>👤</NavIcon>
-          <NavLabel active>프로필</NavLabel>
-        </NavItem>
-      </BottomNav>
+      <BottomNavigation activeTab="profile" />
+
+      {/* 닉네임 변경 모달 */}
+      {showNicknameModal && (
+        <ModalOverlay onClick={() => setShowNicknameModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>닉네임 관리</ModalTitle>
+              <CloseButton onClick={() => setShowNicknameModal(false)}>
+                ✕
+              </CloseButton>
+            </ModalHeader>
+            <ModalDescription>
+              이래의 닉네임을 확인하고 업데이트하세요.
+            </ModalDescription>
+
+            <ModalFormGroup>
+              <ModalLabel>현재 닉네임</ModalLabel>
+              <ModalInputReadonly value={user.nickname} readOnly />
+            </ModalFormGroup>
+
+            <ModalFormGroup>
+              <ModalLabel>새로운 닉네임</ModalLabel>
+              <ModalInput
+                type="text"
+                placeholder="새로운 닉네임을 입력하세요"
+                value={newNickname}
+                onChange={(e) => setNewNickname(e.target.value)}
+              />
+            </ModalFormGroup>
+
+            <ModalButton onClick={handleNicknameUpdate}>
+              닉네임 업데이트
+            </ModalButton>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
+      {/* 비밀번호 변경 모달 */}
+      {showPasswordModal && (
+        <ModalOverlay onClick={() => setShowPasswordModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>비밀번호 변경</ModalTitle>
+              <CloseButton onClick={() => setShowPasswordModal(false)}>
+                ✕
+              </CloseButton>
+            </ModalHeader>
+            <ModalDescription>
+              새 비밀번호를 설정하려면 아래 필드를 작성하세요.
+            </ModalDescription>
+
+            <ModalFormGroup>
+              <ModalLabel>현재 비밀번호</ModalLabel>
+              <ModalInput
+                type="password"
+                placeholder="현재 비밀번호를 입력하세요."
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+            </ModalFormGroup>
+
+            <ModalFormGroup>
+              <ModalLabel>새 비밀번호</ModalLabel>
+              <ModalInput
+                type="password"
+                placeholder="새 비밀번호를 입력하세요."
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </ModalFormGroup>
+
+            <ModalFormGroup>
+              <ModalLabel>새 비밀번호 확인</ModalLabel>
+              <ModalInput
+                type="password"
+                placeholder="새 비밀번호를 다시 입력하세요."
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </ModalFormGroup>
+
+            <ModalButton onClick={handlePasswordChange}>
+              비밀번호 변경
+            </ModalButton>
+            <ModalCancelButton onClick={() => setShowPasswordModal(false)}>
+              취소
+            </ModalCancelButton>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
+      {/* 음식 추천 시스템 선택 모달 */}
+      {showRecommendationModal && (
+        <RecommendationModalOverlay
+          onClick={() => setShowRecommendationModal(false)}
+        >
+          <RecommendationModalContent onClick={(e) => e.stopPropagation()}>
+            {/* 상단 텍스트 */}
+            <TopSection>
+              <TopTitle>오늘의 추천</TopTitle>
+              <TopSubtitle>
+                <RobotIcon>🤖</RobotIcon>
+                새로운 맛을 경험해보세요!
+              </TopSubtitle>
+            </TopSection>
+
+            {/* 모달 메인 */}
+            <MainSection>
+              <MainTitle>어떤 유형의 음식을 원하세요?</MainTitle>
+              <MainSubtitle>
+                가장 적합한 음식 결정을 위해 선택해주세요.
+              </MainSubtitle>
+
+              {/* 옵션들 */}
+              <OptionsList>
+                <OptionCard
+                  selected={recommendationType === "절약형"}
+                  onClick={() => setRecommendationType("절약형")}
+                >
+                  <OptionIcon>🐷</OptionIcon>
+                  <OptionContent>
+                    <OptionTitle>절약형</OptionTitle>
+                    <OptionDescription>
+                      예산 준수, 경제적 선택 신호
+                    </OptionDescription>
+                  </OptionContent>
+                </OptionCard>
+
+                <OptionCard
+                  selected={recommendationType === "모험형"}
+                  onClick={() => setRecommendationType("모험형")}
+                >
+                  <OptionIcon>🧭</OptionIcon>
+                  <OptionContent>
+                    <OptionTitle>모험형</OptionTitle>
+                    <OptionDescription>
+                      새로운 경험, 다양성 추구
+                    </OptionDescription>
+                  </OptionContent>
+                </OptionCard>
+
+                <OptionCard
+                  selected={recommendationType === "균형형"}
+                  onClick={() => setRecommendationType("균형형")}
+                >
+                  <OptionIcon>⚖️</OptionIcon>
+                  <OptionContent>
+                    <OptionTitle>균형형</OptionTitle>
+                    <OptionDescription>
+                      안전성과 탐험성의 조화
+                    </OptionDescription>
+                  </OptionContent>
+                </OptionCard>
+              </OptionsList>
+
+              <SaveRecommendationButton
+                onClick={() => {
+                  // TODO: API 호출
+                  setShowRecommendationModal(false);
+                  alert(`${recommendationType} 유형이 저장되었습니다.`);
+                }}
+              >
+                저장하기
+              </SaveRecommendationButton>
+            </MainSection>
+          </RecommendationModalContent>
+        </RecommendationModalOverlay>
+      )}
     </Container>
   );
 };
@@ -244,10 +433,14 @@ const NotificationIcon = styled.div`
 `;
 
 const ProfileAvatar = styled.div<{ large?: boolean; small?: boolean }>`
-  width: ${props => (props.large ? "60px" : props.small ? "40px" : "40px")};
-  height: ${props => (props.large ? "60px" : props.small ? "40px" : "40px")};
+  width: ${(props) => (props.large ? "60px" : props.small ? "40px" : "40px")};
+  height: ${(props) => (props.large ? "60px" : props.small ? "40px" : "40px")};
   border-radius: 50%;
-  background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%);
+  background: linear-gradient(
+    135deg,
+    ${theme.colors.primary} 0%,
+    ${theme.colors.secondary} 100%
+  );
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -329,9 +522,11 @@ const ButtonRow = styled.div`
 
 const ActionButton = styled.button<{ outline?: boolean }>`
   padding: ${theme.spacing.md};
-  background-color: ${props => (props.outline ? "white" : theme.colors.accent)};
-  color: ${props => (props.outline ? theme.colors.secondary : "white")};
-  border: ${props => (props.outline ? `1px solid ${theme.colors.secondary}` : "none")};
+  background-color: ${(props) =>
+    props.outline ? "white" : theme.colors.accent};
+  color: ${(props) => (props.outline ? theme.colors.secondary : "white")};
+  border: ${(props) =>
+    props.outline ? `1px solid ${theme.colors.secondary}` : "none"};
   border-radius: ${theme.borderRadius.md};
   font-size: ${theme.typography.fontSize.sm};
   font-weight: ${theme.typography.fontWeight.medium};
@@ -339,7 +534,7 @@ const ActionButton = styled.button<{ outline?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${props => (props.outline ? "#fff8f0" : "#e55a2b")};
+    background-color: ${(props) => (props.outline ? "#fff8f0" : "#e55a2b")};
   }
 
   &:active {
@@ -369,7 +564,7 @@ const SocialInfo = styled.div`
 `;
 
 const SocialIcon = styled.div`
-  font-size: ${theme.typography.fontSize['2xl']};
+  font-size: ${theme.typography.fontSize["2xl"]};
 `;
 
 const SocialName = styled.span`
@@ -512,41 +707,294 @@ const AppVersion = styled.div`
   margin-top: ${theme.spacing.xl};
 `;
 
-const BottomNav = styled.nav`
+// Modal Styles
+const ModalOverlay = styled.div`
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: white;
-  border-top: 1px solid #e0e0e0;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: space-around;
-  padding: ${theme.spacing.sm} 0;
-  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: ${theme.spacing.lg};
+  z-index: 1000;
 `;
 
-const NavItem = styled.div<{ active?: boolean }>`
+const ModalContent = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.xl};
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+`;
+
+const ModalHeader = styled.div`
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: ${theme.spacing.xs};
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const ModalTitle = styled.h3`
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0;
+`;
+
+const CloseButton = styled.button`
+  background: transparent;
+  border: none;
+  font-size: ${theme.typography.fontSize.xl};
+  color: #757575;
   cursor: pointer;
-  flex: 1;
-  transition: all 0.2s;
+  padding: ${theme.spacing.xs};
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
-    opacity: 0.7;
+    color: #424242;
   }
 `;
 
-const NavIcon = styled.div`
+const ModalDescription = styled.p`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
+  margin: 0 0 ${theme.spacing.lg} 0;
+  line-height: 1.5;
+`;
+
+const ModalFormGroup = styled.div`
+  margin-bottom: ${theme.spacing.lg};
+`;
+
+const ModalLabel = styled.label`
+  display: block;
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: #424242;
+  margin-bottom: ${theme.spacing.sm};
+`;
+
+const ModalInput = styled.input`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  border: 1px solid #e0e0e0;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  color: #212121;
+  background-color: white;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: ${theme.colors.accent};
+  }
+
+  &::placeholder {
+    color: #bdbdbd;
+  }
+`;
+
+const ModalInputReadonly = styled.input`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  border: 1px solid #e0e0e0;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  color: #757575;
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+`;
+
+const ModalButton = styled.button`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.accent};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: ${theme.spacing.sm};
+
+  &:hover {
+    background-color: #e55a2b;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const ModalCancelButton = styled.button`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  background-color: white;
+  color: #424242;
+  border: 1px solid #e0e0e0;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+// Recommendation Modal Styles
+const RecommendationModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: ${theme.spacing["3xl"]};
+  z-index: 1000;
+`;
+
+const RecommendationModalContent = styled.div`
+  width: 100%;
+  max-width: 430px;
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.xl};
+`;
+
+const TopSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: ${theme.spacing.md};
+  padding: 0 ${theme.spacing.lg};
+`;
+
+const TopTitle = styled.h2`
+  font-size: ${theme.typography.fontSize["2xl"]};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: white;
+  margin: 0;
+`;
+
+const TopSubtitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  font-size: ${theme.typography.fontSize.base};
+  color: rgba(255, 255, 255, 0.8);
+`;
+
+const RobotIcon = styled.span`
   font-size: ${theme.typography.fontSize.xl};
 `;
 
-const NavLabel = styled.span<{ active?: boolean }>`
-  font-size: ${theme.typography.fontSize.xs};
-  color: ${props => (props.active ? theme.colors.accent : "#757575")};
-  font-weight: ${props => (props.active ? theme.typography.fontWeight.semibold : theme.typography.fontWeight.normal)};
+const MainSection = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg} ${theme.borderRadius.lg} 0 0;
+  padding: ${theme.spacing.xl} ${theme.spacing.lg};
+  min-height: 500px;
+`;
+
+const MainTitle = styled.h3`
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0 0 ${theme.spacing.sm} 0;
+  text-align: center;
+`;
+
+const MainSubtitle = styled.p`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
+  text-align: center;
+  margin: 0 0 ${theme.spacing["2xl"]} 0;
+  line-height: 1.5;
+`;
+
+const OptionsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing["2xl"]};
+`;
+
+const OptionCard = styled.div<{ selected?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.md};
+  padding: ${theme.spacing.lg};
+  border: 2px solid
+    ${(props) => (props.selected ? theme.colors.accent : "#e0e0e0")};
+  border-radius: ${theme.borderRadius.lg};
+  background-color: ${(props) =>
+    props.selected ? "rgba(255, 107, 53, 0.05)" : "white"};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: ${(props) =>
+      props.selected ? theme.colors.accent : "#bdbdbd"};
+    background-color: ${(props) =>
+      props.selected ? "rgba(255, 107, 53, 0.05)" : "#fafafa"};
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const OptionIcon = styled.div`
+  font-size: ${theme.typography.fontSize["3xl"]};
+  flex-shrink: 0;
+`;
+
+const OptionContent = styled.div`
+  flex: 1;
+`;
+
+const OptionTitle = styled.div`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin-bottom: ${theme.spacing.xs};
+`;
+
+const OptionDescription = styled.div`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
+  line-height: 1.4;
+`;
+
+const SaveRecommendationButton = styled.button`
+  width: 100%;
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.accent};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #e55a2b;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
 
 export default ProfilePage;
