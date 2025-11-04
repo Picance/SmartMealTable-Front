@@ -10,6 +10,8 @@ const AddressDetailPage = () => {
   const state = location.state as {
     roadAddress?: string;
     jibunAddress?: string;
+    lat?: number;
+    lng?: number;
   };
 
   // 주소 정보
@@ -17,10 +19,8 @@ const AddressDetailPage = () => {
   const [addressType, setAddressType] = useState<
     "집" | "직장" | "학교" | "기타"
   >("집");
-  const [roadAddress] = useState(state?.roadAddress || "서울 특별시 공릉로");
-  const [jibunAddress] = useState(
-    state?.jibunAddress || "서울 특별시 노원구 공릉동"
-  );
+  const [roadAddress] = useState(state?.roadAddress || "");
+  const [jibunAddress] = useState(state?.jibunAddress || "");
   const [detailAddress, setDetailAddress] = useState("");
 
   const handleSave = () => {

@@ -35,6 +35,8 @@ import FoodPreferencePage from "./pages/preference/FoodPreferencePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import AffiliationPage from "./pages/profile/AffiliationPage";
 import AddressManagementPage from "./pages/address/AddressManagementPage";
+import AddressMapPage from "./pages/address/AddressMapPage";
+import AddressDetailPage from "./pages/address/AddressDetailPage";
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -63,7 +65,10 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
-      <NavermapsProvider ncpKeyId={import.meta.env.VITE_NAVER_MAP_CLIENT_ID}>
+      <NavermapsProvider
+        ncpKeyId={import.meta.env.VITE_NAVER_MAP_CLIENT_ID}
+        submodules={["geocoder"]}
+      >
         <BrowserRouter>
           <Routes>
             {/* Auth Routes */}
@@ -240,6 +245,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AddressManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/address/map"
+              element={
+                <ProtectedRoute>
+                  <AddressMapPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/address/detail"
+              element={
+                <ProtectedRoute>
+                  <AddressDetailPage />
                 </ProtectedRoute>
               }
             />

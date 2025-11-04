@@ -1,17 +1,43 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiChevronLeft } from "react-icons/fi";
+import NaverMapPicker from "../../components/map/NaverMapPicker";
 
 const AddressMapPage = () => {
   const navigate = useNavigate();
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+    address: string;
+    roadAddress?: string;
+    jibunAddress?: string;
+  } | null>(null);
+
+  const handleLocationSelect = (location: {
+    lat: number;
+    lng: number;
+    address: string;
+    roadAddress?: string;
+    jibunAddress?: string;
+  }) => {
+    setSelectedLocation(location);
+  };
 
   const handleConfirmLocation = () => {
+    if (!selectedLocation) {
+      alert("위치를 선택해주세요.");
+      return;
+    }
+
     // 선택된 위치 정보 전달
     navigate("/address/detail", {
       state: {
-        roadAddress: "서울 노원구 공릉로 179",
-        jibunAddress: "서울 노원구 공릉동 419-43",
+        roadAddress: selectedLocation.address,
+        jibunAddress: selectedLocation.address,
+        lat: selectedLocation.lat,
+        lng: selectedLocation.lng,
       },
     });
   };
@@ -26,32 +52,38 @@ const AddressMapPage = () => {
         <Spacer />
       </Header>
 
-      {/* 지도 영역 */}
-      <MapContainer>
-        <MapPlaceholder>
-          <MapIcon>🗺️</MapIcon>
-          <MapText>지도 영역</MapText>
-          <MapSubText>실제로는 카카오맵 또는 네이버맵 API 사용</MapSubText>
-        </MapPlaceholder>
-        <LocationMarker>📍</LocationMarker>
-        <CompassButton>🧭</CompassButton>
-      </MapContainer>
+      <Content>
+        {/* 지도 영역 */}
+        <MapContainer>
+          <NaverMapPicker
+            onLocationSelect={handleLocationSelect}
+            height="100%"
+            showAddressBox={false}
+          />
+        </MapContainer>
 
-      {/* 주소 정보 */}
-      <AddressInfo>
-        <AddressTitle>서울 노원구 공릉로 179</AddressTitle>
-        <AddressSubtitle>서울 노원구 공릉동 419-43</AddressSubtitle>
-        <WarningBox>
-          <WarningText>
-            지도의 표시와 실제 주소가 맞는지 확인해주세요.
-          </WarningText>
-        </WarningBox>
-      </AddressInfo>
+        {/* 주소 정보 */}
+        <AddressInfo>
+          <AddressTitle>
+            {selectedLocation?.roadAddress ||
+              selectedLocation?.address ||
+              "위치를 선택해주세요"}
+          </AddressTitle>
+          {selectedLocation?.jibunAddress && (
+            <AddressSubtitle>{selectedLocation.jibunAddress}</AddressSubtitle>
+          )}
+          <WarningBox>
+            <WarningText>
+              지도의 표시와 실제 주소가 맞는지 확인해주세요.
+            </WarningText>
+          </WarningBox>
+        </AddressInfo>
 
-      {/* 확인 버튼 */}
-      <ConfirmButton onClick={handleConfirmLocation}>
-        이 위치로 주소 등록
-      </ConfirmButton>
+        {/* 확인 버튼 */}
+        <ConfirmButton onClick={handleConfirmLocation}>
+          이 위치로 주소 등록
+        </ConfirmButton>
+      </Content>
     </Container>
   );
 };
@@ -59,6 +91,7 @@ const AddressMapPage = () => {
 // Styled Components
 const Container = styled.div`
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: #fafafa;
   display: flex;
   flex-direction: column;
@@ -103,125 +136,45 @@ const Spacer = styled.div`
   width: 32px;
 `;
 
-const MapContainer = styled.div`
-  position: relative;
+const Content = styled.div`
   flex: 1;
-  background-color: #e8f0f2;
-  overflow: hidden;
-`;
-
-const MapPlaceholder = styled.div`
-  width: 100%;
-  height: 100%;
+  padding: ${theme.spacing.lg};
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #b3d9e6 0%, #d4e7f0 50%, #e8f0f2 100%);
-  position: relative;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 20%;
-    left: 10%;
-    width: 200px;
-    height: 150px;
-    background-color: rgba(255, 255, 255, 0.3);
-    border-radius: ${theme.borderRadius.lg};
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: 15%;
-    right: 15%;
-    width: 150px;
-    height: 100px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: ${theme.borderRadius.lg};
-  }
+  gap: ${theme.spacing.lg};
+  overflow-y: auto;
 `;
 
-const MapIcon = styled.div`
-  font-size: 64px;
-  margin-bottom: ${theme.spacing.md};
-  position: relative;
-  z-index: 1;
-`;
-
-const MapText = styled.div`
-  font-size: ${theme.typography.fontSize.xl};
-  font-weight: ${theme.typography.fontWeight.bold};
-  color: #424242;
-  position: relative;
-  z-index: 1;
-`;
-
-const MapSubText = styled.div`
-  font-size: ${theme.typography.fontSize.sm};
-  color: #757575;
-  margin-top: ${theme.spacing.sm};
-  position: relative;
-  z-index: 1;
-`;
-
-const LocationMarker = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -100%);
-  font-size: 48px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-  z-index: 2;
-`;
-
-const CompassButton = styled.button`
-  position: absolute;
-  bottom: 120px;
-  right: ${theme.spacing.lg};
-  width: 48px;
-  height: 48px;
-  background-color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: ${theme.typography.fontSize["2xl"]};
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3;
-  transition: all 0.2s;
-
-  &:hover {
-    transform: scale(1.1);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
+const MapContainer = styled.div`
+  width: 100%;
+  height: 400px;
+  border-radius: ${theme.borderRadius.lg};
+  overflow: hidden;
+  background-color: #e8f0f2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const AddressInfo = styled.div`
   background-color: white;
-  padding: ${theme.spacing.xl} ${theme.spacing.lg};
-  border-top-left-radius: ${theme.borderRadius.lg};
-  border-top-right-radius: ${theme.borderRadius.lg};
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  padding: ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.lg};
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.sm};
 `;
 
 const AddressTitle = styled.h2`
-  font-size: ${theme.typography.fontSize.xl};
+  font-size: ${theme.typography.fontSize.lg};
   font-weight: ${theme.typography.fontWeight.bold};
   color: #212121;
-  margin: 0 0 ${theme.spacing.xs} 0;
+  margin: 0;
 `;
 
 const AddressSubtitle = styled.p`
   font-size: ${theme.typography.fontSize.base};
   color: #757575;
-  margin: 0 0 ${theme.spacing.lg} 0;
+  margin: 0;
 `;
 
 const WarningBox = styled.div`
@@ -239,8 +192,8 @@ const WarningText = styled.p`
 `;
 
 const ConfirmButton = styled.button`
-  margin: ${theme.spacing.lg};
-  padding: ${theme.spacing.md};
+  width: 100%;
+  padding: ${theme.spacing.lg};
   background-color: ${theme.colors.accent};
   color: white;
   border: none;

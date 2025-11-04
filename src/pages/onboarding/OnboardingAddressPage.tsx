@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { FiSearch, FiMapPin, FiEdit2, FiTrash2 } from "react-icons/fi";
+import AddressMapModal from "../../components/address/AddressMapModal";
 
 interface SavedAddress {
   id: number;
@@ -59,6 +60,26 @@ const OnboardingAddressPage = () => {
   // 건너뛰기
   const handleSkip = () => {
     navigate("/onboarding/budget");
+  };
+
+  // 선택한 위치로 주소 등록
+  const handleRegisterLocation = (location: {
+    lat: number;
+    lng: number;
+    address: string;
+    roadAddress?: string;
+    jibunAddress?: string;
+  }) => {
+    // 새 주소 추가
+    const newAddress: SavedAddress = {
+      id: savedAddresses.length + 1,
+      type: "home",
+      address: location.address,
+      icon: "🏠",
+    };
+
+    setSavedAddresses([...savedAddresses, newAddress]);
+    setShowLocationModal(false);
   };
 
   return (
@@ -135,37 +156,13 @@ const OnboardingAddressPage = () => {
       </ContentContainer>
 
       {/* 현재 위치 찾기 모달 */}
-      {showLocationModal && (
-        <Modal onClick={() => setShowLocationModal(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalHeader>
-              <ModalTitle>현재 위치로 찾기</ModalTitle>
-              <CloseButton onClick={() => setShowLocationModal(false)}>
-                ×
-              </CloseButton>
-            </ModalHeader>
-
-            <ModalBody>
-              <MapPlaceholder>
-                <MapIcon>🗺️</MapIcon>
-                <MapText>지도 영역</MapText>
-              </MapPlaceholder>
-
-              <LocationInfo>
-                <LocationAddress>서울 노원구 공릉로 179</LocationAddress>
-                <LocationDetail>서울 노원구 공릉동 419-43</LocationDetail>
-                <LocationWarning>
-                  지도의 표시와 실제 주소가 맞는지 확인해주세요.
-                </LocationWarning>
-              </LocationInfo>
-
-              <RegisterButton onClick={() => setShowLocationModal(false)}>
-                이 위치로 주소 등록
-              </RegisterButton>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      )}
+      <AddressMapModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onConfirm={handleRegisterLocation}
+        title="현재 위치로 찾기"
+        confirmButtonText="이 위치로 주소 등록"
+      />
     </PageContainer>
   );
 };
@@ -410,146 +407,6 @@ const SkipButton = styled.button`
 
   &:hover {
     background-color: #f5f5f5;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-`;
-
-// Modal Styles
-const Modal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-`;
-
-const ModalContent = styled.div`
-  background-color: #ffffff;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 390px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-`;
-
-const ModalHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
-`;
-
-const ModalTitle = styled.h2`
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #000000;
-  margin: 0;
-`;
-
-const CloseButton = styled.button`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: #666666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-`;
-
-const ModalBody = styled.div`
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  overflow-y: auto;
-`;
-
-const MapPlaceholder = styled.div`
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-`;
-
-const MapIcon = styled.div`
-  font-size: 3rem;
-`;
-
-const MapText = styled.p`
-  font-size: 0.875rem;
-  color: #666666;
-  margin: 0;
-`;
-
-const LocationInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const LocationAddress = styled.h3`
-  font-size: 1rem;
-  font-weight: 600;
-  color: #000000;
-  margin: 0;
-`;
-
-const LocationDetail = styled.p`
-  font-size: 0.875rem;
-  color: #666666;
-  margin: 0;
-`;
-
-const LocationWarning = styled.p`
-  font-size: 0.75rem;
-  color: #ff6b35;
-  background-color: #fff5f0;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin: 0.5rem 0 0 0;
-`;
-
-const RegisterButton = styled.button`
-  width: 100%;
-  height: 56px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  background-color: #ff6b35;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 0.5rem;
-
-  &:hover {
-    background-color: #ff5722;
   }
 
   &:active {
