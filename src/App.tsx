@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
+import { NavermapsProvider } from "react-naver-maps";
 // import { useAuthStore } from "./store/authStore";
 import { theme } from "./styles/theme";
 import { GlobalStyle } from "./styles/GlobalStyle";
@@ -62,190 +63,192 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
-      <BrowserRouter>
-        <Routes>
-          {/* Auth Routes */}
-          <Route path="/" element={<SplashPage />} />
-          <Route path="/login-options" element={<LoginOptionsPage />} />
-          <Route path="/login" element={<EmailLoginPage />} />
-          <Route path="/signup" element={<EmailSignupPage />} />
+      <NavermapsProvider ncpKeyId={import.meta.env.VITE_NAVER_MAP_CLIENT_ID}>
+        <BrowserRouter>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/" element={<SplashPage />} />
+            <Route path="/login-options" element={<LoginOptionsPage />} />
+            <Route path="/login" element={<EmailLoginPage />} />
+            <Route path="/signup" element={<EmailSignupPage />} />
 
-          {/* Onboarding Routes */}
-          <Route
-            path="/onboarding/profile"
-            element={
-              <ProtectedRoute requireOnboarding={false}>
-                <OnboardingProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/onboarding/address"
-            element={
-              <ProtectedRoute requireOnboarding={false}>
-                <OnboardingAddressPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/onboarding/budget"
-            element={
-              <ProtectedRoute requireOnboarding={false}>
-                <OnboardingBudgetPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/onboarding/preference"
-            element={
-              <ProtectedRoute requireOnboarding={false}>
-                <OnboardingPreferencePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/onboarding/policy"
-            element={
-              <ProtectedRoute requireOnboarding={false}>
-                <OnboardingPolicyPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Onboarding Routes */}
+            <Route
+              path="/onboarding/profile"
+              element={
+                <ProtectedRoute requireOnboarding={false}>
+                  <OnboardingProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding/address"
+              element={
+                <ProtectedRoute requireOnboarding={false}>
+                  <OnboardingAddressPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding/budget"
+              element={
+                <ProtectedRoute requireOnboarding={false}>
+                  <OnboardingBudgetPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding/preference"
+              element={
+                <ProtectedRoute requireOnboarding={false}>
+                  <OnboardingPreferencePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding/policy"
+              element={
+                <ProtectedRoute requireOnboarding={false}>
+                  <OnboardingPolicyPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Main App Routes */}
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <HomePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/recommendation"
-            element={
-              <ProtectedRoute>
-                <RecommendationPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/store/:storeId"
-            element={
-              <ProtectedRoute>
-                <StoreDetailPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/menu/:menuId"
-            element={
-              <ProtectedRoute>
-                <MenuDetailPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cart"
-            element={
-              <ProtectedRoute>
-                <CartPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/spending"
-            element={
-              <ProtectedRoute>
-                <SpendingPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/spending/create"
-            element={
-              <ProtectedRoute>
-                <CreateExpenditurePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/spending/:id"
-            element={
-              <ProtectedRoute>
-                <ExpenditureDetailPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/spending/success"
-            element={
-              <ProtectedRoute>
-                <ExpenditureSuccessPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/favorites"
-            element={
-              <ProtectedRoute>
-                <FavoritesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile/budget"
-            element={
-              <ProtectedRoute>
-                <BudgetManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile/preference"
-            element={
-              <ProtectedRoute>
-                <FoodPreferencePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/affiliation"
-            element={
-              <ProtectedRoute>
-                <AffiliationPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/address/management"
-            element={
-              <ProtectedRoute>
-                <AddressManagementPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Main App Routes */}
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recommendation"
+              element={
+                <ProtectedRoute>
+                  <RecommendationPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/store/:storeId"
+              element={
+                <ProtectedRoute>
+                  <StoreDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/menu/:menuId"
+              element={
+                <ProtectedRoute>
+                  <MenuDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/spending"
+              element={
+                <ProtectedRoute>
+                  <SpendingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/spending/create"
+              element={
+                <ProtectedRoute>
+                  <CreateExpenditurePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/spending/:id"
+              element={
+                <ProtectedRoute>
+                  <ExpenditureDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/spending/success"
+              element={
+                <ProtectedRoute>
+                  <ExpenditureSuccessPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/favorites"
+              element={
+                <ProtectedRoute>
+                  <FavoritesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/budget"
+              element={
+                <ProtectedRoute>
+                  <BudgetManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/preference"
+              element={
+                <ProtectedRoute>
+                  <FoodPreferencePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/affiliation"
+              element={
+                <ProtectedRoute>
+                  <AffiliationPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/address/management"
+              element={
+                <ProtectedRoute>
+                  <AddressManagementPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </NavermapsProvider>
     </ThemeProvider>
   );
 }
