@@ -41,6 +41,12 @@ export interface SignupRequest {
   password: string;
 }
 
+export interface SignupResponse {
+  memberId: number;
+  email: string;
+  name: string;
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;

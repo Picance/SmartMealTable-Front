@@ -97,7 +97,7 @@ const EmailLoginPage = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder="이메일을 입력해주세요"
-              hasError={!!errors.email}
+              $hasError={!!errors.email}
             />
             {errors.email && <ErrorText>{errors.email}</ErrorText>}
           </InputGroup>
@@ -110,7 +110,7 @@ const EmailLoginPage = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="비밀번호를 입력해주세요"
-              hasError={!!errors.password}
+              $hasError={!!errors.password}
             />
             {errors.password && <ErrorText>{errors.password}</ErrorText>}
           </InputGroup>
@@ -207,11 +207,11 @@ const Label = styled.label`
   color: #000000;
 `;
 
-const StyledInput = styled.input<{ hasError?: boolean }>`
+const StyledInput = styled.input<{ $hasError?: boolean }>`
   width: 100%;
   height: 48px;
   padding: 0 1rem;
-  border: 1px solid ${(props) => (props.hasError ? "#ff4444" : "#e0e0e0")};
+  border: 1px solid ${(props) => (props.$hasError ? "#ff4444" : "#e0e0e0")};
   border-radius: 8px;
   font-size: 1rem;
   color: #000000;
@@ -224,7 +224,7 @@ const StyledInput = styled.input<{ hasError?: boolean }>`
 
   &:focus {
     outline: none;
-    border-color: ${(props) => (props.hasError ? "#ff4444" : "#00796b")};
+    border-color: ${(props) => (props.$hasError ? "#ff4444" : "#00796b")};
   }
 
   &:disabled {

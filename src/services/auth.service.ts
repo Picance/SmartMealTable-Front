@@ -5,32 +5,25 @@ import type {
   EmailCheckResponse,
   LoginRequest,
   SignupRequest,
+  SignupResponse,
   SocialLoginRequest,
   SocialLoginResponse,
 } from "../types/api";
 
 export const authService = {
   // 이메일 회원가입
-  async signup(data: SignupRequest): Promise<ApiResponse<AuthResponse>> {
-    const response = await api.post<ApiResponse<AuthResponse>>(
-      "/auth/signup/email",
+  async signup(data: SignupRequest): Promise<ApiResponse<SignupResponse>> {
+    const response = await api.post<ApiResponse<SignupResponse>>(
+      "/api/v1/auth/signup/email",
       data
     );
-
-    // 회원가입 성공 시 자동 로그인
-    if (response.data.result === "SUCCESS" && response.data.data) {
-      const { accessToken, refreshToken } = response.data.data;
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-    }
-
     return response.data;
   },
 
   // 이메일 로그인
   async login(data: LoginRequest): Promise<ApiResponse<AuthResponse>> {
     const response = await api.post<ApiResponse<AuthResponse>>(
-      "/auth/login/email",
+      "/api/v1/auth/login/email",
       data
     );
 

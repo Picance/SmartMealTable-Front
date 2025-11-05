@@ -153,11 +153,31 @@ const EmailSignupPage = () => {
       });
 
       if (response.result === "SUCCESS" && response.data) {
-        const { member, accessToken, refreshToken } = response.data;
-        setAuth(member, accessToken, refreshToken);
-        navigate("/onboarding/profile", { replace: true });
+        // 회원가입 성공 후 자동 로그인
+        try {
+          const loginResponse = await authService.login({
+            email: formData.email,
+            password: formData.password,
+          });
+
+          if (loginResponse.result === "SUCCESS" && loginResponse.data) {
+            const { member, accessToken, refreshToken } = loginResponse.data;
+            setAuth(member, accessToken, refreshToken);
+            navigate("/onboarding/profile", { replace: true });
+          }
+        } catch (loginError: any) {
+          // 로그인 실패 시 로그인 페이지로 이동
+          console.error("Auto login error:", loginError);
+          navigate("/login", {
+            state: {
+              message: "회원가입이 완료되었습니다. 로그인해주세요.",
+              email: formData.email,
+            },
+          });
+        }
       }
     } catch (error: any) {
+      console.error("Signup error:", error);
       if (error.response?.data?.error) {
         setErrors({ general: error.response.data.error.message });
       } else {
