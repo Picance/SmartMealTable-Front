@@ -20,6 +20,8 @@ export const getGoogleAuthUrl = (): string => {
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile",
       "openid",
+      "email",
+      "profile",
     ].join(" "),
     access_type: "offline",
     prompt: "consent",

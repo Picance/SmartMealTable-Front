@@ -47,7 +47,7 @@ const GoogleCallbackPage = () => {
 
           // 신규 회원이면 온보딩으로, 기존 회원이면 홈으로
           if (isNewMember) {
-            navigate("/onboarding/policy");
+            navigate("/onboarding/profile");
           } else {
             navigate("/home");
           }
