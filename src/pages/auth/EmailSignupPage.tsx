@@ -161,8 +161,15 @@ const EmailSignupPage = () => {
           });
 
           if (loginResponse.result === "SUCCESS" && loginResponse.data) {
-            const { memberId, email, name, onboardingComplete, accessToken, refreshToken } = loginResponse.data;
-            
+            const {
+              memberId,
+              email,
+              name,
+              onboardingComplete,
+              accessToken,
+              refreshToken,
+            } = loginResponse.data;
+
             // Member 객체 생성
             const member = {
               memberId,

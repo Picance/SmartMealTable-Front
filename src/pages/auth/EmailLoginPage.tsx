@@ -59,8 +59,15 @@ const EmailLoginPage = () => {
       console.log("로그인 응답:", response);
 
       if (response.result === "SUCCESS" && response.data) {
-        const { memberId, email, name, onboardingComplete, accessToken, refreshToken } = response.data;
-        
+        const {
+          memberId,
+          email,
+          name,
+          onboardingComplete,
+          accessToken,
+          refreshToken,
+        } = response.data;
+
         // Member 객체 생성
         const member = {
           memberId,
