@@ -11,6 +11,7 @@ import LoginOptionsPage from "./pages/auth/LoginOptionsPage";
 import EmailLoginPage from "./pages/auth/EmailLoginPage";
 import EmailSignupPage from "./pages/auth/EmailSignupPage";
 import GoogleCallbackPage from "./pages/auth/GoogleCallbackPage";
+import KakaoCallbackPage from "./pages/auth/KakaoCallbackPage";
 
 // Onboarding
 import OnboardingProfilePage from "./pages/onboarding/OnboardingProfilePage";
@@ -80,6 +81,10 @@ function App() {
             <Route
               path="/oauth/google/callback"
               element={<GoogleCallbackPage />}
+            />
+            <Route
+              path="/oauth/kakao/callback"
+              element={<KakaoCallbackPage />}
             />
 
             {/* Onboarding Routes */}

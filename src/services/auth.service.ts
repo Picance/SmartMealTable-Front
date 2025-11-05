@@ -46,17 +46,14 @@ export const authService = {
   // 카카오 로그인
   async kakaoLogin(
     data: SocialLoginRequest
-  ): Promise<ApiResponse<AuthResponse>> {
-    const response = await api.post<ApiResponse<AuthResponse>>(
-      "/auth/login/kakao",
+  ): Promise<ApiResponse<SocialLoginResponse>> {
+    const response = await api.post<ApiResponse<SocialLoginResponse>>(
+      "/api/v1/auth/login/kakao",
       data
     );
 
-    if (response.data.result === "SUCCESS" && response.data.data) {
-      const { accessToken, refreshToken } = response.data.data;
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-    }
+    // 카카오 로그인의 경우 토큰은 응답 헤더나 쿠키에서 받을 수 있음
+    // 필요시 response.headers에서 토큰 추출
 
     return response.data;
   },

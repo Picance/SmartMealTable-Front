@@ -4,13 +4,14 @@ import { FcGoogle } from "react-icons/fc";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { MdEmail, MdPerson } from "react-icons/md";
 import { redirectToGoogleLogin } from "../../utils/googleAuth";
+import { redirectToKakaoLogin } from "../../utils/kakaoAuth";
 
 const LoginOptionsPage = () => {
   const navigate = useNavigate();
 
   const handleKakaoLogin = () => {
-    // TODO: 카카오 로그인 구현
-    console.log("카카오 로그인");
+    // 카카오 로그인 페이지로 리다이렉트
+    redirectToKakaoLogin();
   };
 
   const handleGoogleLogin = () => {
