@@ -89,7 +89,7 @@ const OnboardingAddressPage = () => {
           <Title>신규 회원 주소 등록</Title>
         </Header>
 
-        <InfoText>지구 방문하는 곳의 주소를 등록해보세요</InfoText>
+        <InfoText>자주 방문하는 곳의 주소를 등록해보세요</InfoText>
 
         <Section>
           <SectionLabel>주소 추가</SectionLabel>

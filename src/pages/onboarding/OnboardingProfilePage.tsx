@@ -124,7 +124,7 @@ const OnboardingProfilePage = () => {
     }
   };
 
-  // 소속 진단 정보 타입
+  // 소속 집단 정보 타입
   type AffiliationType = "student" | "worker" | "none";
   const [affiliationType, setAffiliationType] =
     useState<AffiliationType | null>(null);
@@ -157,7 +157,7 @@ const OnboardingProfilePage = () => {
           </Section>
 
           <Section>
-            <Label>소속 진단 정보</Label>
+            <Label>소속 집단 정보</Label>
             <ButtonGroup>
               <SelectButton
                 type="button"
