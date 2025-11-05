@@ -70,6 +70,12 @@ export interface SocialLoginResponse {
   isNewMember: boolean;
 }
 
+// 이메일 중복 확인 응답
+export interface EmailCheckResponse {
+  available: boolean;
+  message: string;
+}
+
 // 온보딩 관련
 export interface OnboardingProfileRequest {
   nickname: string;

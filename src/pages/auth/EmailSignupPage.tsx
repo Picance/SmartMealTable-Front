@@ -19,6 +19,8 @@ const EmailSignupPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailChecked, setEmailChecked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -33,27 +35,68 @@ const EmailSignupPage = () => {
     return re.test(password);
   };
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
 
-    // 이메일 입력 시 자동으로 유효성 검사
-    if (name === "email" && value && validateEmail(value)) {
-      try {
-        const response = await authService.checkEmail(value);
-        setEmailAvailable(response.available);
-        if (!response.available) {
+    // 이메일 변경 시 중복 확인 상태 초기화
+    if (name === "email") {
+      setEmailAvailable(null);
+      setEmailChecked(false);
+    }
+  };
+
+  // 이메일 중복 확인 버튼 클릭 핸들러
+  const handleCheckEmail = async () => {
+    if (!formData.email) {
+      setErrors((prev) => ({
+        ...prev,
+        email: "이메일을 입력해주세요",
+      }));
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      setErrors((prev) => ({
+        ...prev,
+        email: "올바른 이메일 형식이 아닙니다",
+      }));
+      return;
+    }
+
+    setCheckingEmail(true);
+    setErrors((prev) => ({ ...prev, email: "" }));
+
+    try {
+      const response = await authService.checkEmail(formData.email);
+
+      if (response.result === "SUCCESS" && response.data) {
+        setEmailAvailable(response.data.available);
+        setEmailChecked(true);
+
+        if (!response.data.available) {
           setErrors((prev) => ({
             ...prev,
-            email: "이미 사용 중인 이메일입니다",
+            email: response.data?.message || "이미 사용 중인 이메일입니다",
           }));
         }
-      } catch (error) {
-        console.error("Email check error:", error);
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          email: "이메일 확인 중 오류가 발생했습니다",
+        }));
       }
-    } else if (name === "email") {
-      setEmailAvailable(null);
+    } catch (error: any) {
+      console.error("Email check error:", error);
+      setErrors((prev) => ({
+        ...prev,
+        email:
+          error.response?.data?.error?.message ||
+          "이메일 확인 중 오류가 발생했습니다",
+      }));
+    } finally {
+      setCheckingEmail(false);
     }
   };
 
@@ -76,10 +119,10 @@ const EmailSignupPage = () => {
       newErrors.email = "이메일을 입력해주세요";
     } else if (!validateEmail(formData.email)) {
       newErrors.email = "올바른 이메일 형식이 아닙니다";
+    } else if (!emailChecked) {
+      newErrors.email = "이메일 중복 확인을 해주세요";
     } else if (emailAvailable === false) {
       newErrors.email = "이미 사용 중인 이메일입니다";
-    } else if (emailAvailable === null) {
-      newErrors.email = "이메일 중복 확인을 해주세요";
     }
 
     if (!formData.password) {
@@ -131,7 +174,8 @@ const EmailSignupPage = () => {
     formData.password &&
     formData.confirmPassword &&
     validateEmail(formData.email) &&
-    emailAvailable !== false;
+    emailChecked &&
+    emailAvailable === true;
 
   return (
     <PageContainer>
@@ -151,29 +195,42 @@ const EmailSignupPage = () => {
               value={formData.name}
               onChange={handleChange}
               placeholder="김민준"
-              hasError={!!errors.name}
+              $hasError={!!errors.name}
             />
             {errors.name && <ErrorText>{errors.name}</ErrorText>}
           </InputGroup>
 
           <InputGroup>
             <Label>이메일</Label>
-            <InputWrapper>
-              <StyledInput
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="minjun.kim@example.com"
-                hasError={!!errors.email}
-              />
-              {emailAvailable === true && (
-                <ValidationIcon>
-                  <MdCheckCircle size={20} />
-                </ValidationIcon>
-              )}
-            </InputWrapper>
-            {emailAvailable === true && (
+            <EmailInputContainer>
+              <EmailInputWrapper>
+                <StyledInput
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="minjun.kim@example.com"
+                  $hasError={!!errors.email}
+                />
+                {emailAvailable === true && emailChecked && (
+                  <ValidationIcon>
+                    <MdCheckCircle size={20} />
+                  </ValidationIcon>
+                )}
+              </EmailInputWrapper>
+              <CheckButton
+                type="button"
+                onClick={handleCheckEmail}
+                disabled={
+                  !formData.email ||
+                  !validateEmail(formData.email) ||
+                  checkingEmail
+                }
+              >
+                {checkingEmail ? "확인 중..." : "중복 확인"}
+              </CheckButton>
+            </EmailInputContainer>
+            {emailAvailable === true && emailChecked && (
               <SuccessText>사용 가능한 이메일입니다</SuccessText>
             )}
             {errors.email && <ErrorText>{errors.email}</ErrorText>}
@@ -188,7 +245,7 @@ const EmailSignupPage = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="SecurePassword123!"
-                hasError={!!errors.password}
+                $hasError={!!errors.password}
               />
               <EyeIcon onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? (
@@ -210,7 +267,7 @@ const EmailSignupPage = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="SecurePassword123!"
-                hasError={!!errors.confirmPassword}
+                $hasError={!!errors.confirmPassword}
               />
               <EyeIcon
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -290,16 +347,53 @@ const Label = styled.label`
   color: #000000;
 `;
 
-const InputWrapper = styled.div`
-  position: relative;
+const EmailInputContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
   width: 100%;
 `;
 
-const StyledInput = styled.input<{ hasError?: boolean }>`
+const EmailInputWrapper = styled.div`
+  position: relative;
+  flex: 1;
+`;
+
+const CheckButton = styled.button`
+  height: 48px;
+  padding: 0 1rem;
+  border: 1px solid #00796b;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #00796b;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 88px;
+
+  &:hover:not(:disabled) {
+    background-color: #00796b;
+    color: white;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    border-color: #e0e0e0;
+    color: #999999;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+  }
+`;
+
+const StyledInput = styled.input<{ $hasError?: boolean }>`
   width: 100%;
   height: 48px;
   padding: 0 1rem;
-  border: 1px solid ${(props) => (props.hasError ? "#ff4444" : "#e0e0e0")};
+  border: 1px solid ${(props) => (props.$hasError ? "#ff4444" : "#e0e0e0")};
   border-radius: 8px;
   font-size: 1rem;
   color: #000000;
@@ -312,7 +406,7 @@ const StyledInput = styled.input<{ hasError?: boolean }>`
 
   &:focus {
     outline: none;
-    border-color: ${(props) => (props.hasError ? "#ff4444" : "#00796b")};
+    border-color: ${(props) => (props.$hasError ? "#ff4444" : "#00796b")};
   }
 
   &:disabled {

@@ -2,6 +2,7 @@ import api from "./api";
 import type {
   ApiResponse,
   AuthResponse,
+  EmailCheckResponse,
   LoginRequest,
   SignupRequest,
   SocialLoginRequest,
@@ -80,13 +81,18 @@ export const authService = {
   },
 
   // 이메일 중복 확인
-  async checkEmail(
-    email: string
-  ): Promise<{ available: boolean; message: string }> {
-    const response = await api.get<{ available: boolean; message: string }>(
-      `/auth/check-email?email=${encodeURIComponent(email)}`
-    );
-    return response.data;
+  async checkEmail(email: string): Promise<ApiResponse<EmailCheckResponse>> {
+    try {
+      console.log("이메일 중복 확인 요청:", email);
+      const response = await api.get<ApiResponse<EmailCheckResponse>>(
+        `/api/v1/auth/check-email?email=${encodeURIComponent(email)}`
+      );
+      console.log("이메일 중복 확인 응답:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("이메일 중복 확인 에러:", error);
+      throw error;
+    }
   },
 
   // 토큰 갱신
