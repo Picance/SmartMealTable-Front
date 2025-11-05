@@ -78,7 +78,7 @@ function App() {
             <Route path="/login" element={<EmailLoginPage />} />
             <Route path="/signup" element={<EmailSignupPage />} />
             <Route
-              path="/auth/google/callback"
+              path="/oauth/google/callback"
               element={<GoogleCallbackPage />}
             />
 
