@@ -55,8 +55,19 @@ export interface AuthResponse {
   };
 }
 
+// 소셜 로그인 요청 (구글, 카카오)
 export interface SocialLoginRequest {
   authorizationCode: string;
+  redirectUri: string;
+}
+
+// 소셜 로그인 응답 (신규 회원 여부 포함)
+export interface SocialLoginResponse {
+  memberId: number;
+  email: string;
+  name: string;
+  profileImageUrl?: string;
+  isNewMember: boolean;
 }
 
 // 온보딩 관련

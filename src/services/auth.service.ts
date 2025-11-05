@@ -5,6 +5,7 @@ import type {
   LoginRequest,
   SignupRequest,
   SocialLoginRequest,
+  SocialLoginResponse,
 } from "../types/api";
 
 export const authService = {
@@ -62,17 +63,11 @@ export const authService = {
   // 구글 로그인
   async googleLogin(
     data: SocialLoginRequest
-  ): Promise<ApiResponse<AuthResponse>> {
-    const response = await api.post<ApiResponse<AuthResponse>>(
-      "/auth/login/google",
+  ): Promise<ApiResponse<SocialLoginResponse>> {
+    const response = await api.post<ApiResponse<SocialLoginResponse>>(
+      "/api/v1/auth/login/google",
       data
     );
-
-    if (response.data.result === "SUCCESS" && response.data.data) {
-      const { accessToken, refreshToken } = response.data.data;
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-    }
 
     return response.data;
   },

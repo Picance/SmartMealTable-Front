@@ -10,6 +10,7 @@ import SplashPage from "./pages/auth/SplashPage";
 import LoginOptionsPage from "./pages/auth/LoginOptionsPage";
 import EmailLoginPage from "./pages/auth/EmailLoginPage";
 import EmailSignupPage from "./pages/auth/EmailSignupPage";
+import GoogleCallbackPage from "./pages/auth/GoogleCallbackPage";
 
 // Onboarding
 import OnboardingProfilePage from "./pages/onboarding/OnboardingProfilePage";
@@ -76,6 +77,10 @@ function App() {
             <Route path="/login-options" element={<LoginOptionsPage />} />
             <Route path="/login" element={<EmailLoginPage />} />
             <Route path="/signup" element={<EmailSignupPage />} />
+            <Route
+              path="/auth/google/callback"
+              element={<GoogleCallbackPage />}
+            />
 
             {/* Onboarding Routes */}
             <Route

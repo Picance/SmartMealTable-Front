@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { FcGoogle } from "react-icons/fc";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { MdEmail, MdPerson } from "react-icons/md";
+import { redirectToGoogleLogin } from "../../utils/googleAuth";
 
 const LoginOptionsPage = () => {
   const navigate = useNavigate();
@@ -13,8 +14,8 @@ const LoginOptionsPage = () => {
   };
 
   const handleGoogleLogin = () => {
-    // TODO: 구글 로그인 구현
-    console.log("구글 로그인");
+    // 구글 로그인 페이지로 리다이렉트
+    redirectToGoogleLogin();
   };
 
   return (
