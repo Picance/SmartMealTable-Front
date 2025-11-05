@@ -62,13 +62,15 @@ export interface SocialLoginRequest {
   redirectUri: string;
 }
 
-// 소셜 로그인 응답 (신규 회원 여부 포함)
+// 소셜 로그인 응답
 export interface SocialLoginResponse {
+  accessToken: string;
+  refreshToken: string;
   memberId: number;
   email: string;
   name: string;
   profileImageUrl?: string;
-  isNewMember: boolean;
+  onboardingComplete: boolean;
 }
 
 // 이메일 중복 확인 응답

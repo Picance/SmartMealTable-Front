@@ -42,31 +42,31 @@ const KakaoCallbackPage = () => {
         console.log("카카오 로그인 응답:", response);
 
         if (response.result === "SUCCESS" && response.data) {
-          const { memberId, email, name, isNewMember } = response.data;
+          const {
+            memberId,
+            email,
+            name,
+            onboardingComplete,
+            accessToken,
+            refreshToken,
+          } = response.data;
 
-          // 사용자 정보 저장
-          // 토큰은 localStorage에서 가져옴 (authService에서 저장됨)
-          const accessToken = localStorage.getItem("accessToken") || "";
-          const refreshToken = localStorage.getItem("refreshToken") || "";
+          // Member 객체 생성
+          const member = {
+            memberId,
+            email,
+            name,
+            isOnboardingComplete: onboardingComplete,
+          };
 
-          if (accessToken && refreshToken) {
-            setAuth(
-              {
-                memberId,
-                name,
-                email,
-                isOnboardingComplete: !isNewMember,
-              },
-              accessToken,
-              refreshToken
-            );
-          }
+          // authStore에 저장
+          setAuth(member, accessToken, refreshToken);
 
-          // 신규 회원이면 온보딩으로, 기존 회원이면 홈으로
-          if (isNewMember) {
-            navigate("/onboarding/profile", { replace: true });
+          // 온보딩 완료 여부에 따라 페이지 이동
+          if (onboardingComplete) {
+            navigate("/home", { replace: true });
           } else {
-            navigate("/", { replace: true });
+            navigate("/onboarding/profile", { replace: true });
           }
         } else {
           throw new Error(response.error?.message || "로그인에 실패했습니다.");

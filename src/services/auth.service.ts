@@ -45,8 +45,11 @@ export const authService = {
       data
     );
 
-    // 카카오 로그인의 경우 토큰은 응답 헤더나 쿠키에서 받을 수 있음
-    // 필요시 response.headers에서 토큰 추출
+    if (response.data.result === "SUCCESS" && response.data.data) {
+      const { accessToken, refreshToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+    }
 
     return response.data;
   },
@@ -59,6 +62,12 @@ export const authService = {
       "/api/v1/auth/login/google",
       data
     );
+
+    if (response.data.result === "SUCCESS" && response.data.data) {
+      const { accessToken, refreshToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+    }
 
     return response.data;
   },

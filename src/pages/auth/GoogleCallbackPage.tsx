@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { authService } from "../../services/auth.service";
+import { useAuthStore } from "../../store/authStore";
 
 /**
  * 구글 OAuth 콜백 페이지
@@ -38,18 +39,32 @@ const GoogleCallbackPage = () => {
         });
 
         if (response.result === "SUCCESS" && response.data) {
-          const { isNewMember, memberId, name, email } = response.data;
+          const {
+            memberId,
+            email,
+            name,
+            onboardingComplete,
+            accessToken,
+            refreshToken,
+          } = response.data;
 
-          // 사용자 정보 저장
-          localStorage.setItem("memberId", memberId.toString());
-          localStorage.setItem("userName", name);
-          localStorage.setItem("userEmail", email);
+          // Member 객체 생성
+          const member = {
+            memberId,
+            email,
+            name,
+            isOnboardingComplete: onboardingComplete,
+          };
 
-          // 신규 회원이면 온보딩으로, 기존 회원이면 홈으로
-          if (isNewMember) {
-            navigate("/onboarding/profile");
+          // authStore에 저장
+          const { setAuth } = useAuthStore.getState();
+          setAuth(member, accessToken, refreshToken);
+
+          // 온보딩 완료 여부에 따라 페이지 이동
+          if (onboardingComplete) {
+            navigate("/home", { replace: true });
           } else {
-            navigate("/home");
+            navigate("/onboarding/profile", { replace: true });
           }
         } else {
           setError(response.error?.message || "로그인에 실패했습니다.");
