@@ -8,7 +8,7 @@ const OnboardingProfilePage = () => {
   const navigate = useNavigate();
   const [nickname, setNickname] = useState("");
   const [nicknameError, setNicknameError] = useState("");
-  const [groupSearchKeyword, setGroupSearchKeyword] = useState("");
+  const [modalSearchKeyword, setModalSearchKeyword] = useState(""); // 모달 내부 검색어
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isSearchingGroups, setIsSearchingGroups] = useState(false);
@@ -43,7 +43,10 @@ const OnboardingProfilePage = () => {
 
     setIsSearchingGroups(true);
     try {
+      // API 명세에 따라 name 파라미터로 검색
       const response = await onboardingService.searchGroups(keyword);
+      console.log("그룹 검색 응답:", response);
+
       if (response.result === "SUCCESS" && response.data) {
         setGroups(response.data.content);
       } else {
@@ -57,14 +60,14 @@ const OnboardingProfilePage = () => {
     }
   };
 
-  // 그룹 검색어 변경 (디바운싱)
+  // 모달 검색어 변경 (디바운싱)
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
     searchTimeoutRef.current = setTimeout(() => {
-      searchGroups(groupSearchKeyword);
+      searchGroups(modalSearchKeyword);
     }, 300);
 
     return () => {
@@ -72,12 +75,14 @@ const OnboardingProfilePage = () => {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [groupSearchKeyword]);
+  }, [modalSearchKeyword]);
 
   // 그룹 선택
   const handleSelectGroup = (group: Group) => {
+    console.log("그룹 선택:", group);
     setSelectedGroup(group);
-    setGroupSearchKeyword("");
+    setModalSearchKeyword(""); // 모달 검색어 초기화
+    setGroups([]); // 검색 결과 초기화
   };
 
   // 다음 단계로
@@ -91,10 +96,17 @@ const OnboardingProfilePage = () => {
 
     setIsSubmitting(true);
     try {
+      console.log("프로필 저장 요청:", {
+        nickname,
+        groupId: selectedGroup?.groupId,
+      });
+
       const response = await onboardingService.saveProfile({
         nickname,
         groupId: selectedGroup?.groupId,
       });
+
+      console.log("프로필 저장 응답:", response);
 
       if (response.result === "SUCCESS") {
         navigate("/onboarding/address");
@@ -138,7 +150,7 @@ const OnboardingProfilePage = () => {
                 validateNickname(e.target.value);
               }}
               placeholder="대학교 10학년 백수"
-              hasError={!!nicknameError}
+              $hasError={!!nicknameError}
               maxLength={50}
             />
             {nicknameError && <ErrorText>{nicknameError}</ErrorText>}
@@ -177,11 +189,11 @@ const OnboardingProfilePage = () => {
               <SearchInputWrapper>
                 <SearchInput
                   type="text"
-                  value={groupSearchKeyword}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setGroupSearchKeyword(e.target.value)
-                  }
-                  placeholder="서울과학기술대학교"
+                  value={selectedGroup?.name || ""}
+                  placeholder="학교를 검색해주세요"
+                  readOnly
+                  onClick={() => setShowSchoolModal(true)}
+                  style={{ cursor: "pointer" }}
                 />
                 <SearchButton
                   type="button"
@@ -190,9 +202,6 @@ const OnboardingProfilePage = () => {
                   검색
                 </SearchButton>
               </SearchInputWrapper>
-              {selectedGroup && (
-                <SelectedSchool>{selectedGroup.groupName}</SelectedSchool>
-              )}
             </SearchContainer>
           </Section>
 
@@ -208,11 +217,23 @@ const OnboardingProfilePage = () => {
 
       {/* 학교 찾기 모달 */}
       {showSchoolModal && (
-        <Modal onClick={() => setShowSchoolModal(false)}>
+        <Modal
+          onClick={() => {
+            setShowSchoolModal(false);
+            setModalSearchKeyword("");
+            setGroups([]);
+          }}
+        >
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>학교 찾기</ModalTitle>
-              <CloseButton onClick={() => setShowSchoolModal(false)}>
+              <CloseButton
+                onClick={() => {
+                  setShowSchoolModal(false);
+                  setModalSearchKeyword("");
+                  setGroups([]);
+                }}
+              >
                 ×
               </CloseButton>
             </ModalHeader>
@@ -221,9 +242,9 @@ const OnboardingProfilePage = () => {
               <ModalSearchWrapper>
                 <ModalSearchInput
                   type="text"
-                  value={groupSearchKeyword}
+                  value={modalSearchKeyword}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setGroupSearchKeyword(e.target.value)
+                    setModalSearchKeyword(e.target.value)
                   }
                   placeholder="서울과학기술대학교"
                   autoFocus
@@ -238,11 +259,23 @@ const OnboardingProfilePage = () => {
                   groups.map((group) => (
                     <ResultItem key={group.groupId}>
                       <ResultInfo>
-                        <ResultAddress>
-                          지번 주소 : {group.address}
-                        </ResultAddress>
-                        <ResultName>학교명 : {group.groupName}</ResultName>
-                        <ResultType>학교 유형 : 대학교(4년제)</ResultType>
+                        <ResultAddress>주소: {group.address}</ResultAddress>
+                        <ResultName>
+                          {group.type === "UNIVERSITY"
+                            ? "학교명"
+                            : group.type === "COMPANY"
+                            ? "회사명"
+                            : "그룹명"}
+                          : {group.name}
+                        </ResultName>
+                        <ResultType>
+                          유형:{" "}
+                          {group.type === "UNIVERSITY"
+                            ? "대학교"
+                            : group.type === "COMPANY"
+                            ? "회사"
+                            : "기타"}
+                        </ResultType>
                       </ResultInfo>
                       <SelectSchoolButton
                         type="button"
@@ -255,7 +288,7 @@ const OnboardingProfilePage = () => {
                       </SelectSchoolButton>
                     </ResultItem>
                   ))
-                ) : groupSearchKeyword ? (
+                ) : modalSearchKeyword ? (
                   <EmptyText>검색 결과가 없습니다</EmptyText>
                 ) : null}
               </ResultsList>
@@ -317,11 +350,11 @@ const Label = styled.label`
   color: #000000;
 `;
 
-const StyledInput = styled.input<{ hasError?: boolean }>`
+const StyledInput = styled.input<{ $hasError?: boolean }>`
   width: 100%;
   height: 48px;
   padding: 0 1rem;
-  border: 1px solid ${(props) => (props.hasError ? "#ff4444" : "#e0e0e0")};
+  border: 1px solid ${(props) => (props.$hasError ? "#ff4444" : "#e0e0e0")};
   border-radius: 8px;
   font-size: 1rem;
   color: #000000;
@@ -334,7 +367,7 @@ const StyledInput = styled.input<{ hasError?: boolean }>`
 
   &:focus {
     outline: none;
-    border-color: ${(props) => (props.hasError ? "#ff4444" : "#ff6b35")};
+    border-color: ${(props) => (props.$hasError ? "#ff4444" : "#ff6b35")};
   }
 `;
 
@@ -428,14 +461,6 @@ const SearchButton = styled.button`
   &:active {
     transform: scale(0.98);
   }
-`;
-
-const SelectedSchool = styled.div`
-  padding: 0.75rem 1rem;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: #666666;
 `;
 
 const SubmitButton = styled.button`

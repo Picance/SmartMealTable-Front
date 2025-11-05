@@ -85,6 +85,12 @@ export interface OnboardingProfileRequest {
   groupId?: number;
 }
 
+export interface OnboardingProfileResponse {
+  memberId: number;
+  nickname: string;
+  group: Group;
+}
+
 export interface AddressRequest {
   addressAlias: string;
   addressType: "HOME" | "WORK" | "ETC";
@@ -257,10 +263,24 @@ export interface RecommendationRequest {
 // 그룹 관련
 export interface Group {
   groupId: number;
-  groupName: string;
-  groupType: "UNIVERSITY" | "COMPANY" | "OTHER";
+  name: string;
+  type: "UNIVERSITY" | "COMPANY" | "OTHER";
   address: string;
-  memberCount: number;
+}
+
+// 그룹 목록 페이징 정보
+export interface GroupPageInfo {
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+// 그룹 목록 조회 응답
+export interface GroupListResponse {
+  content: Group[];
+  pageInfo: GroupPageInfo;
 }
 
 // 카테고리 관련

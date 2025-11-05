@@ -1,8 +1,9 @@
 import api from "./api";
 import type {
   ApiResponse,
-  Group,
+  GroupListResponse,
   OnboardingProfileRequest,
+  OnboardingProfileResponse,
   AddressRequest,
   BudgetRequest,
   PreferenceRequest,
@@ -14,28 +15,35 @@ export const onboardingService = {
   // 프로필 설정
   async saveProfile(
     data: OnboardingProfileRequest
-  ): Promise<ApiResponse<void>> {
-    const response = await api.post("/onboarding/profile", data);
+  ): Promise<ApiResponse<OnboardingProfileResponse>> {
+    const response = await api.post<ApiResponse<OnboardingProfileResponse>>(
+      "/api/v1/onboarding/profile",
+      data
+    );
     return response.data;
   },
 
   // 그룹 검색
   async searchGroups(
-    keyword: string,
+    keyword?: string,
+    type?: "UNIVERSITY" | "COMPANY" | "OTHER",
     page: number = 0,
     size: number = 20
-  ): Promise<
-    ApiResponse<{
-      content: Group[];
-      totalElements: number;
-      totalPages: number;
-      currentPage: number;
-      pageSize: number;
-    }>
-  > {
-    const response = await api.get("/groups", {
-      params: { keyword, page, size },
-    });
+  ): Promise<ApiResponse<GroupListResponse>> {
+    const params: any = { page, size };
+
+    if (keyword) {
+      params.name = keyword; // API는 'name' 파라미터로 검색
+    }
+
+    if (type) {
+      params.type = type;
+    }
+
+    const response = await api.get<ApiResponse<GroupListResponse>>(
+      "/api/v1/groups",
+      { params }
+    );
     return response.data;
   },
 
