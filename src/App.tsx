@@ -35,9 +35,9 @@ import BudgetManagementPage from "./pages/budget/BudgetManagementPage";
 import FoodPreferencePage from "./pages/preference/FoodPreferencePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import AffiliationPage from "./pages/profile/AffiliationPage";
-import AddressManagementPage from "./pages/address/AddressManagementPage";
-import AddressMapPage from "./pages/address/AddressMapPage";
-import AddressDetailPage from "./pages/address/AddressDetailPage";
+import AddressManagementPage from "./components/address/AddressManagementPage";
+import AddressMapPage from "./components/address/AddressMapPage";
+import AddressDetailPage from "./components/address/AddressDetailPage";
 
 // Protected Route Component
 interface ProtectedRouteProps {
