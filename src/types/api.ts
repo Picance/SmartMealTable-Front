@@ -50,15 +50,10 @@ export interface SignupResponse {
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  tokenType: string;
-  expiresIn: number;
-  member: {
-    memberId: number;
-    name: string;
-    email: string;
-    nickname?: string;
-    isOnboardingComplete: boolean;
-  };
+  memberId: number;
+  email: string;
+  name: string;
+  onboardingComplete: boolean;
 }
 
 // 소셜 로그인 요청 (구글, 카카오)

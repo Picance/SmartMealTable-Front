@@ -161,7 +161,16 @@ const EmailSignupPage = () => {
           });
 
           if (loginResponse.result === "SUCCESS" && loginResponse.data) {
-            const { member, accessToken, refreshToken } = loginResponse.data;
+            const { memberId, email, name, onboardingComplete, accessToken, refreshToken } = loginResponse.data;
+            
+            // Member 객체 생성
+            const member = {
+              memberId,
+              email,
+              name,
+              isOnboardingComplete: onboardingComplete,
+            };
+
             setAuth(member, accessToken, refreshToken);
             navigate("/onboarding/profile", { replace: true });
           }

@@ -54,13 +54,24 @@ const EmailLoginPage = () => {
     // API Call
     setLoading(true);
     try {
+      console.log("로그인 시도:", formData);
       const response = await authService.login(formData);
+      console.log("로그인 응답:", response);
 
       if (response.result === "SUCCESS" && response.data) {
-        const { member, accessToken, refreshToken } = response.data;
+        const { memberId, email, name, onboardingComplete, accessToken, refreshToken } = response.data;
+        
+        // Member 객체 생성
+        const member = {
+          memberId,
+          email,
+          name,
+          isOnboardingComplete: onboardingComplete,
+        };
+
         setAuth(member, accessToken, refreshToken);
 
-        if (member.isOnboardingComplete) {
+        if (onboardingComplete) {
           navigate("/home", { replace: true });
         } else {
           navigate("/onboarding/profile", { replace: true });
@@ -69,6 +80,7 @@ const EmailLoginPage = () => {
         setGeneralError(response.error.message);
       }
     } catch (error: any) {
+      console.error("로그인 에러:", error);
       if (error.response?.data?.error) {
         setGeneralError(error.response.data.error.message);
       } else {
