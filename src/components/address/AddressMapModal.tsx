@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import NaverMapPicker from "../map/NaverMapPicker";
+import { mapService } from "../../services/map.service";
 
 interface AddressMapModalProps {
   isOpen: boolean;
@@ -33,14 +34,35 @@ const AddressMapModal = ({
 
   if (!isOpen) return null;
 
-  const handleLocationSelect = (location: {
+  const handleLocationSelect = async (location: {
     lat: number;
     lng: number;
     address: string;
     roadAddress?: string;
     jibunAddress?: string;
   }) => {
-    setSelectedLocation(location);
+    // Backend API로 역지오코딩하여 정확한 주소 가져오기
+    try {
+      const result = await mapService.reverseGeocode(
+        location.lat,
+        location.lng
+      );
+      if (result) {
+        setSelectedLocation({
+          lat: location.lat,
+          lng: location.lng,
+          address: result.roadAddress || result.jibunAddress,
+          roadAddress: result.roadAddress,
+          jibunAddress: result.jibunAddress,
+        });
+      } else {
+        setSelectedLocation(location);
+      }
+    } catch (error) {
+      console.error("역지오코딩 실패, 기본 주소 사용:", error);
+      // API 실패 시 기본 주소 사용
+      setSelectedLocation(location);
+    }
   };
 
   const handleConfirm = () => {
