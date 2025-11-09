@@ -51,7 +51,7 @@ export interface OnboardingBudgetResponse {
 export const budgetService = {
   // 예산 현황 조회
   async getBudgetStatus(): Promise<ApiResponse<BudgetStatus>> {
-    const response = await api.get("/budget/status");
+    const response = await api.get("/api/v1/budgets/status");
     return response.data;
   },
 
@@ -60,7 +60,7 @@ export const budgetService = {
     year: number,
     month: number
   ): Promise<ApiResponse<BudgetStatus>> {
-    const response = await api.get("/budget/monthly", {
+    const response = await api.get("/api/v1/budgets/monthly", {
       params: { year, month },
     });
     return response.data;
@@ -76,7 +76,7 @@ export const budgetService = {
       DINNER: number;
     };
   }): Promise<ApiResponse<void>> {
-    const response = await api.put("/budget", data);
+    const response = await api.put("/api/v1/budgets", data);
     return response.data;
   },
 
@@ -84,7 +84,7 @@ export const budgetService = {
   async createOnboardingBudget(
     data: OnboardingBudgetRequest
   ): Promise<ApiResponse<OnboardingBudgetResponse>> {
-    const response = await api.post("/onboarding/budget", data);
+    const response = await api.post("/api/v1/onboarding/budget", data);
     return response.data;
   },
 };

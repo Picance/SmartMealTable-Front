@@ -74,7 +74,7 @@ export const authService = {
 
   // 로그아웃
   async logout(): Promise<void> {
-    await api.post("/auth/logout");
+    await api.post("/api/v1/auth/logout");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
   },
@@ -102,7 +102,7 @@ export const authService = {
       accessToken: string;
       refreshToken: string;
       expiresIn: number;
-    }>("/auth/refresh", { refreshToken });
+    }>("/api/v1/auth/refresh", { refreshToken });
     return response.data;
   },
 };

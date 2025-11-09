@@ -11,7 +11,7 @@ export const expenditureService = {
     data: CreateExpenditureRequest
   ): Promise<ApiResponse<Expenditure>> {
     const response = await api.post<ApiResponse<Expenditure>>(
-      "/expenditures",
+      "/api/v1/expenditures",
       data
     );
     return response.data;
@@ -22,7 +22,7 @@ export const expenditureService = {
     data: CreateExpenditureRequest
   ): Promise<ApiResponse<Expenditure>> {
     const response = await api.post<ApiResponse<Expenditure>>(
-      "/expenditures/manual",
+      "/api/v1/expenditures/manual",
       data
     );
     return response.data;
@@ -33,7 +33,7 @@ export const expenditureService = {
     smsContent: string;
   }): Promise<ApiResponse<Expenditure>> {
     const response = await api.post<ApiResponse<Expenditure>>(
-      "/expenditures/sms",
+      "/api/v1/expenditures/sms",
       data
     );
     return response.data;
@@ -51,7 +51,7 @@ export const expenditureService = {
     size?: number;
   }): Promise<ApiResponse<Expenditure[]>> {
     const response = await api.get<ApiResponse<Expenditure[]>>(
-      "/expenditures",
+      "/api/v1/expenditures",
       { params }
     );
     return response.data;
@@ -62,7 +62,7 @@ export const expenditureService = {
     expenditureId: number
   ): Promise<ApiResponse<Expenditure>> {
     const response = await api.get<ApiResponse<Expenditure>>(
-      `/expenditures/${expenditureId}`
+      `/api/v1/expenditures/${expenditureId}`
     );
     return response.data;
   },
@@ -73,7 +73,7 @@ export const expenditureService = {
     data: Partial<CreateExpenditureRequest>
   ): Promise<ApiResponse<Expenditure>> {
     const response = await api.put<ApiResponse<Expenditure>>(
-      `/expenditures/${expenditureId}`,
+      `/api/v1/expenditures/${expenditureId}`,
       data
     );
     return response.data;
@@ -82,7 +82,7 @@ export const expenditureService = {
   // 지출 삭제
   async deleteExpenditure(expenditureId: number): Promise<ApiResponse<void>> {
     const response = await api.delete<ApiResponse<void>>(
-      `/expenditures/${expenditureId}`
+      `/api/v1/expenditures/${expenditureId}`
     );
     return response.data;
   },
@@ -110,7 +110,7 @@ export const expenditureService = {
       dailySpending: Array<{ date: string; amount: number }>;
     }>
   > {
-    const response = await api.get(`/expenditures/stats/monthly`, {
+    const response = await api.get(`/api/v1/expenditures/stats/monthly`, {
       params: { year, month },
     });
     return response.data;
@@ -129,7 +129,7 @@ export const expenditureService = {
       expenditures: Expenditure[];
     }>
   > {
-    const response = await api.get(`/expenditures/stats/daily`, {
+    const response = await api.get(`/api/v1/expenditures/stats/daily`, {
       params: { date },
     });
     return response.data;

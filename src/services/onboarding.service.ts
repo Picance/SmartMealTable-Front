@@ -49,7 +49,7 @@ export const onboardingService = {
 
   // 주소 설정
   async saveAddress(data: AddressRequest): Promise<ApiResponse<void>> {
-    const response = await api.post("/onboarding/address", data);
+    const response = await api.post("/api/v1/onboarding/address", data);
     return response.data;
   },
 
@@ -64,7 +64,7 @@ export const onboardingService = {
       }>;
     }>
   > {
-    const response = await api.get("/maps/search-address", {
+    const response = await api.get("/api/v1/maps/search-address", {
       params: { query },
     });
     return response.data;
@@ -72,13 +72,13 @@ export const onboardingService = {
 
   // 예산 설정
   async saveBudget(data: BudgetRequest): Promise<ApiResponse<void>> {
-    const response = await api.post("/onboarding/budget", data);
+    const response = await api.post("/api/v1/onboarding/budget", data);
     return response.data;
   },
 
   // 선호 카테고리 설정
   async savePreferences(data: PreferenceRequest): Promise<ApiResponse<void>> {
-    const response = await api.post("/onboarding/preferences", data);
+    const response = await api.post("/api/v1/onboarding/preferences", data);
     return response.data;
   },
 
@@ -86,7 +86,10 @@ export const onboardingService = {
   async saveFoodPreferences(
     data: FoodPreferenceRequest
   ): Promise<ApiResponse<void>> {
-    const response = await api.post("/onboarding/food-preferences", data);
+    const response = await api.post(
+      "/api/v1/onboarding/food-preferences",
+      data
+    );
     return response.data;
   },
 
@@ -94,7 +97,10 @@ export const onboardingService = {
   async savePolicyAgreements(
     data: PolicyAgreementRequest
   ): Promise<ApiResponse<void>> {
-    const response = await api.post("/onboarding/policy-agreements", data);
+    const response = await api.post(
+      "/api/v1/onboarding/policy-agreements",
+      data
+    );
     return response.data;
   },
 
@@ -105,7 +111,7 @@ export const onboardingService = {
       currentStep: string | null;
     }>
   > {
-    const response = await api.get("/onboarding/status");
+    const response = await api.get("/api/v1/onboarding/status");
     return response.data;
   },
 };

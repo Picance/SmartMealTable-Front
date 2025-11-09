@@ -22,7 +22,7 @@ export const recommendationService = {
     longitude?: number;
     limit?: number;
   }): Promise<ApiResponse<RecommendedMenu[]>> {
-    const response = await api.get("/recommendations/menus", { params });
+    const response = await api.get("/api/v1/recommendations/menus", { params });
     return response.data;
   },
 
@@ -32,7 +32,7 @@ export const recommendationService = {
     latitude?: number;
     longitude?: number;
   }): Promise<ApiResponse<RecommendedMenu[]>> {
-    const response = await api.get("/recommendations/budget-friendly", {
+    const response = await api.get("/api/v1/recommendations/budget-friendly", {
       params,
     });
     return response.data;
@@ -44,7 +44,9 @@ export const recommendationService = {
     longitude?: number;
     limit?: number;
   }): Promise<ApiResponse<RecommendedMenu[]>> {
-    const response = await api.get("/recommendations/taste-based", { params });
+    const response = await api.get("/api/v1/recommendations/taste-based", {
+      params,
+    });
     return response.data;
   },
 
@@ -54,7 +56,7 @@ export const recommendationService = {
     longitude?: number;
     limit?: number;
   }): Promise<ApiResponse<RecommendedMenu[]>> {
-    const response = await api.get("/recommendations/new", { params });
+    const response = await api.get("/api/v1/recommendations/new", { params });
     return response.data;
   },
 };
