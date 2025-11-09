@@ -27,6 +27,27 @@ export interface BudgetStatus {
   };
 }
 
+// 온보딩 예산 설정 요청
+export interface OnboardingBudgetRequest {
+  monthlyBudget: number;
+  dailyBudget: number;
+  mealBudgets: {
+    BREAKFAST: number;
+    LUNCH: number;
+    DINNER: number;
+  };
+}
+
+// 온보딩 예산 설정 응답
+export interface OnboardingBudgetResponse {
+  monthlyBudget: number;
+  dailyBudget: number;
+  mealBudgets: Array<{
+    mealType: "BREAKFAST" | "LUNCH" | "DINNER";
+    budget: number;
+  }>;
+}
+
 export const budgetService = {
   // 예산 현황 조회
   async getBudgetStatus(): Promise<ApiResponse<BudgetStatus>> {
@@ -56,6 +77,14 @@ export const budgetService = {
     };
   }): Promise<ApiResponse<void>> {
     const response = await api.put("/budget", data);
+    return response.data;
+  },
+
+  // 온보딩 예산 설정
+  async createOnboardingBudget(
+    data: OnboardingBudgetRequest
+  ): Promise<ApiResponse<OnboardingBudgetResponse>> {
+    const response = await api.post("/onboarding/budget", data);
     return response.data;
   },
 };
