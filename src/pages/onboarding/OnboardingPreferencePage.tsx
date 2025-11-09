@@ -88,22 +88,22 @@ const OnboardingPreferencePage = () => {
             <SubTitle>선호하는 음식 카테고리 (우선순위 순서)</SubTitle>
             <CategoryButtonGroup>
               <CategoryButton
-                active={likedCategories.includes("한식")}
-                color="orange"
+                $active={likedCategories.includes("한식")}
+                $color="orange"
                 onClick={() => toggleLikeCategory("한식")}
               >
                 한식
               </CategoryButton>
               <CategoryButton
-                active={likedCategories.includes("중식")}
-                color="orange"
+                $active={likedCategories.includes("중식")}
+                $color="orange"
                 onClick={() => toggleLikeCategory("중식")}
               >
                 중식
               </CategoryButton>
               <CategoryButton
-                active={likedCategories.includes("양식")}
-                color="orange"
+                $active={likedCategories.includes("양식")}
+                $color="orange"
                 onClick={() => toggleLikeCategory("양식")}
               >
                 양식
@@ -115,22 +115,22 @@ const OnboardingPreferencePage = () => {
             <SubTitle>불호하는 음식 카테고리 (우선순위 순서)</SubTitle>
             <CategoryButtonGroup>
               <CategoryButton
-                active={dislikedCategories.includes("해산물")}
-                color="yellow"
+                $active={dislikedCategories.includes("해산물")}
+                $color="yellow"
                 onClick={() => toggleDislikeCategory("해산물")}
               >
                 해산물
               </CategoryButton>
               <CategoryButton
-                active={dislikedCategories.includes("매운 음식")}
-                color="yellow"
+                $active={dislikedCategories.includes("매운 음식")}
+                $color="yellow"
                 onClick={() => toggleDislikeCategory("매운 음식")}
               >
                 매운 음식
               </CategoryButton>
               <CategoryButton
-                active={dislikedCategories.includes("달콤한 음식")}
-                color="yellow"
+                $active={dislikedCategories.includes("달콤한 음식")}
+                $color="yellow"
                 onClick={() => toggleDislikeCategory("달콤한 음식")}
               >
                 달콤한 음식
@@ -192,12 +192,12 @@ const OnboardingPreferencePage = () => {
             {FOOD_IMAGES.map((food) => (
               <FoodCard
                 key={food.id}
-                selected={selectedFoods.includes(food.id)}
+                $selected={selectedFoods.includes(food.id)}
                 onClick={() => toggleFoodSelection(food.id)}
               >
                 <FoodImage>{food.image}</FoodImage>
                 <FoodName>{food.name}</FoodName>
-                <Checkbox checked={selectedFoods.includes(food.id)}>
+                <Checkbox $checked={selectedFoods.includes(food.id)}>
                   {selectedFoods.includes(food.id) && "✓"}
                 </Checkbox>
               </FoodCard>
@@ -265,7 +265,7 @@ const CategoryButtonGroup = styled.div`
   flex-wrap: wrap;
 `;
 
-const CategoryButton = styled.button<{ active?: boolean; color?: "orange" | "yellow" }>`
+const CategoryButton = styled.button<{ $active?: boolean; $color?: "orange" | "yellow" }>`
   padding: ${theme.spacing.sm} ${theme.spacing.lg};
   border-radius: ${theme.borderRadius.full};
   border: none;
@@ -275,13 +275,13 @@ const CategoryButton = styled.button<{ active?: boolean; color?: "orange" | "yel
   transition: all 0.2s;
   
   background-color: ${props =>
-    props.active
-      ? props.color === "orange"
+    props.$active
+      ? props.$color === "orange"
         ? theme.colors.accent
         : theme.colors.secondary
       : "white"};
-  color: ${props => (props.active ? "white" : "#424242")};
-  box-shadow: ${props => (props.active ? "none" : "0 1px 3px rgba(0, 0, 0, 0.1)")};
+  color: ${props => (props.$active ? "white" : "#424242")};
+  box-shadow: ${props => (props.$active ? "none" : "0 1px 3px rgba(0, 0, 0, 0.1)")};
 
   &:hover {
     transform: translateY(-1px);
@@ -398,7 +398,7 @@ const FoodGrid = styled.div`
   padding: ${theme.spacing.lg};
 `;
 
-const FoodCard = styled.div<{ selected?: boolean }>`
+const FoodCard = styled.div<{ $selected?: boolean }>`
   background-color: white;
   border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.lg};
@@ -407,7 +407,7 @@ const FoodCard = styled.div<{ selected?: boolean }>`
   align-items: center;
   gap: ${theme.spacing.sm};
   cursor: pointer;
-  border: 2px solid ${props => (props.selected ? theme.colors.accent : "transparent")};
+  border: 2px solid ${props => (props.$selected ? theme.colors.accent : "transparent")};
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.2s;
   position: relative;
@@ -441,15 +441,15 @@ const FoodName = styled.p`
   text-align: center;
 `;
 
-const Checkbox = styled.div<{ checked?: boolean }>`
+const Checkbox = styled.div<{ $checked?: boolean }>`
   position: absolute;
   bottom: ${theme.spacing.md};
   right: ${theme.spacing.md};
   width: 24px;
   height: 24px;
-  border: 2px solid ${props => (props.checked ? theme.colors.accent : "#e0e0e0")};
+  border: 2px solid ${props => (props.$checked ? theme.colors.accent : "#e0e0e0")};
   border-radius: ${theme.borderRadius.sm};
-  background-color: ${props => (props.checked ? theme.colors.accent : "white")};
+  background-color: ${props => (props.$checked ? theme.colors.accent : "white")};
   display: flex;
   align-items: center;
   justify-content: center;
