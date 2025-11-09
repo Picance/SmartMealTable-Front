@@ -16,12 +16,12 @@ const FOOD_IMAGES = [
 const OnboardingPreferencePage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: 카테고리 선택, 2: 음식 선택
-  
+
   // Step 1: 카테고리 선호도
   const [likedCategories, setLikedCategories] = useState<string[]>([]);
   const [dislikedCategories, setDislikedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Step 2: 음식 선택
   const [selectedFoods, setSelectedFoods] = useState<number[]>([]);
 
@@ -168,7 +168,9 @@ const OnboardingPreferencePage = () => {
           <ButtonGroup>
             <SubmitButton
               onClick={handleStep1Next}
-              disabled={likedCategories.length === 0 && dislikedCategories.length === 0}
+              disabled={
+                likedCategories.length === 0 && dislikedCategories.length === 0
+              }
             >
               저장하기
             </SubmitButton>
@@ -204,9 +206,7 @@ const OnboardingPreferencePage = () => {
             ))}
           </FoodGrid>
 
-          <NextButton onClick={handleStep2Next}>
-            다음
-          </NextButton>
+          <NextButton onClick={handleStep2Next}>다음</NextButton>
         </>
       )}
     </Container>
@@ -265,7 +265,10 @@ const CategoryButtonGroup = styled.div`
   flex-wrap: wrap;
 `;
 
-const CategoryButton = styled.button<{ $active?: boolean; $color?: "orange" | "yellow" }>`
+const CategoryButton = styled.button<{
+  $active?: boolean;
+  $color?: "orange" | "yellow";
+}>`
   padding: ${theme.spacing.sm} ${theme.spacing.lg};
   border-radius: ${theme.borderRadius.full};
   border: none;
@@ -273,15 +276,16 @@ const CategoryButton = styled.button<{ $active?: boolean; $color?: "orange" | "y
   font-weight: ${theme.typography.fontWeight.medium};
   cursor: pointer;
   transition: all 0.2s;
-  
-  background-color: ${props =>
+
+  background-color: ${(props) =>
     props.$active
       ? props.$color === "orange"
         ? theme.colors.accent
         : theme.colors.secondary
       : "white"};
-  color: ${props => (props.$active ? "white" : "#424242")};
-  box-shadow: ${props => (props.$active ? "none" : "0 1px 3px rgba(0, 0, 0, 0.1)")};
+  color: ${(props) => (props.$active ? "white" : "#424242")};
+  box-shadow: ${(props) =>
+    props.$active ? "none" : "0 1px 3px rgba(0, 0, 0, 0.1)"};
 
   &:hover {
     transform: translateY(-1px);
@@ -351,21 +355,22 @@ const ButtonGroup = styled.div`
 const SubmitButton = styled.button<{ disabled?: boolean }>`
   width: 100%;
   padding: ${theme.spacing.md};
-  background-color: ${props => (props.disabled ? "#e0e0e0" : theme.colors.accent)};
+  background-color: ${(props) =>
+    props.disabled ? "#e0e0e0" : theme.colors.accent};
   color: white;
   border: none;
   border-radius: ${theme.borderRadius.md};
   font-size: ${theme.typography.fontSize.lg};
   font-weight: ${theme.typography.fontWeight.semibold};
-  cursor: ${props => (props.disabled ? "not-allowed" : "pointer")};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${props => (props.disabled ? "#e0e0e0" : "#e55a2b")};
+    background-color: ${(props) => (props.disabled ? "#e0e0e0" : "#e55a2b")};
   }
 
   &:active {
-    transform: ${props => (props.disabled ? "none" : "scale(0.98)")};
+    transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
   }
 `;
 
@@ -407,7 +412,8 @@ const FoodCard = styled.div<{ $selected?: boolean }>`
   align-items: center;
   gap: ${theme.spacing.sm};
   cursor: pointer;
-  border: 2px solid ${props => (props.$selected ? theme.colors.accent : "transparent")};
+  border: 2px solid
+    ${(props) => (props.$selected ? theme.colors.accent : "transparent")};
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.2s;
   position: relative;
@@ -447,9 +453,11 @@ const Checkbox = styled.div<{ $checked?: boolean }>`
   right: ${theme.spacing.md};
   width: 24px;
   height: 24px;
-  border: 2px solid ${props => (props.$checked ? theme.colors.accent : "#e0e0e0")};
+  border: 2px solid
+    ${(props) => (props.$checked ? theme.colors.accent : "#e0e0e0")};
   border-radius: ${theme.borderRadius.sm};
-  background-color: ${props => (props.$checked ? theme.colors.accent : "white")};
+  background-color: ${(props) =>
+    props.$checked ? theme.colors.accent : "white"};
   display: flex;
   align-items: center;
   justify-content: center;
