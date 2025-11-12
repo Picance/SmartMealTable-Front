@@ -42,30 +42,43 @@ const KakaoCallbackPage = () => {
         console.log("카카오 로그인 응답:", response);
 
         if (response.result === "SUCCESS" && response.data) {
-          const {
-            memberId,
-            email,
-            name,
-            onboardingComplete,
+          const { memberId, email, name, accessToken, refreshToken } =
+            response.data;
+
+          // 먼저 토큰 저장
+          setAuth(
+            {
+              memberId,
+              email,
+              name,
+              isOnboardingComplete: false, // 초기값
+            },
             accessToken,
-            refreshToken,
-          } = response.data;
+            refreshToken
+          );
 
-          // Member 객체 생성
-          const member = {
-            memberId,
-            email,
-            name,
-            isOnboardingComplete: onboardingComplete,
-          };
+          // 서버에서 실제 온보딩 상태 조회
+          try {
+            const statusResponse = await authService.getOnboardingStatus();
+            if (statusResponse.result === "SUCCESS" && statusResponse.data) {
+              const { isOnboardingComplete } = statusResponse.data;
 
-          // authStore에 저장
-          setAuth(member, accessToken, refreshToken);
+              // 온보딩 상태 업데이트
+              const { updateMember } = useAuthStore.getState();
+              updateMember({ isOnboardingComplete });
 
-          // 온보딩 완료 여부에 따라 페이지 이동
-          if (onboardingComplete) {
-            navigate("/home", { replace: true });
-          } else {
+              console.log("온보딩 상태 조회 완료:", isOnboardingComplete);
+
+              // 온보딩 상태에 따라 이동
+              if (isOnboardingComplete) {
+                navigate("/home", { replace: true });
+              } else {
+                navigate("/onboarding/profile", { replace: true });
+              }
+            }
+          } catch (statusError) {
+            console.error("온보딩 상태 조회 실패:", statusError);
+            // 온보딩 상태 조회 실패 시 기본적으로 온보딩 페이지로 이동
             navigate("/onboarding/profile", { replace: true });
           }
         } else {

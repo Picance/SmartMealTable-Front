@@ -105,4 +105,19 @@ export const authService = {
     }>("/api/v1/auth/refresh", { refreshToken });
     return response.data;
   },
+
+  // 온보딩 상태 조회
+  async getOnboardingStatus(): Promise<
+    ApiResponse<{
+      isOnboardingComplete: boolean;
+      hasSelectedRecommendationType: boolean;
+      hasConfirmedMonthlyBudget: boolean;
+      currentMonth: string;
+      showRecommendationTypeModal: boolean;
+      showMonthlyBudgetModal: boolean;
+    }>
+  > {
+    const response = await api.get("/api/v1/members/me/onboarding-status");
+    return response.data;
+  },
 };
