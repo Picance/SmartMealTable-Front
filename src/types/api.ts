@@ -320,9 +320,15 @@ export interface Food {
 export interface Policy {
   policyId: number;
   title: string;
-  type: "REQUIRED" | "OPTIONAL";
   version: string;
+  type: "TERMS_OF_SERVICE" | "PRIVACY_POLICY" | "MARKETING_CONSENT" | string; // API 응답: 약관 유형
+  isRequired?: boolean; // 계산된 필드
+  summary?: string;
+  contentUrl?: string;
+  updatedAt?: string;
   content?: string;
+  // 프론트엔드에서 사용할 표시 타입
+  displayType?: "REQUIRED" | "OPTIONAL";
 }
 
 export interface PolicyListResponse {
@@ -332,7 +338,9 @@ export interface PolicyListResponse {
 export interface PolicyDetailResponse {
   policyId: number;
   title: string;
-  content: string;
-  type: "REQUIRED" | "OPTIONAL";
+  type: "TERMS_OF_SERVICE" | "PRIVACY_POLICY" | "MARKETING_CONSENT" | string; // 약관 유형
   version: string;
+  isRequired: boolean; // 필수 약관 여부
+  content: string;
+  updatedAt: string; // 업데이트 일시
 }

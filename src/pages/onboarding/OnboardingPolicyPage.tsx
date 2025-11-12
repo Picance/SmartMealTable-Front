@@ -31,12 +31,36 @@ const OnboardingPolicyPage = () => {
         setLoading(true);
         const data = await getPolicies();
 
-        // 필수 약관이 먼저 오도록 정렬
-        const sortedPolicies = data.policies.sort((a, b) => {
-          if (a.type === "REQUIRED" && b.type === "OPTIONAL") return -1;
-          if (a.type === "OPTIONAL" && b.type === "REQUIRED") return 1;
-          return 0;
+        console.log("원본 약관 데이터:", data.policies);
+
+        // API 응답의 type에 따라 필수/선택 판단 및 변환
+        const policiesWithType = data.policies.map((policy) => {
+          // TERMS_OF_SERVICE(서비스 이용 약관), PRIVACY_POLICY(개인정보 처리방침)는 필수
+          // MARKETING_CONSENT(마케팅 수신 동의)는 선택
+          const isRequired =
+            policy.type === "TERMS_OF_SERVICE" ||
+            policy.type === "PRIVACY_POLICY";
+
+          const displayType = isRequired ? "REQUIRED" : "OPTIONAL";
+
+          console.log(
+            `약관 ${policy.policyId}: 원본 type=${policy.type}, isRequired=${isRequired}, displayType=${displayType}`
+          );
+
+          return {
+            ...policy,
+            isRequired: isRequired,
+            displayType: displayType as "REQUIRED" | "OPTIONAL",
+          };
         });
+
+        // 필수 약관이 먼저 오도록 정렬
+        const sortedPolicies = policiesWithType.sort((a, b) => {
+          if (a.isRequired === b.isRequired) return 0;
+          return a.isRequired ? -1 : 1;
+        });
+
+        console.log("정렬된 약관 목록:", sortedPolicies);
 
         setPolicies(sortedPolicies);
 
@@ -88,7 +112,7 @@ const OnboardingPolicyPage = () => {
   // 필수 약관 모두 동의 여부 확인
   const isAllRequiredAgreed = () => {
     return policies
-      .filter((policy) => policy.type === "REQUIRED")
+      .filter((policy) => policy.displayType === "REQUIRED")
       .every((policy) => agreements[policy.policyId] === true);
   };
 
@@ -198,17 +222,22 @@ const OnboardingPolicyPage = () => {
 
       <Content>
         {policies.map((policy) => (
-          <Section key={policy.policyId}>
+          <Section
+            key={policy.policyId}
+            $isRequired={policy.displayType === "REQUIRED"}
+          >
             <SectionHeader>
-              <SectionTitle>
-                {policy.title}
-                {policy.type === "REQUIRED" && (
+              <SectionTitleWrapper>
+                {policy.displayType === "REQUIRED" && (
                   <RequiredBadge>필수</RequiredBadge>
                 )}
-                {policy.type === "OPTIONAL" && (
+                {policy.displayType === "OPTIONAL" && (
                   <OptionalBadge>선택</OptionalBadge>
                 )}
-              </SectionTitle>
+                <SectionTitle $isRequired={policy.displayType === "REQUIRED"}>
+                  {policy.title}
+                </SectionTitle>
+              </SectionTitleWrapper>
               <ViewDetailButton onClick={() => handleViewPolicy(policy)}>
                 상세보기
               </ViewDetailButton>
@@ -237,6 +266,10 @@ const OnboardingPolicyPage = () => {
                 <AgreementLabel>동의안함</AgreementLabel>
               </AgreementCard>
             </AgreementRow>
+            {policy.displayType === "REQUIRED" &&
+              !agreements[policy.policyId] && (
+                <RequiredNotice>* 필수 약관에 동의해주세요</RequiredNotice>
+              )}
           </Section>
         ))}
 
@@ -299,8 +332,12 @@ const Content = styled.div`
   padding: ${theme.spacing.xl} ${theme.spacing.lg};
 `;
 
-const Section = styled.section`
+const Section = styled.section<{ $isRequired?: boolean }>`
   margin-bottom: ${theme.spacing.xl};
+  padding: ${theme.spacing.lg};
+  background-color: ${(props) => (props.$isRequired ? "#fff8f5" : "white")};
+  border-radius: ${theme.borderRadius.lg};
+  border: 2px solid ${(props) => (props.$isRequired ? "#ffccbc" : "#e0e0e0")};
 `;
 
 const SectionHeader = styled.div`
@@ -310,34 +347,47 @@ const SectionHeader = styled.div`
   margin-bottom: ${theme.spacing.md};
 `;
 
-const SectionTitle = styled.h2`
-  font-size: ${theme.typography.fontSize.base};
-  font-weight: ${theme.typography.fontWeight.semibold};
-  color: #212121;
-  margin: 0;
+const SectionTitleWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.sm};
+  flex: 1;
+`;
+
+const SectionTitle = styled.h2<{ $isRequired?: boolean }>`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: ${(props) => (props.$isRequired ? "#d32f2f" : "#212121")};
+  margin: 0;
 `;
 
 const RequiredBadge = styled.span`
   display: inline-block;
-  padding: 2px 8px;
-  background-color: ${theme.colors.accent};
+  padding: 4px 12px;
+  background-color: #d32f2f;
   color: white;
-  font-size: ${theme.typography.fontSize.xs};
-  font-weight: ${theme.typography.fontWeight.medium};
-  border-radius: ${theme.borderRadius.sm};
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.bold};
+  border-radius: ${theme.borderRadius.md};
+  flex-shrink: 0;
 `;
 
 const OptionalBadge = styled.span`
   display: inline-block;
-  padding: 2px 8px;
-  background-color: #9e9e9e;
+  padding: 4px 12px;
+  background-color: #757575;
   color: white;
-  font-size: ${theme.typography.fontSize.xs};
+  font-size: ${theme.typography.fontSize.sm};
   font-weight: ${theme.typography.fontWeight.medium};
-  border-radius: ${theme.borderRadius.sm};
+  border-radius: ${theme.borderRadius.md};
+  flex-shrink: 0;
+`;
+
+const RequiredNotice = styled.p`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #d32f2f;
+  margin: ${theme.spacing.sm} 0 0 0;
+  font-weight: ${theme.typography.fontWeight.medium};
 `;
 
 const ViewDetailButton = styled.button`
