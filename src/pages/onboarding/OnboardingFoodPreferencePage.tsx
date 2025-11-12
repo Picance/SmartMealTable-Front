@@ -96,18 +96,17 @@ const OnboardingFoodPreferencePage = () => {
 
   // 저장하기
   const handleSubmit = async () => {
-    if (selectedFoods.length === 0) {
-      alert("선호하는 음식을 최소 1개 이상 선택해주세요.");
-      return;
-    }
-
+    // 선택 없이도 저장 가능 (최소 0개)
     try {
       setLoading(true);
       const response = await onboardingService.saveFoodPreferences({
         preferredFoodIds: selectedFoods,
       });
 
-      if (response.result === "SUCCESS") {
+      if (response.result === "SUCCESS" && response.data) {
+        console.log(
+          `${response.data.savedCount}개의 음식 선호도가 저장되었습니다.`
+        );
         navigate("/onboarding/policy");
       } else {
         throw new Error(response.error?.message || "음식 선호도 저장 실패");
@@ -185,10 +184,7 @@ const OnboardingFoodPreferencePage = () => {
       </Container>
 
       <ButtonGroup>
-        <SubmitButton
-          onClick={handleSubmit}
-          disabled={loading || selectedFoods.length === 0}
-        >
+        <SubmitButton onClick={handleSubmit} disabled={loading}>
           {loading ? "저장 중..." : "저장하기"}
         </SubmitButton>
         <SkipButton onClick={() => navigate("/onboarding/policy")}>

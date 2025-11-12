@@ -85,11 +85,11 @@ export const onboardingService = {
     return response.data;
   },
 
-  // 개별 음식 선호도 설정
+  // 개별 음식 선호도 저장/덮어쓰기 (Idempotent)
   async saveFoodPreferences(
     data: FoodPreferenceRequest
   ): Promise<ApiResponse<FoodPreferenceResponse>> {
-    const response = await api.post<ApiResponse<FoodPreferenceResponse>>(
+    const response = await api.put<ApiResponse<FoodPreferenceResponse>>(
       "/api/v1/onboarding/food-preferences",
       data
     );
@@ -114,9 +114,7 @@ export const onboardingService = {
   },
 
   // 약관 동의
-  async savePolicyAgreements(
-    data: PolicyAgreementRequest
-  ): Promise<
+  async savePolicyAgreements(data: PolicyAgreementRequest): Promise<
     ApiResponse<{
       agreedCount: number;
       memberAuthenticationId: number;
