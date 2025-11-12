@@ -10,13 +10,48 @@ const SplashPage = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      // 디버깅: 현재 상태 로그
+      console.log("=== SplashPage 상태 확인 ===");
+      console.log("isAuthenticated:", isAuthenticated);
+      console.log("member:", member);
+      console.log(
+        "member?.isOnboardingComplete:",
+        member?.isOnboardingComplete
+      );
+
+      // 로컬 스토리지 직접 확인
+      const authStorage = localStorage.getItem("auth-storage");
+      if (authStorage) {
+        const parsed = JSON.parse(authStorage);
+        console.log("로컬 스토리지 auth-storage:", parsed);
+        console.log(
+          "로컬 스토리지 isOnboardingComplete:",
+          parsed.state?.member?.isOnboardingComplete
+        );
+      }
+
       if (isAuthenticated) {
-        if (member?.isOnboardingComplete) {
+        // 로컬 스토리지에서 직접 확인 (zustand persist 동기화 이슈 대응)
+        const authStorage = localStorage.getItem("auth-storage");
+        let isOnboardingComplete = member?.isOnboardingComplete || false;
+
+        if (authStorage) {
+          const parsed = JSON.parse(authStorage);
+          isOnboardingComplete =
+            parsed.state?.member?.isOnboardingComplete || false;
+        }
+
+        console.log("최종 isOnboardingComplete:", isOnboardingComplete);
+
+        if (isOnboardingComplete) {
+          console.log("→ 홈으로 이동");
           navigate("/home", { replace: true });
         } else {
+          console.log("→ 온보딩으로 이동");
           navigate("/onboarding/profile", { replace: true });
         }
       } else {
+        console.log("→ 로그인 페이지로 이동");
         navigate("/login-options", { replace: true });
       }
     }, 2000);

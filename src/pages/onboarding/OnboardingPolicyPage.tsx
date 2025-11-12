@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { getPolicies, getPolicyDetail } from "../../services/policy.service";
+import { onboardingService } from "../../services/onboarding.service";
+import { useAuthStore } from "../../store/authStore";
 import type { Policy } from "../../types/api";
 
 const OnboardingPolicyPage = () => {
   const navigate = useNavigate();
+  const { updateMember } = useAuthStore();
 
   // 약관 목록 상태
   const [policies, setPolicies] = useState<Policy[]>([]);
@@ -90,21 +93,67 @@ const OnboardingPolicyPage = () => {
   };
 
   // 가입 완료
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!isAllRequiredAgreed()) {
       alert("필수 약관에 모두 동의해주세요.");
       return;
     }
 
-    // TODO: 약관 동의 API 호출
-    // const agreementData = policies.map((policy) => ({
-    //   policyId: policy.policyId,
-    //   agreed: agreements[policy.policyId],
-    //   agreedAt: new Date().toISOString(),
-    // }));
-    // await submitPolicyAgreements({ agreements: agreementData });
+    try {
+      // 약관 동의 API 호출 - 모든 약관의 동의 상태를 전송
+      const agreementData = policies.map((policy) => ({
+        policyId: policy.policyId,
+        isAgreed: agreements[policy.policyId] === true,
+      }));
 
-    navigate("/home", { replace: true });
+      console.log("약관 동의 데이터 전송:", agreementData);
+
+      const response = await onboardingService.savePolicyAgreements({
+        agreements: agreementData,
+      });
+
+      console.log("약관 동의 응답:", response);
+
+      // 약관 동의 성공 확인
+      if (response.result === "SUCCESS" && response.data) {
+        console.log("약관 동의 완료:", response.data.message);
+        console.log("동의한 약관 수:", response.data.agreedCount);
+
+        // 온보딩 완료 상태 업데이트
+        updateMember({ isOnboardingComplete: true });
+
+        // 로컬 스토리지 강제 동기화 (persist middleware가 즉시 반영되지 않을 수 있음)
+        const authStorage = localStorage.getItem("auth-storage");
+        if (authStorage) {
+          const parsed = JSON.parse(authStorage);
+          if (parsed.state && parsed.state.member) {
+            parsed.state.member.isOnboardingComplete = true;
+            localStorage.setItem("auth-storage", JSON.stringify(parsed));
+            console.log("로컬 스토리지 온보딩 상태 업데이트 완료");
+          }
+        }
+
+        // 약관 동의 완료 - 홈으로 이동
+        navigate("/home", { replace: true });
+      } else {
+        console.error("약관 동의 처리 실패:", response);
+        alert("약관 동의 처리 중 오류가 발생했습니다.");
+      }
+    } catch (err: any) {
+      console.error("약관 동의 처리 실패:", err);
+      console.error("에러 응답:", err.response);
+      console.error("에러 데이터:", err.response?.data);
+
+      // 422 에러: 필수 약관 미동의
+      if (err.response?.status === 422) {
+        alert("필수 약관에 모두 동의해주세요.");
+      } else {
+        const errorMessage =
+          err.response?.data?.error?.message ||
+          "약관 동의 처리 중 오류가 발생했습니다.";
+        alert(`${errorMessage}\n다시 시도해주세요.`);
+      }
+    }
   };
 
   // 가입 취소

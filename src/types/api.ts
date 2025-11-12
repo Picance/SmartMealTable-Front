@@ -138,9 +138,14 @@ export interface FoodPreferenceResponse {
 export interface PolicyAgreementRequest {
   agreements: Array<{
     policyId: number;
-    agreed: boolean;
-    agreedAt: string;
+    isAgreed: boolean;
   }>;
+}
+
+export interface PolicyAgreementResponse {
+  agreedCount: number;
+  memberAuthenticationId: number;
+  message: string;
 }
 
 // 가게 관련

@@ -116,7 +116,13 @@ export const onboardingService = {
   // 약관 동의
   async savePolicyAgreements(
     data: PolicyAgreementRequest
-  ): Promise<ApiResponse<void>> {
+  ): Promise<
+    ApiResponse<{
+      agreedCount: number;
+      memberAuthenticationId: number;
+      message: string;
+    }>
+  > {
     const response = await api.post(
       "/api/v1/onboarding/policy-agreements",
       data
