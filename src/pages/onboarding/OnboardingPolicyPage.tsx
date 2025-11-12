@@ -5,7 +5,7 @@ import { theme } from "../../styles/theme";
 
 const OnboardingPolicyPage = () => {
   const navigate = useNavigate();
-  
+
   // 동의 상태
   const [serviceAgree, setServiceAgree] = useState(false);
   const [privacyAgree, setPrivacyAgree] = useState(false);
@@ -37,18 +37,20 @@ const OnboardingPolicyPage = () => {
           <SectionTitle>서비스 이용 약관</SectionTitle>
           <AgreementRow>
             <AgreementCard
-              active={serviceAgree}
+              $active={serviceAgree}
               onClick={() => setServiceAgree(true)}
             >
-              <CheckIcon active={serviceAgree}>✓</CheckIcon>
+              <CheckIcon $active={serviceAgree}>✓</CheckIcon>
               <AgreementLabel>동의함</AgreementLabel>
             </AgreementCard>
             <AgreementCard
-              active={!serviceAgree}
+              $active={!serviceAgree}
               onClick={() => setServiceAgree(false)}
-              decline
+              $decline
             >
-              <CheckIcon active={!serviceAgree} decline>✕</CheckIcon>
+              <CheckIcon $active={!serviceAgree} $decline>
+                ✕
+              </CheckIcon>
               <AgreementLabel>동의안함</AgreementLabel>
             </AgreementCard>
           </AgreementRow>
@@ -58,20 +60,22 @@ const OnboardingPolicyPage = () => {
           <SectionTitle>개인정보 수집 동의</SectionTitle>
           <AgreementRow>
             <AgreementCard
-              light
-              active={privacyAgree}
+              $light
+              $active={privacyAgree}
               onClick={() => setPrivacyAgree(true)}
             >
-              <CheckIcon active={privacyAgree}>✓</CheckIcon>
+              <CheckIcon $active={privacyAgree}>✓</CheckIcon>
               <AgreementLabel>동의함</AgreementLabel>
             </AgreementCard>
             <AgreementCard
-              light
-              active={!privacyAgree}
+              $light
+              $active={!privacyAgree}
               onClick={() => setPrivacyAgree(false)}
-              decline
+              $decline
             >
-              <CheckIcon active={!privacyAgree} decline>✕</CheckIcon>
+              <CheckIcon $active={!privacyAgree} $decline>
+                ✕
+              </CheckIcon>
               <AgreementLabel>동의안함</AgreementLabel>
             </AgreementCard>
           </AgreementRow>
@@ -81,20 +85,22 @@ const OnboardingPolicyPage = () => {
           <SectionTitle>푸시 알림 동의</SectionTitle>
           <AgreementRow>
             <AgreementCard
-              light
-              active={pushAgree}
+              $light
+              $active={pushAgree}
               onClick={() => setPushAgree(true)}
             >
-              <CheckIcon active={pushAgree}>✓</CheckIcon>
+              <CheckIcon $active={pushAgree}>✓</CheckIcon>
               <AgreementLabel>동의함</AgreementLabel>
             </AgreementCard>
             <AgreementCard
-              light
-              active={!pushAgree}
+              $light
+              $active={!pushAgree}
               onClick={() => setPushAgree(false)}
-              decline
+              $decline
             >
-              <CheckIcon active={!pushAgree} decline>✕</CheckIcon>
+              <CheckIcon $active={!pushAgree} $decline>
+                ✕
+              </CheckIcon>
               <AgreementLabel>동의안함</AgreementLabel>
             </AgreementCard>
           </AgreementRow>
@@ -107,9 +113,7 @@ const OnboardingPolicyPage = () => {
           >
             가입완료
           </CompleteButton>
-          <CancelButton onClick={handleCancel}>
-            가입취소
-          </CancelButton>
+          <CancelButton onClick={handleCancel}>가입취소</CancelButton>
         </ButtonGroup>
       </Content>
     </Container>
@@ -158,16 +162,21 @@ const AgreementRow = styled.div`
   gap: ${theme.spacing.md};
 `;
 
-const AgreementCard = styled.div<{ active?: boolean; light?: boolean; decline?: boolean }>`
-  background-color: ${props => {
-    if (!props.active) return "white";
-    if (props.light) return "white";
+const AgreementCard = styled.div<{
+  $active?: boolean;
+  $light?: boolean;
+  $decline?: boolean;
+}>`
+  background-color: ${(props) => {
+    if (!props.$active) return "white";
+    if (props.$light) return "white";
     return theme.colors.accent;
   }};
-  border: 2px solid ${props => {
-    if (props.active && !props.light) return theme.colors.accent;
-    return "#e0e0e0";
-  }};
+  border: 2px solid
+    ${(props) => {
+      if (props.$active && !props.$light) return theme.colors.accent;
+      return "#e0e0e0";
+    }};
   border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.xl} ${theme.spacing.lg};
   display: flex;
@@ -176,7 +185,8 @@ const AgreementCard = styled.div<{ active?: boolean; light?: boolean; decline?: 
   gap: ${theme.spacing.md};
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: ${props => (props.active ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "none")};
+  box-shadow: ${(props) =>
+    props.$active ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "none"};
 
   &:hover {
     transform: translateY(-2px);
@@ -188,28 +198,29 @@ const AgreementCard = styled.div<{ active?: boolean; light?: boolean; decline?: 
   }
 `;
 
-const CheckIcon = styled.div<{ active?: boolean; decline?: boolean }>`
+const CheckIcon = styled.div<{ $active?: boolean; $decline?: boolean }>`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: ${props => {
-    if (!props.active) return "transparent";
-    if (props.decline) return "white";
+  background-color: ${(props) => {
+    if (!props.$active) return "transparent";
+    if (props.$decline) return "white";
     return "white";
   }};
-  border: 2px solid ${props => {
-    if (!props.active) return "#e0e0e0";
-    if (props.decline) return "#e0e0e0";
-    return "white";
-  }};
+  border: 2px solid
+    ${(props) => {
+      if (!props.$active) return "#e0e0e0";
+      if (props.$decline) return "#e0e0e0";
+      return "white";
+    }};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: ${theme.typography.fontSize.xl};
   font-weight: ${theme.typography.fontWeight.bold};
-  color: ${props => {
-    if (!props.active) return "transparent";
-    if (props.decline) return "#ff5252";
+  color: ${(props) => {
+    if (!props.$active) return "transparent";
+    if (props.$decline) return "#ff5252";
     return theme.colors.accent;
   }};
   transition: all 0.2s;
@@ -225,27 +236,28 @@ const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.md};
-  margin-top: ${theme.spacing['3xl']};
+  margin-top: ${theme.spacing["3xl"]};
 `;
 
 const CompleteButton = styled.button<{ disabled?: boolean }>`
   width: 100%;
   padding: ${theme.spacing.md};
-  background-color: ${props => (props.disabled ? "#e0e0e0" : theme.colors.accent)};
+  background-color: ${(props) =>
+    props.disabled ? "#e0e0e0" : theme.colors.accent};
   color: white;
   border: none;
   border-radius: ${theme.borderRadius.md};
   font-size: ${theme.typography.fontSize.lg};
   font-weight: ${theme.typography.fontWeight.semibold};
-  cursor: ${props => (props.disabled ? "not-allowed" : "pointer")};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${props => (props.disabled ? "#e0e0e0" : "#e55a2b")};
+    background-color: ${(props) => (props.disabled ? "#e0e0e0" : "#e55a2b")};
   }
 
   &:active {
-    transform: ${props => (props.disabled ? "none" : "scale(0.98)")};
+    transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
   }
 `;
 
