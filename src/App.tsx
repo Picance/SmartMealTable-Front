@@ -18,6 +18,7 @@ import OnboardingProfilePage from "./pages/onboarding/OnboardingProfilePage";
 import OnboardingAddressPage from "./pages/onboarding/OnboardingAddressPage";
 import OnboardingBudgetPage from "./pages/onboarding/OnboardingBudgetPage";
 import OnboardingPreferencePage from "./pages/onboarding/OnboardingPreferencePage";
+import OnboardingFoodPreferencePage from "./pages/onboarding/OnboardingFoodPreferencePage";
 import OnboardingPolicyPage from "./pages/onboarding/OnboardingPolicyPage";
 
 // Main App
@@ -117,6 +118,14 @@ function App() {
               element={
                 <ProtectedRoute requireOnboarding={false}>
                   <OnboardingPreferencePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding/food-preference"
+              element={
+                <ProtectedRoute requireOnboarding={false}>
+                  <OnboardingFoodPreferencePage />
                 </ProtectedRoute>
               }
             />

@@ -5,21 +5,10 @@ import { theme } from "../../styles/theme";
 import { categoryService } from "../../services/category.service";
 import type { Category } from "../../types/api";
 
-// 임시 음식 이미지 데이터
-const FOOD_IMAGES = [
-  { id: 1, name: "후라이드 치킨", image: "🍗", category: "치킨" },
-  { id: 2, name: "양념 치킨", image: "🍖", category: "치킨" },
-  { id: 3, name: "마라 간장 치킨", image: "🍗", category: "치킨" },
-  { id: 4, name: "피자", image: "🍕", category: "피자" },
-  { id: 5, name: "햄버거", image: "🍔", category: "버거" },
-  { id: 6, name: "파스타", image: "🍝", category: "파스타" },
-];
-
 type DragZone = "liked" | "disliked" | "available";
 
 const OnboardingPreferencePage = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: 카테고리 선택, 2: 음식 선택
 
   // 카테고리 관련 상태
   const [likedCategories, setLikedCategories] = useState<Category[]>([]);
@@ -35,10 +24,7 @@ const OnboardingPreferencePage = () => {
   const [dragSourceZone, setDragSourceZone] = useState<DragZone | null>(null);
   const [dragOverZone, setDragOverZone] = useState<DragZone | null>(null);
 
-  // Step 2: 음식 선택
-  const [selectedFoods, setSelectedFoods] = useState<number[]>([]);
-
-  // 카테고리 목록 조회
+  // 카테고리 목록 조회 (한 번만 모두 가져오기)
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -156,17 +142,8 @@ const OnboardingPreferencePage = () => {
     }
   };
 
-  // 음식 선택 토글
-  const toggleFoodSelection = (foodId: number) => {
-    if (selectedFoods.includes(foodId)) {
-      setSelectedFoods(selectedFoods.filter((id) => id !== foodId));
-    } else {
-      setSelectedFoods([...selectedFoods, foodId]);
-    }
-  };
-
-  // Step 1 -> Step 2
-  const handleStep1Next = async () => {
+  // 저장하기
+  const handleSubmit = async () => {
     if (likedCategories.length === 0 && dislikedCategories.length === 0) {
       alert(
         "선호하는 카테고리 또는 불호하는 카테고리를 최소 1개 이상 선택해주세요."
@@ -192,7 +169,7 @@ const OnboardingPreferencePage = () => {
       });
 
       if (response.result === "SUCCESS") {
-        setStep(2);
+        navigate("/onboarding/food-preference");
       } else {
         throw new Error(response.error?.message || "카테고리 선호도 저장 실패");
       }
@@ -204,189 +181,149 @@ const OnboardingPreferencePage = () => {
     }
   };
 
-  // Step 2 -> 완료
-  const handleStep2Next = () => {
-    // TODO: API 호출
-    navigate("/onboarding/policy");
-  };
-
   return (
     <Container>
       <Header>
-        <Title>음식 취향 {step === 1 ? "설정" : "선택"}</Title>
+        <Title>음식 카테고리 설정</Title>
       </Header>
 
-      {step === 1 && (
-        <>
-          <Section>
-            <SectionTitle>신규 회원 가입 (음식 선호/불호)</SectionTitle>
-            <SectionDescription>
-              완벽한 서비스 제공을 위해 음식 취향을 설정해주세요.
-            </SectionDescription>
-          </Section>
+      <Section>
+        <SectionTitle>신규 회원 가입 (음식 선호/불호)</SectionTitle>
+        <SectionDescription>
+          완벽한 서비스 제공을 위해 음식 취향을 설정해주세요.
+        </SectionDescription>
+      </Section>
 
-          {/* 선호하는 카테고리 드롭 영역 */}
-          <Section>
-            <SubTitle>선호하는 음식 카테고리 (우선순위 순서)</SubTitle>
-            <DropZone
-              onDragOver={(e) => handleDragOver(e, "liked")}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, "liked")}
-              $isOver={dragOverZone === "liked"}
-              $isEmpty={likedCategories.length === 0}
-            >
-              {likedCategories.length === 0 ? (
-                <EmptyMessage>아래에서 드래그하여 추가하세요</EmptyMessage>
-              ) : (
-                <CategoryChipGroup>
-                  {likedCategories.map((category) => (
-                    <CategoryChip
-                      key={category.categoryId}
-                      draggable
-                      onDragStart={() => handleDragStart(category, "liked")}
-                      onDragEnd={handleDragEnd}
-                      $color="orange"
-                      $isDragging={
-                        draggedCategory?.categoryId === category.categoryId
-                      }
-                    >
-                      {category.name}
-                      <RemoveButton
-                        onClick={() => removeFromLiked(category.categoryId)}
-                      >
-                        ×
-                      </RemoveButton>
-                    </CategoryChip>
-                  ))}
-                </CategoryChipGroup>
-              )}
-            </DropZone>
-          </Section>
-
-          {/* 불호하는 카테고리 드롭 영역 */}
-          <Section>
-            <SubTitle>불호하는 음식 카테고리 (우선순위 순서)</SubTitle>
-            <DropZone
-              onDragOver={(e) => handleDragOver(e, "disliked")}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, "disliked")}
-              $isOver={dragOverZone === "disliked"}
-              $isEmpty={dislikedCategories.length === 0}
-            >
-              {dislikedCategories.length === 0 ? (
-                <EmptyMessage>아래에서 드래그하여 추가하세요</EmptyMessage>
-              ) : (
-                <CategoryChipGroup>
-                  {dislikedCategories.map((category) => (
-                    <CategoryChip
-                      key={category.categoryId}
-                      draggable
-                      onDragStart={() => handleDragStart(category, "disliked")}
-                      onDragEnd={handleDragEnd}
-                      $color="yellow"
-                      $isDragging={
-                        draggedCategory?.categoryId === category.categoryId
-                      }
-                    >
-                      {category.name}
-                      <RemoveButton
-                        onClick={() => removeFromDisliked(category.categoryId)}
-                      >
-                        ×
-                      </RemoveButton>
-                    </CategoryChip>
-                  ))}
-                </CategoryChipGroup>
-              )}
-            </DropZone>
-          </Section>
-
-          {/* 전체 카테고리 목록 */}
-          <Section>
-            <SubTitle>드래그 앤 드롭으로 지정해주세요</SubTitle>
-            <SearchInput
-              type="text"
-              placeholder="🔍  카테고리 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <CategoryGrid
-              onDragOver={(e) => handleDragOver(e, "available")}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, "available")}
-            >
-              {loading ? (
-                <LoadingMessage>카테고리를 불러오는 중...</LoadingMessage>
-              ) : filteredAvailableCategories.length === 0 ? (
-                <EmptyMessage>
-                  {searchQuery
-                    ? "검색 결과가 없습니다"
-                    : "모든 카테고리를 선택했습니다"}
-                </EmptyMessage>
-              ) : (
-                filteredAvailableCategories.map((category) => (
-                  <DraggableCategory
-                    key={category.categoryId}
-                    draggable
-                    onDragStart={() => handleDragStart(category, "available")}
-                    onDragEnd={handleDragEnd}
-                    $isDragging={
-                      draggedCategory?.categoryId === category.categoryId
-                    }
+      {/* 선호하는 카테고리 드롭 영역 */}
+      <Section>
+        <SubTitle>선호하는 음식 카테고리 (우선순위 순서)</SubTitle>
+        <DropZone
+          onDragOver={(e) => handleDragOver(e, "liked")}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, "liked")}
+          $isOver={dragOverZone === "liked"}
+          $isEmpty={likedCategories.length === 0}
+        >
+          {likedCategories.length === 0 ? (
+            <EmptyMessage>아래에서 드래그하여 추가하세요</EmptyMessage>
+          ) : (
+            <CategoryChipGroup>
+              {likedCategories.map((category) => (
+                <CategoryChip
+                  key={category.categoryId}
+                  draggable
+                  onDragStart={() => handleDragStart(category, "liked")}
+                  onDragEnd={handleDragEnd}
+                  $color="orange"
+                  $isDragging={
+                    draggedCategory?.categoryId === category.categoryId
+                  }
+                >
+                  {category.name}
+                  <RemoveButton
+                    onClick={() => removeFromLiked(category.categoryId)}
                   >
-                    ≡ {category.name}
-                  </DraggableCategory>
-                ))
-              )}
-            </CategoryGrid>
-          </Section>
+                    ×
+                  </RemoveButton>
+                </CategoryChip>
+              ))}
+            </CategoryChipGroup>
+          )}
+        </DropZone>
+      </Section>
 
-          <ButtonGroup>
-            <SubmitButton
-              onClick={handleStep1Next}
-              disabled={
-                loading ||
-                (likedCategories.length === 0 &&
-                  dislikedCategories.length === 0)
-              }
-            >
-              {loading ? "저장 중..." : "저장하기"}
-            </SubmitButton>
-            <SkipButton onClick={() => navigate("/onboarding/policy")}>
-              건너뛰기
-            </SkipButton>
-          </ButtonGroup>
-        </>
-      )}
+      {/* 불호하는 카테고리 드롭 영역 */}
+      <Section>
+        <SubTitle>불호하는 음식 카테고리 (우선순위 순서)</SubTitle>
+        <DropZone
+          onDragOver={(e) => handleDragOver(e, "disliked")}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, "disliked")}
+          $isOver={dragOverZone === "disliked"}
+          $isEmpty={dislikedCategories.length === 0}
+        >
+          {dislikedCategories.length === 0 ? (
+            <EmptyMessage>아래에서 드래그하여 추가하세요</EmptyMessage>
+          ) : (
+            <CategoryChipGroup>
+              {dislikedCategories.map((category) => (
+                <CategoryChip
+                  key={category.categoryId}
+                  draggable
+                  onDragStart={() => handleDragStart(category, "disliked")}
+                  onDragEnd={handleDragEnd}
+                  $color="yellow"
+                  $isDragging={
+                    draggedCategory?.categoryId === category.categoryId
+                  }
+                >
+                  {category.name}
+                  <RemoveButton
+                    onClick={() => removeFromDisliked(category.categoryId)}
+                  >
+                    ×
+                  </RemoveButton>
+                </CategoryChip>
+              ))}
+            </CategoryChipGroup>
+          )}
+        </DropZone>
+      </Section>
 
-      {step === 2 && (
-        <>
-          <Section>
-            <SectionTitle>선호하는 음식을 선택해주세요</SectionTitle>
-            <SectionDescription>
-              취향에 맞는 음식 추천을 위해 선택해주세요.
-            </SectionDescription>
-          </Section>
-
-          <FoodGrid>
-            {FOOD_IMAGES.map((food) => (
-              <FoodCard
-                key={food.id}
-                $selected={selectedFoods.includes(food.id)}
-                onClick={() => toggleFoodSelection(food.id)}
+      {/* 전체 카테고리 목록 */}
+      <Section>
+        <SubTitle>드래그 앤 드롭으로 지정해주세요</SubTitle>
+        <SearchInput
+          type="text"
+          placeholder="🔍  카테고리 검색..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <CategoryGrid
+          onDragOver={(e) => handleDragOver(e, "available")}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, "available")}
+        >
+          {loading ? (
+            <LoadingMessage>카테고리를 불러오는 중...</LoadingMessage>
+          ) : filteredAvailableCategories.length === 0 ? (
+            <EmptyMessage>
+              {searchQuery
+                ? "검색 결과가 없습니다"
+                : "모든 카테고리를 선택했습니다"}
+            </EmptyMessage>
+          ) : (
+            filteredAvailableCategories.map((category) => (
+              <DraggableCategory
+                key={category.categoryId}
+                draggable
+                onDragStart={() => handleDragStart(category, "available")}
+                onDragEnd={handleDragEnd}
+                $isDragging={
+                  draggedCategory?.categoryId === category.categoryId
+                }
               >
-                <FoodImage>{food.image}</FoodImage>
-                <FoodName>{food.name}</FoodName>
-                <Checkbox $checked={selectedFoods.includes(food.id)}>
-                  {selectedFoods.includes(food.id) && "✓"}
-                </Checkbox>
-              </FoodCard>
-            ))}
-          </FoodGrid>
+                ≡ {category.name}
+              </DraggableCategory>
+            ))
+          )}
+        </CategoryGrid>
+      </Section>
 
-          <NextButton onClick={handleStep2Next}>다음</NextButton>
-        </>
-      )}
+      <ButtonGroup>
+        <SubmitButton
+          onClick={handleSubmit}
+          disabled={
+            loading ||
+            (likedCategories.length === 0 && dislikedCategories.length === 0)
+          }
+        >
+          {loading ? "저장 중..." : "다음"}
+        </SubmitButton>
+        <SkipButton onClick={() => navigate("/onboarding/food-preference")}>
+          건너뛰기
+        </SkipButton>
+      </ButtonGroup>
     </Container>
   );
 };
@@ -621,99 +558,6 @@ const SkipButton = styled.button`
 
   &:hover {
     background-color: #f5f5f5;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-`;
-
-// Step 2 Styles
-const FoodGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: ${theme.spacing.lg};
-  padding: ${theme.spacing.lg};
-`;
-
-const FoodCard = styled.div<{ $selected?: boolean }>`
-  background-color: white;
-  border-radius: ${theme.borderRadius.lg};
-  padding: ${theme.spacing.lg};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: ${theme.spacing.sm};
-  cursor: pointer;
-  border: 2px solid
-    ${(props) => (props.$selected ? theme.colors.accent : "transparent")};
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s;
-  position: relative;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-const FoodImage = styled.div`
-  font-size: 80px;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5f5f5;
-  border-radius: ${theme.borderRadius.md};
-`;
-
-const FoodName = styled.p`
-  font-size: ${theme.typography.fontSize.base};
-  font-weight: ${theme.typography.fontWeight.medium};
-  color: #212121;
-  margin: 0;
-  text-align: center;
-`;
-
-const Checkbox = styled.div<{ $checked?: boolean }>`
-  position: absolute;
-  bottom: ${theme.spacing.md};
-  right: ${theme.spacing.md};
-  width: 24px;
-  height: 24px;
-  border: 2px solid
-    ${(props) => (props.$checked ? theme.colors.accent : "#e0e0e0")};
-  border-radius: ${theme.borderRadius.sm};
-  background-color: ${(props) =>
-    props.$checked ? theme.colors.accent : "white"};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: ${theme.typography.fontSize.sm};
-  font-weight: ${theme.typography.fontWeight.bold};
-`;
-
-const NextButton = styled.button`
-  width: calc(100% - ${theme.spacing.lg} * 2);
-  margin: ${theme.spacing.xl} ${theme.spacing.lg};
-  padding: ${theme.spacing.md};
-  background-color: ${theme.colors.secondary};
-  color: white;
-  border: none;
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.lg};
-  font-weight: ${theme.typography.fontWeight.semibold};
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: #ff9f3a;
   }
 
   &:active {

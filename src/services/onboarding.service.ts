@@ -8,7 +8,10 @@ import type {
   BudgetRequest,
   PreferenceRequest,
   FoodPreferenceRequest,
+  FoodPreferenceResponse,
   PolicyAgreementRequest,
+  Food,
+  PageResponse,
 } from "../types/api";
 
 export const onboardingService = {
@@ -85,10 +88,27 @@ export const onboardingService = {
   // 개별 음식 선호도 설정
   async saveFoodPreferences(
     data: FoodPreferenceRequest
-  ): Promise<ApiResponse<void>> {
-    const response = await api.post(
+  ): Promise<ApiResponse<FoodPreferenceResponse>> {
+    const response = await api.post<ApiResponse<FoodPreferenceResponse>>(
       "/api/v1/onboarding/food-preferences",
       data
+    );
+    return response.data;
+  },
+
+  // 온보딩용 음식 목록 조회
+  async getFoods(
+    categoryId?: number,
+    page: number = 0,
+    size: number = 20
+  ): Promise<ApiResponse<PageResponse<Food>>> {
+    const params: any = { page, size };
+    if (categoryId) {
+      params.categoryId = categoryId;
+    }
+    const response = await api.get<ApiResponse<PageResponse<Food>>>(
+      "/api/v1/onboarding/foods",
+      { params }
     );
     return response.data;
   },

@@ -124,6 +124,17 @@ export interface FoodPreferenceRequest {
   preferredFoodIds: number[];
 }
 
+export interface FoodPreferenceResponse {
+  savedCount: number;
+  preferredFoods: Array<{
+    foodId: number;
+    foodName: string;
+    categoryName: string;
+    imageUrl: string;
+  }>;
+  message: string;
+}
+
 export interface PolicyAgreementRequest {
   agreements: Array<{
     policyId: number;
