@@ -9,7 +9,7 @@ import type { Policy } from "../../types/api";
 
 const OnboardingPolicyPage = () => {
   const navigate = useNavigate();
-  const { updateMember } = useAuthStore();
+  const { updateMember, clearAuth } = useAuthStore();
 
   // 약관 목록 상태
   const [policies, setPolicies] = useState<Policy[]>([]);
@@ -182,8 +182,23 @@ const OnboardingPolicyPage = () => {
 
   // 가입 취소
   const handleCancel = () => {
-    if (window.confirm("회원가입을 취소하시겠습니까?")) {
-      navigate("/login-options", { replace: true });
+    if (
+      window.confirm(
+        "회원가입을 취소하시겠습니까?\n모든 인증 정보가 삭제됩니다."
+      )
+    ) {
+      // 모든 인증 정보 초기화
+      clearAuth();
+
+      // 로컬 스토리지 완전 초기화 (persist middleware 포함)
+      localStorage.removeItem("auth-storage");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+
+      console.log("회원가입 취소 - 인증 정보 초기화 완료");
+
+      // 처음 화면(Splash)으로 이동
+      navigate("/", { replace: true });
     }
   };
 
