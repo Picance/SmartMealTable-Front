@@ -314,10 +314,20 @@ export interface Food {
 // 약관 관련
 export interface Policy {
   policyId: number;
-  policyType: string;
+  title: string;
+  type: "REQUIRED" | "OPTIONAL";
+  version: string;
+  content?: string;
+}
+
+export interface PolicyListResponse {
+  policies: Policy[];
+}
+
+export interface PolicyDetailResponse {
+  policyId: number;
   title: string;
   content: string;
-  isRequired: boolean;
+  type: "REQUIRED" | "OPTIONAL";
   version: string;
-  effectiveDate: string;
 }

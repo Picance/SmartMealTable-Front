@@ -1,22 +1,110 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
+import { getPolicies, getPolicyDetail } from "../../services/policy.service";
+import type { Policy } from "../../types/api";
 
 const OnboardingPolicyPage = () => {
   const navigate = useNavigate();
 
-  // 동의 상태
-  const [serviceAgree, setServiceAgree] = useState(false);
-  const [privacyAgree, setPrivacyAgree] = useState(false);
-  const [pushAgree, setPushAgree] = useState(false);
+  // 약관 목록 상태
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 동의 상태 (약관 ID를 키로 사용)
+  const [agreements, setAgreements] = useState<{ [key: number]: boolean }>({});
+
+  // 모달 상태
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
+  const [modalContent, setModalContent] = useState("");
+
+  // 약관 목록 불러오기
+  useEffect(() => {
+    const loadPolicies = async () => {
+      try {
+        setLoading(true);
+        const data = await getPolicies();
+
+        // 필수 약관이 먼저 오도록 정렬
+        const sortedPolicies = data.policies.sort((a, b) => {
+          if (a.type === "REQUIRED" && b.type === "OPTIONAL") return -1;
+          if (a.type === "OPTIONAL" && b.type === "REQUIRED") return 1;
+          return 0;
+        });
+
+        setPolicies(sortedPolicies);
+
+        // 초기 동의 상태 설정 (모두 false)
+        const initialAgreements: { [key: number]: boolean } = {};
+        sortedPolicies.forEach((policy) => {
+          initialAgreements[policy.policyId] = false;
+        });
+        setAgreements(initialAgreements);
+      } catch (err) {
+        console.error("약관 목록 로드 실패:", err);
+        setError("약관을 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPolicies();
+  }, []);
+
+  // 약관 상세 보기
+  const handleViewPolicy = async (policy: Policy) => {
+    try {
+      const detail = await getPolicyDetail(policy.policyId);
+      setSelectedPolicy(policy);
+      setModalContent(detail.content);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("약관 상세 로드 실패:", err);
+      alert("약관 상세 정보를 불러오는데 실패했습니다.");
+    }
+  };
+
+  // 모달 닫기
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPolicy(null);
+    setModalContent("");
+  };
+
+  // 동의 상태 변경
+  const handleAgreeChange = (policyId: number, agreed: boolean) => {
+    setAgreements((prev) => ({
+      ...prev,
+      [policyId]: agreed,
+    }));
+  };
+
+  // 필수 약관 모두 동의 여부 확인
+  const isAllRequiredAgreed = () => {
+    return policies
+      .filter((policy) => policy.type === "REQUIRED")
+      .every((policy) => agreements[policy.policyId] === true);
+  };
 
   // 가입 완료
   const handleComplete = () => {
-    if (serviceAgree && privacyAgree && pushAgree) {
-      // TODO: API 호출
-      navigate("/home", { replace: true });
+    if (!isAllRequiredAgreed()) {
+      alert("필수 약관에 모두 동의해주세요.");
+      return;
     }
+
+    // TODO: 약관 동의 API 호출
+    // const agreementData = policies.map((policy) => ({
+    //   policyId: policy.policyId,
+    //   agreed: agreements[policy.policyId],
+    //   agreedAt: new Date().toISOString(),
+    // }));
+    // await submitPolicyAgreements({ agreements: agreementData });
+
+    navigate("/home", { replace: true });
   };
 
   // 가입 취소
@@ -26,6 +114,33 @@ const OnboardingPolicyPage = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Container>
+        <Header>
+          <Title>신규 회원 가입(이용 약관 동의)</Title>
+        </Header>
+        <LoadingContainer>약관을 불러오는 중...</LoadingContainer>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Header>
+          <Title>신규 회원 가입(이용 약관 동의)</Title>
+        </Header>
+        <ErrorContainer>
+          <ErrorMessage>{error}</ErrorMessage>
+          <RetryButton onClick={() => window.location.reload()}>
+            다시 시도
+          </RetryButton>
+        </ErrorContainer>
+      </Container>
+    );
+  }
+
   return (
     <Container>
       <Header>
@@ -33,89 +148,79 @@ const OnboardingPolicyPage = () => {
       </Header>
 
       <Content>
-        <Section>
-          <SectionTitle>서비스 이용 약관</SectionTitle>
-          <AgreementRow>
-            <AgreementCard
-              $active={serviceAgree}
-              onClick={() => setServiceAgree(true)}
-            >
-              <CheckIcon $active={serviceAgree}>✓</CheckIcon>
-              <AgreementLabel>동의함</AgreementLabel>
-            </AgreementCard>
-            <AgreementCard
-              $active={!serviceAgree}
-              onClick={() => setServiceAgree(false)}
-              $decline
-            >
-              <CheckIcon $active={!serviceAgree} $decline>
-                ✕
-              </CheckIcon>
-              <AgreementLabel>동의안함</AgreementLabel>
-            </AgreementCard>
-          </AgreementRow>
-        </Section>
-
-        <Section>
-          <SectionTitle>개인정보 수집 동의</SectionTitle>
-          <AgreementRow>
-            <AgreementCard
-              $light
-              $active={privacyAgree}
-              onClick={() => setPrivacyAgree(true)}
-            >
-              <CheckIcon $active={privacyAgree}>✓</CheckIcon>
-              <AgreementLabel>동의함</AgreementLabel>
-            </AgreementCard>
-            <AgreementCard
-              $light
-              $active={!privacyAgree}
-              onClick={() => setPrivacyAgree(false)}
-              $decline
-            >
-              <CheckIcon $active={!privacyAgree} $decline>
-                ✕
-              </CheckIcon>
-              <AgreementLabel>동의안함</AgreementLabel>
-            </AgreementCard>
-          </AgreementRow>
-        </Section>
-
-        <Section>
-          <SectionTitle>푸시 알림 동의</SectionTitle>
-          <AgreementRow>
-            <AgreementCard
-              $light
-              $active={pushAgree}
-              onClick={() => setPushAgree(true)}
-            >
-              <CheckIcon $active={pushAgree}>✓</CheckIcon>
-              <AgreementLabel>동의함</AgreementLabel>
-            </AgreementCard>
-            <AgreementCard
-              $light
-              $active={!pushAgree}
-              onClick={() => setPushAgree(false)}
-              $decline
-            >
-              <CheckIcon $active={!pushAgree} $decline>
-                ✕
-              </CheckIcon>
-              <AgreementLabel>동의안함</AgreementLabel>
-            </AgreementCard>
-          </AgreementRow>
-        </Section>
+        {policies.map((policy) => (
+          <Section key={policy.policyId}>
+            <SectionHeader>
+              <SectionTitle>
+                {policy.title}
+                {policy.type === "REQUIRED" && (
+                  <RequiredBadge>필수</RequiredBadge>
+                )}
+                {policy.type === "OPTIONAL" && (
+                  <OptionalBadge>선택</OptionalBadge>
+                )}
+              </SectionTitle>
+              <ViewDetailButton onClick={() => handleViewPolicy(policy)}>
+                상세보기
+              </ViewDetailButton>
+            </SectionHeader>
+            <AgreementRow>
+              <AgreementCard
+                $active={agreements[policy.policyId] === true}
+                onClick={() => handleAgreeChange(policy.policyId, true)}
+              >
+                <CheckIcon $active={agreements[policy.policyId] === true}>
+                  ✓
+                </CheckIcon>
+                <AgreementLabel>동의함</AgreementLabel>
+              </AgreementCard>
+              <AgreementCard
+                $active={agreements[policy.policyId] === false}
+                onClick={() => handleAgreeChange(policy.policyId, false)}
+                $decline
+              >
+                <CheckIcon
+                  $active={agreements[policy.policyId] === false}
+                  $decline
+                >
+                  ✕
+                </CheckIcon>
+                <AgreementLabel>동의안함</AgreementLabel>
+              </AgreementCard>
+            </AgreementRow>
+          </Section>
+        ))}
 
         <ButtonGroup>
           <CompleteButton
             onClick={handleComplete}
-            disabled={!serviceAgree || !privacyAgree || !pushAgree}
+            disabled={!isAllRequiredAgreed()}
           >
             가입완료
           </CompleteButton>
           <CancelButton onClick={handleCancel}>가입취소</CancelButton>
         </ButtonGroup>
       </Content>
+
+      {/* 약관 상세보기 모달 */}
+      {isModalOpen && selectedPolicy && (
+        <Modal onClick={handleCloseModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>{selectedPolicy.title}</ModalTitle>
+              <CloseButton onClick={handleCloseModal}>✕</CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <PolicyContent>{modalContent}</PolicyContent>
+            </ModalBody>
+            <ModalFooter>
+              <ModalCloseButton onClick={handleCloseModal}>
+                닫기
+              </ModalCloseButton>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
     </Container>
   );
 };
@@ -149,11 +254,99 @@ const Section = styled.section`
   margin-bottom: ${theme.spacing.xl};
 `;
 
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${theme.spacing.md};
+`;
+
 const SectionTitle = styled.h2`
   font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.semibold};
   color: #212121;
-  margin: 0 0 ${theme.spacing.md} 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+`;
+
+const RequiredBadge = styled.span`
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: ${theme.colors.accent};
+  color: white;
+  font-size: ${theme.typography.fontSize.xs};
+  font-weight: ${theme.typography.fontWeight.medium};
+  border-radius: ${theme.borderRadius.sm};
+`;
+
+const OptionalBadge = styled.span`
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: #9e9e9e;
+  color: white;
+  font-size: ${theme.typography.fontSize.xs};
+  font-weight: ${theme.typography.fontWeight.medium};
+  border-radius: ${theme.borderRadius.sm};
+`;
+
+const ViewDetailButton = styled.button`
+  padding: 4px 12px;
+  background-color: white;
+  color: ${theme.colors.accent};
+  border: 1px solid ${theme.colors.accent};
+  border-radius: ${theme.borderRadius.sm};
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: ${theme.colors.accent};
+    color: white;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  font-size: ${theme.typography.fontSize.lg};
+  color: #757575;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  gap: ${theme.spacing.lg};
+  padding: ${theme.spacing.xl};
+`;
+
+const ErrorMessage = styled.p`
+  font-size: ${theme.typography.fontSize.base};
+  color: #d32f2f;
+  text-align: center;
+`;
+
+const RetryButton = styled.button`
+  padding: ${theme.spacing.md} ${theme.spacing.xl};
+  background-color: ${theme.colors.accent};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #e55a2b;
+  }
 `;
 
 const AgreementRow = styled.div`
@@ -275,6 +468,107 @@ const CancelButton = styled.button`
 
   &:hover {
     background-color: #f5f5f5;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+// 모달 스타일 컴포넌트
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: ${theme.spacing.lg};
+`;
+
+const ModalContent = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: ${theme.spacing.lg};
+  border-bottom: 1px solid #e0e0e0;
+`;
+
+const ModalTitle = styled.h3`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0;
+`;
+
+const CloseButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border: none;
+  background-color: transparent;
+  color: #757575;
+  font-size: ${theme.typography.fontSize.xl};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f5f5f5;
+    color: #212121;
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: ${theme.spacing.lg};
+  overflow-y: auto;
+  flex: 1;
+`;
+
+const PolicyContent = styled.div`
+  font-size: ${theme.typography.fontSize.base};
+  line-height: 1.6;
+  color: #424242;
+  white-space: pre-wrap;
+`;
+
+const ModalFooter = styled.div`
+  padding: ${theme.spacing.lg};
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const ModalCloseButton = styled.button`
+  padding: ${theme.spacing.sm} ${theme.spacing.xl};
+  background-color: ${theme.colors.accent};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #e55a2b;
   }
 
   &:active {
