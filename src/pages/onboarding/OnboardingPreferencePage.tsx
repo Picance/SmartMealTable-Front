@@ -24,7 +24,9 @@ const OnboardingPreferencePage = () => {
   // 카테고리 관련 상태
   const [likedCategories, setLikedCategories] = useState<Category[]>([]);
   const [dislikedCategories, setDislikedCategories] = useState<Category[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<Category[]>(
+    []
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -91,11 +93,23 @@ const OnboardingPreferencePage = () => {
 
     // 원래 영역에서 제거
     if (dragSourceZone === "liked") {
-      setLikedCategories(likedCategories.filter((c) => c.categoryId !== draggedCategory.categoryId));
+      setLikedCategories(
+        likedCategories.filter(
+          (c) => c.categoryId !== draggedCategory.categoryId
+        )
+      );
     } else if (dragSourceZone === "disliked") {
-      setDislikedCategories(dislikedCategories.filter((c) => c.categoryId !== draggedCategory.categoryId));
+      setDislikedCategories(
+        dislikedCategories.filter(
+          (c) => c.categoryId !== draggedCategory.categoryId
+        )
+      );
     } else if (dragSourceZone === "available") {
-      setAvailableCategories(availableCategories.filter((c) => c.categoryId !== draggedCategory.categoryId));
+      setAvailableCategories(
+        availableCategories.filter(
+          (c) => c.categoryId !== draggedCategory.categoryId
+        )
+      );
     }
 
     // 새 영역에 추가
@@ -123,15 +137,21 @@ const OnboardingPreferencePage = () => {
   const removeFromLiked = (categoryId: number) => {
     const category = likedCategories.find((c) => c.categoryId === categoryId);
     if (category) {
-      setLikedCategories(likedCategories.filter((c) => c.categoryId !== categoryId));
+      setLikedCategories(
+        likedCategories.filter((c) => c.categoryId !== categoryId)
+      );
       setAvailableCategories([...availableCategories, category]);
     }
   };
 
   const removeFromDisliked = (categoryId: number) => {
-    const category = dislikedCategories.find((c) => c.categoryId === categoryId);
+    const category = dislikedCategories.find(
+      (c) => c.categoryId === categoryId
+    );
     if (category) {
-      setDislikedCategories(dislikedCategories.filter((c) => c.categoryId !== categoryId));
+      setDislikedCategories(
+        dislikedCategories.filter((c) => c.categoryId !== categoryId)
+      );
       setAvailableCategories([...availableCategories, category]);
     }
   };
@@ -148,7 +168,9 @@ const OnboardingPreferencePage = () => {
   // Step 1 -> Step 2
   const handleStep1Next = async () => {
     if (likedCategories.length === 0 && dislikedCategories.length === 0) {
-      alert("선호하는 카테고리 또는 불호하는 카테고리를 최소 1개 이상 선택해주세요.");
+      alert(
+        "선호하는 카테고리 또는 불호하는 카테고리를 최소 1개 이상 선택해주세요."
+      );
       return;
     }
 
@@ -165,7 +187,9 @@ const OnboardingPreferencePage = () => {
         })),
       ];
 
-      const response = await categoryService.updateCategoryPreferences({ preferences });
+      const response = await categoryService.updateCategoryPreferences({
+        preferences,
+      });
 
       if (response.result === "SUCCESS") {
         setStep(2);
@@ -222,10 +246,14 @@ const OnboardingPreferencePage = () => {
                       onDragStart={() => handleDragStart(category, "liked")}
                       onDragEnd={handleDragEnd}
                       $color="orange"
-                      $isDragging={draggedCategory?.categoryId === category.categoryId}
+                      $isDragging={
+                        draggedCategory?.categoryId === category.categoryId
+                      }
                     >
                       {category.name}
-                      <RemoveButton onClick={() => removeFromLiked(category.categoryId)}>
+                      <RemoveButton
+                        onClick={() => removeFromLiked(category.categoryId)}
+                      >
                         ×
                       </RemoveButton>
                     </CategoryChip>
@@ -256,10 +284,14 @@ const OnboardingPreferencePage = () => {
                       onDragStart={() => handleDragStart(category, "disliked")}
                       onDragEnd={handleDragEnd}
                       $color="yellow"
-                      $isDragging={draggedCategory?.categoryId === category.categoryId}
+                      $isDragging={
+                        draggedCategory?.categoryId === category.categoryId
+                      }
                     >
                       {category.name}
-                      <RemoveButton onClick={() => removeFromDisliked(category.categoryId)}>
+                      <RemoveButton
+                        onClick={() => removeFromDisliked(category.categoryId)}
+                      >
                         ×
                       </RemoveButton>
                     </CategoryChip>
@@ -287,7 +319,9 @@ const OnboardingPreferencePage = () => {
                 <LoadingMessage>카테고리를 불러오는 중...</LoadingMessage>
               ) : filteredAvailableCategories.length === 0 ? (
                 <EmptyMessage>
-                  {searchQuery ? "검색 결과가 없습니다" : "모든 카테고리를 선택했습니다"}
+                  {searchQuery
+                    ? "검색 결과가 없습니다"
+                    : "모든 카테고리를 선택했습니다"}
                 </EmptyMessage>
               ) : (
                 filteredAvailableCategories.map((category) => (
@@ -296,7 +330,9 @@ const OnboardingPreferencePage = () => {
                     draggable
                     onDragStart={() => handleDragStart(category, "available")}
                     onDragEnd={handleDragEnd}
-                    $isDragging={draggedCategory?.categoryId === category.categoryId}
+                    $isDragging={
+                      draggedCategory?.categoryId === category.categoryId
+                    }
                   >
                     ≡ {category.name}
                   </DraggableCategory>
@@ -310,7 +346,8 @@ const OnboardingPreferencePage = () => {
               onClick={handleStep1Next}
               disabled={
                 loading ||
-                (likedCategories.length === 0 && dislikedCategories.length === 0)
+                (likedCategories.length === 0 &&
+                  dislikedCategories.length === 0)
               }
             >
               {loading ? "저장 중..." : "저장하기"}
