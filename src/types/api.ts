@@ -286,9 +286,7 @@ export interface GroupListResponse {
 // 카테고리 관련
 export interface Category {
   categoryId: number;
-  categoryName: string;
-  imageUrl: string;
-  description: string;
+  name: string; // API 응답 구조에 맞게 수정
 }
 
 // 음식 관련
