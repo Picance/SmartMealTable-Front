@@ -63,25 +63,25 @@ const AddressDetailPage = () => {
           <Label>주소 분류</Label>
           <TypeButtonGroup>
             <TypeButton
-              active={addressType === "집"}
+              $active={addressType === "집"}
               onClick={() => setAddressType("집")}
             >
               집
             </TypeButton>
             <TypeButton
-              active={addressType === "직장"}
+              $active={addressType === "직장"}
               onClick={() => setAddressType("직장")}
             >
               직장
             </TypeButton>
             <TypeButton
-              active={addressType === "학교"}
+              $active={addressType === "학교"}
               onClick={() => setAddressType("학교")}
             >
               학교
             </TypeButton>
             <TypeButton
-              active={addressType === "기타"}
+              $active={addressType === "기타"}
               onClick={() => setAddressType("기타")}
             >
               기타
@@ -226,13 +226,13 @@ const TypeButtonGroup = styled.div`
   gap: ${theme.spacing.sm};
 `;
 
-const TypeButton = styled.button<{ active?: boolean }>`
+const TypeButton = styled.button<{ $active?: boolean }>`
   padding: ${theme.spacing.md};
   background-color: ${(props) =>
-    props.active ? theme.colors.accent : "white"};
-  color: ${(props) => (props.active ? "white" : "#424242")};
+    props.$active ? theme.colors.accent : "white"};
+  color: ${(props) => (props.$active ? "white" : "#424242")};
   border: 1px solid
-    ${(props) => (props.active ? theme.colors.accent : "#e0e0e0")};
+    ${(props) => (props.$active ? theme.colors.accent : "#e0e0e0")};
   border-radius: ${theme.borderRadius.full};
   font-size: ${theme.typography.fontSize.sm};
   font-weight: ${theme.typography.fontWeight.medium};
@@ -240,7 +240,7 @@ const TypeButton = styled.button<{ active?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${(props) => (props.active ? "#e55a2b" : "#f5f5f5")};
+    background-color: ${(props) => (props.$active ? "#e55a2b" : "#f5f5f5")};
   }
 
   &:active {

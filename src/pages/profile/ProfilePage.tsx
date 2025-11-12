@@ -339,7 +339,7 @@ const ProfilePage = () => {
               {/* 옵션들 */}
               <OptionsList>
                 <OptionCard
-                  selected={recommendationType === "절약형"}
+                  $selected={recommendationType === "절약형"}
                   onClick={() => setRecommendationType("절약형")}
                 >
                   <OptionIcon>🐷</OptionIcon>
@@ -352,7 +352,7 @@ const ProfilePage = () => {
                 </OptionCard>
 
                 <OptionCard
-                  selected={recommendationType === "모험형"}
+                  $selected={recommendationType === "모험형"}
                   onClick={() => setRecommendationType("모험형")}
                 >
                   <OptionIcon>🧭</OptionIcon>
@@ -365,7 +365,7 @@ const ProfilePage = () => {
                 </OptionCard>
 
                 <OptionCard
-                  selected={recommendationType === "균형형"}
+                  $selected={recommendationType === "균형형"}
                   onClick={() => setRecommendationType("균형형")}
                 >
                   <OptionIcon>⚖️</OptionIcon>
@@ -929,24 +929,24 @@ const OptionsList = styled.div`
   margin-bottom: ${theme.spacing["2xl"]};
 `;
 
-const OptionCard = styled.div<{ selected?: boolean }>`
+const OptionCard = styled.div<{ $selected?: boolean }>`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.md};
   padding: ${theme.spacing.lg};
   border: 2px solid
-    ${(props) => (props.selected ? theme.colors.accent : "#e0e0e0")};
+    ${(props) => (props.$selected ? theme.colors.accent : "#e0e0e0")};
   border-radius: ${theme.borderRadius.lg};
   background-color: ${(props) =>
-    props.selected ? "rgba(255, 107, 53, 0.05)" : "white"};
+    props.$selected ? "rgba(255, 107, 53, 0.05)" : "white"};
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
     border-color: ${(props) =>
-      props.selected ? theme.colors.accent : "#bdbdbd"};
+      props.$selected ? theme.colors.accent : "#bdbdbd"};
     background-color: ${(props) =>
-      props.selected ? "rgba(255, 107, 53, 0.05)" : "#fafafa"};
+      props.$selected ? "rgba(255, 107, 53, 0.05)" : "#fafafa"};
   }
 
   &:active {

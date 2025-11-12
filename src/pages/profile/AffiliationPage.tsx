@@ -110,19 +110,19 @@ const AffiliationPage = () => {
           <SectionTitle>소속 집단 정보</SectionTitle>
           <ButtonGroup>
             <TypeButton
-              active={affiliationType === "학생"}
+              $active={affiliationType === "학생"}
               onClick={() => setAffiliationType("학생")}
             >
               학생
             </TypeButton>
             <TypeButton
-              active={affiliationType === "직장인"}
+              $active={affiliationType === "직장인"}
               onClick={() => setAffiliationType("직장인")}
             >
               직장인
             </TypeButton>
             <TypeButton
-              active={affiliationType === "해당없음"}
+              $active={affiliationType === "해당없음"}
               onClick={() => setAffiliationType("해당없음")}
             >
               해당없음
@@ -275,13 +275,13 @@ const ButtonGroup = styled.div`
   gap: ${theme.spacing.md};
 `;
 
-const TypeButton = styled.button<{ active?: boolean }>`
+const TypeButton = styled.button<{ $active?: boolean }>`
   padding: ${theme.spacing.md};
   background-color: ${(props) =>
-    props.active ? theme.colors.accent : "white"};
-  color: ${(props) => (props.active ? "white" : "#424242")};
+    props.$active ? theme.colors.accent : "white"};
+  color: ${(props) => (props.$active ? "white" : "#424242")};
   border: 1px solid
-    ${(props) => (props.active ? theme.colors.accent : "#e0e0e0")};
+    ${(props) => (props.$active ? theme.colors.accent : "#e0e0e0")};
   border-radius: ${theme.borderRadius.md};
   font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.medium};
@@ -289,7 +289,7 @@ const TypeButton = styled.button<{ active?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${(props) => (props.active ? "#e55a2b" : "#f5f5f5")};
+    background-color: ${(props) => (props.$active ? "#e55a2b" : "#f5f5f5")};
   }
 
   &:active {

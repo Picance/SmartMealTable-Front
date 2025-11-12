@@ -34,37 +34,40 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
 
   return (
     <Nav>
-      <NavItem onClick={() => navigate("/home")} active={currentTab === "home"}>
+      <NavItem
+        onClick={() => navigate("/home")}
+        $active={currentTab === "home"}
+      >
         <NavIcon>🏠</NavIcon>
-        <NavLabel active={currentTab === "home"}>홈</NavLabel>
+        <NavLabel $active={currentTab === "home"}>홈</NavLabel>
       </NavItem>
       <NavItem
         onClick={() => navigate("/spending")}
-        active={currentTab === "spending"}
+        $active={currentTab === "spending"}
       >
         <NavIcon>📋</NavIcon>
-        <NavLabel active={currentTab === "spending"}>지출 내역</NavLabel>
+        <NavLabel $active={currentTab === "spending"}>지출 내역</NavLabel>
       </NavItem>
       <NavItem
         onClick={() => navigate("/recommendation")}
-        active={currentTab === "recommendation"}
+        $active={currentTab === "recommendation"}
       >
         <NavIcon>🍽️</NavIcon>
-        <NavLabel active={currentTab === "recommendation"}>음식 추천</NavLabel>
+        <NavLabel $active={currentTab === "recommendation"}>음식 추천</NavLabel>
       </NavItem>
       <NavItem
         onClick={() => navigate("/favorites")}
-        active={currentTab === "favorites"}
+        $active={currentTab === "favorites"}
       >
         <NavIcon>❤️</NavIcon>
-        <NavLabel active={currentTab === "favorites"}>즐겨 찾는 가게</NavLabel>
+        <NavLabel $active={currentTab === "favorites"}>즐겨 찾는 가게</NavLabel>
       </NavItem>
       <NavItem
         onClick={() => navigate("/profile")}
-        active={currentTab === "profile"}
+        $active={currentTab === "profile"}
       >
         <NavIcon>👤</NavIcon>
-        <NavLabel active={currentTab === "profile"}>프로필</NavLabel>
+        <NavLabel $active={currentTab === "profile"}>프로필</NavLabel>
       </NavItem>
     </Nav>
   );
@@ -91,7 +94,7 @@ const Nav = styled.nav`
   }
 `;
 
-const NavItem = styled.div<{ active?: boolean }>`
+const NavItem = styled.div<{ $active?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -109,11 +112,11 @@ const NavIcon = styled.div`
   font-size: ${theme.typography.fontSize.xl};
 `;
 
-const NavLabel = styled.span<{ active?: boolean }>`
+const NavLabel = styled.span<{ $active?: boolean }>`
   font-size: ${theme.typography.fontSize.xs};
-  color: ${(props) => (props.active ? theme.colors.accent : "#757575")};
+  color: ${(props) => (props.$active ? theme.colors.accent : "#757575")};
   font-weight: ${(props) =>
-    props.active
+    props.$active
       ? theme.typography.fontWeight.semibold
       : theme.typography.fontWeight.normal};
 `;

@@ -2,17 +2,22 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
-import { FiChevronLeft, FiCalendar, FiShoppingBag, FiDollarSign } from "react-icons/fi";
+import {
+  FiChevronLeft,
+  FiCalendar,
+  FiShoppingBag,
+  FiDollarSign,
+} from "react-icons/fi";
 
 type TabType = "paste" | "manual";
 
 const CreateExpenditurePage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("paste");
-  
+
   // 문자 붙여넣기
   const [messageText, setMessageText] = useState("");
-  
+
   // 직접 입력하기
   const [date, setDate] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -48,10 +53,16 @@ const CreateExpenditurePage = () => {
       </Header>
 
       <TabContainer>
-        <Tab active={activeTab === "paste"} onClick={() => setActiveTab("paste")}>
+        <Tab
+          $active={activeTab === "paste"}
+          onClick={() => setActiveTab("paste")}
+        >
           문자 붙여넣기
         </Tab>
-        <Tab active={activeTab === "manual"} onClick={() => setActiveTab("manual")}>
+        <Tab
+          $active={activeTab === "manual"}
+          onClick={() => setActiveTab("manual")}
+        >
           직접 입력하기
         </Tab>
       </TabContainer>
@@ -70,14 +81,16 @@ const CreateExpenditurePage = () => {
         ) : (
           <ManualSection>
             <SectionTitle>추출된 정보</SectionTitle>
-            
+
             <FormGroup>
               <Label>날짜</Label>
               <InputWrapper>
-                <IconWrapper><FiCalendar /></IconWrapper>
-                <Input 
-                  type="date" 
-                  value={date} 
+                <IconWrapper>
+                  <FiCalendar />
+                </IconWrapper>
+                <Input
+                  type="date"
+                  value={date}
                   onChange={(e) => setDate(e.target.value)}
                   placeholder=""
                 />
@@ -87,11 +100,13 @@ const CreateExpenditurePage = () => {
             <FormGroup>
               <Label>가게명</Label>
               <InputWrapper>
-                <IconWrapper><FiShoppingBag /></IconWrapper>
-                <Input 
-                  type="text" 
-                  placeholder="상점명 입력" 
-                  value={storeName} 
+                <IconWrapper>
+                  <FiShoppingBag />
+                </IconWrapper>
+                <Input
+                  type="text"
+                  placeholder="상점명 입력"
+                  value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                 />
               </InputWrapper>
@@ -100,11 +115,13 @@ const CreateExpenditurePage = () => {
             <FormGroup>
               <Label>금액</Label>
               <InputWrapper>
-                <IconWrapper><FiDollarSign /></IconWrapper>
-                <Input 
-                  type="text" 
-                  placeholder="가격 입력" 
-                  value={price} 
+                <IconWrapper>
+                  <FiDollarSign />
+                </IconWrapper>
+                <Input
+                  type="text"
+                  placeholder="가격 입력"
+                  value={price}
                   onChange={(e) => setPrice(e.target.value)}
                 />
               </InputWrapper>
@@ -112,7 +129,10 @@ const CreateExpenditurePage = () => {
 
             <FormGroup>
               <Label>카테고리</Label>
-              <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+              <Select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
                 <option>식비</option>
                 <option>교통</option>
                 <option>쇼핑</option>
@@ -123,7 +143,10 @@ const CreateExpenditurePage = () => {
 
             <FormGroup>
               <Label>식사 유형</Label>
-              <Select value={mealType} onChange={(e) => setMealType(e.target.value)}>
+              <Select
+                value={mealType}
+                onChange={(e) => setMealType(e.target.value)}
+              >
                 <option>아침</option>
                 <option>점심</option>
                 <option>저녁</option>
@@ -196,20 +219,24 @@ const TabContainer = styled.div`
   border-bottom: 1px solid #e0e0e0;
 `;
 
-const Tab = styled.button<{ active: boolean }>`
+const Tab = styled.button<{ $active: boolean }>`
   flex: 1;
   padding: ${theme.spacing.md};
-  background-color: ${props => props.active ? "white" : "#f5f5f5"};
+  background-color: ${(props) => (props.$active ? "white" : "#f5f5f5")};
   border: none;
-  border-bottom: 3px solid ${props => props.active ? theme.colors.accent : "transparent"};
+  border-bottom: 3px solid
+    ${(props) => (props.$active ? theme.colors.accent : "transparent")};
   font-size: ${theme.typography.fontSize.base};
-  font-weight: ${props => props.active ? theme.typography.fontWeight.bold : theme.typography.fontWeight.medium};
-  color: ${props => props.active ? "#212121" : "#999"};
+  font-weight: ${(props) =>
+    props.$active
+      ? theme.typography.fontWeight.bold
+      : theme.typography.fontWeight.medium};
+  color: ${(props) => (props.$active ? "#212121" : "#999")};
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${props => props.active ? "white" : "#eeeeee"};
+    background-color: ${(props) => (props.$active ? "white" : "#eeeeee")};
   }
 `;
 
@@ -328,7 +355,7 @@ const Input = styled.input`
 
   &[type="date"] {
     color: #bdbdbd;
-    
+
     &::-webkit-calendar-picker-indicator {
       cursor: pointer;
     }

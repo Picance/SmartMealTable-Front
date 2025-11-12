@@ -143,13 +143,13 @@ const BudgetManagementPage = () => {
               return (
                 <DayCell
                   key={day}
-                  selected={isSelected}
+                  $selected={isSelected}
                   onClick={() => setSelectedDate(day)}
                 >
                   <DayNumber
                     red={isSunday}
                     blue={isSaturday}
-                    selected={isSelected}
+                    $selected={isSelected}
                   >
                     {day}
                   </DayNumber>
@@ -380,14 +380,14 @@ const DaysGrid = styled.div`
   gap: ${theme.spacing.xs};
 `;
 
-const DayCell = styled.div<{ selected?: boolean }>`
+const DayCell = styled.div<{ $selected?: boolean }>`
   aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: ${(props) =>
-    props.selected ? theme.colors.accent : "transparent"};
+    props.$selected ? theme.colors.accent : "transparent"};
   border-radius: ${theme.borderRadius.sm};
   cursor: pointer;
   transition: all 0.2s;
@@ -395,19 +395,19 @@ const DayCell = styled.div<{ selected?: boolean }>`
 
   &:hover {
     background-color: ${(props) =>
-      props.selected ? theme.colors.accent : "#f5f5f5"};
+      props.$selected ? theme.colors.accent : "#f5f5f5"};
   }
 `;
 
 const DayNumber = styled.div<{
   red?: boolean;
   blue?: boolean;
-  selected?: boolean;
+  $selected?: boolean;
 }>`
   font-size: ${theme.typography.fontSize.sm};
   font-weight: ${theme.typography.fontWeight.medium};
   color: ${(props) => {
-    if (props.selected) return "white";
+    if (props.$selected) return "white";
     if (props.red) return "#d32f2f";
     if (props.blue) return "#1976d2";
     return "#212121";

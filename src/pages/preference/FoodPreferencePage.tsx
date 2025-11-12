@@ -160,7 +160,7 @@ const FoodPreferencePage = () => {
               return (
                 <CategoryButton
                   key={category}
-                  selected={isLiked || isDisliked}
+                  $selected={isLiked || isDisliked}
                   onClick={() => handleAvailableCategoryClick(category)}
                 >
                   ☰ {category}
@@ -313,9 +313,9 @@ const CategoryGrid = styled.div`
   gap: ${theme.spacing.sm};
 `;
 
-const CategoryButton = styled.button<{ selected?: boolean }>`
+const CategoryButton = styled.button<{ $selected?: boolean }>`
   padding: ${theme.spacing.md} ${theme.spacing.sm};
-  background-color: ${(props) => (props.selected ? "#f5f5f5" : "white")};
+  background-color: ${(props) => (props.$selected ? "#f5f5f5" : "white")};
   color: #424242;
   border: 1px solid #e0e0e0;
   border-radius: ${theme.borderRadius.md};

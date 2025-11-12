@@ -52,7 +52,9 @@ const HomePage = () => {
             <BudgetCard>
               <BudgetLabel>남은 식비</BudgetLabel>
               <BudgetAmount>{remainingBudget.toLocaleString()}원</BudgetAmount>
-              <BudgetSubtext>설정한 식비: {totalBudget.toLocaleString()}원</BudgetSubtext>
+              <BudgetSubtext>
+                설정한 식비: {totalBudget.toLocaleString()}원
+              </BudgetSubtext>
             </BudgetCard>
           </BudgetCards>
         </BudgetSection>
@@ -61,14 +63,14 @@ const HomePage = () => {
         <RecommendSection>
           <SectionTitle>추천 메뉴</SectionTitle>
           <TabContainer>
-            <Tab 
-              active={activeTab === "popular"} 
+            <Tab
+              $active={activeTab === "popular"}
               onClick={() => setActiveTab("popular")}
             >
               인기 메뉴
             </Tab>
-            <Tab 
-              active={activeTab === "healthy"} 
+            <Tab
+              $active={activeTab === "healthy"}
               onClick={() => setActiveTab("healthy")}
             >
               건강한 선택
@@ -76,7 +78,10 @@ const HomePage = () => {
           </TabContainer>
           <MenuGrid>
             {popularMenus.map((menu) => (
-              <MenuCard key={menu.id} onClick={() => navigate(`/menu/${menu.id}`)}>
+              <MenuCard
+                key={menu.id}
+                onClick={() => navigate(`/menu/${menu.id}`)}
+              >
                 <MenuImage>{menu.image}</MenuImage>
                 <MenuInfo>
                   <MenuName>{menu.name}</MenuName>
@@ -92,7 +97,7 @@ const HomePage = () => {
           <SectionTitle>식사 추천</SectionTitle>
           <RestaurantList>
             {restaurants.map((restaurant) => (
-              <RestaurantCard 
+              <RestaurantCard
                 key={restaurant.id}
                 onClick={() => navigate(`/store/${restaurant.id}`)}
               >
@@ -247,15 +252,19 @@ const TabContainer = styled.div`
   margin-top: ${theme.spacing.md};
 `;
 
-const Tab = styled.button<{ active: boolean }>`
+const Tab = styled.button<{ $active: boolean }>`
   flex: 1;
   padding: ${theme.spacing.sm} ${theme.spacing.md};
-  background-color: ${props => props.active ? "white" : "#f5f5f5"};
-  border: 1px solid ${props => props.active ? theme.colors.accent : "#e0e0e0"};
+  background-color: ${(props) => (props.$active ? "white" : "#f5f5f5")};
+  border: 1px solid
+    ${(props) => (props.$active ? theme.colors.accent : "#e0e0e0")};
   border-radius: 8px;
   font-size: ${theme.typography.fontSize.base};
-  font-weight: ${props => props.active ? theme.typography.fontWeight.semibold : theme.typography.fontWeight.medium};
-  color: ${props => props.active ? theme.colors.accent : "#666"};
+  font-weight: ${(props) =>
+    props.$active
+      ? theme.typography.fontWeight.semibold
+      : theme.typography.fontWeight.medium};
+  color: ${(props) => (props.$active ? theme.colors.accent : "#666")};
   cursor: pointer;
   transition: all 0.2s;
 
@@ -338,7 +347,7 @@ const RestaurantIcon = styled.div`
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #FFF3E0;
+  background-color: #fff3e0;
   display: flex;
   align-items: center;
   justify-content: center;
