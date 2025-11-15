@@ -55,6 +55,27 @@ export const budgetService = {
     return response.data;
   },
 
+  // 일별 예산 조회 (특정 날짜)
+  async getDailyBudget(date: string): Promise<
+    ApiResponse<{
+      date: string;
+      totalBudget: number;
+      totalSpent: number;
+      remainingBudget: number;
+      mealBudgets: Array<{
+        mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
+        budget: number;
+        spent: number;
+        remaining: number;
+      }>;
+    }>
+  > {
+    const response = await api.get("/api/v1/budgets/daily", {
+      params: { date },
+    });
+    return response.data;
+  },
+
   // 월간 예산 조회
   async getMonthlyBudget(
     year: number,

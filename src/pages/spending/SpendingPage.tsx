@@ -16,7 +16,41 @@ import {
   getExpenditures,
   getDailyStatistics,
 } from "../../services/expenditure.service";
+import { budgetService } from "../../services/budget.service";
 import type { Expenditure, DailyStatistic } from "../../types/api";
+
+// 지출 내역에서 일별 통계 생성 (통계 API가 없을 경우 대비)
+const generateDailyStatisticsFromExpenditures = (
+  expenditures: Expenditure[],
+  startDate: string,
+  endDate: string
+): DailyStatistic[] => {
+  // 날짜별로 지출 합계 계산
+  const dailyMap = new Map<string, number>();
+
+  expenditures.forEach((exp) => {
+    const date = exp.expendedDate.split("T")[0]; // YYYY-MM-DD 형식으로 변환
+    const currentAmount = dailyMap.get(date) || 0;
+    dailyMap.set(date, currentAmount + exp.amount);
+  });
+
+  // 기간 내 모든 날짜 생성 (데이터가 없는 날도 0으로 표시)
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const result: DailyStatistic[] = [];
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dateStr = d.toISOString().split("T")[0];
+    const totalSpentAmount = dailyMap.get(dateStr) || 0;
+    result.push({
+      date: dateStr,
+      totalSpentAmount,
+      amount: totalSpentAmount, // 하위 호환성
+    });
+  }
+
+  return result;
+};
 
 const SpendingPage = () => {
   const navigate = useNavigate();
@@ -30,25 +64,56 @@ const SpendingPage = () => {
   // 데이터 상태
   const [expenditures, setExpenditures] = useState<Expenditure[]>([]);
   const [dailyStatistics, setDailyStatistics] = useState<DailyStatistic[]>([]);
+  const [dailyBudget, setDailyBudget] = useState<number>(15000); // 기본값 15000원
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // 데이터 로드
   useEffect(() => {
     loadData();
-  }, [year, month]);
+  }, [year, month, dateRange]);
+
+  // 날짜 범위에서 시작일과 종료일 추출
+  const getDateRangeFromFilter = (rangeStr: string) => {
+    const match = rangeStr.match(/(\d+)일\s*~\s*(\d+)일/);
+    if (match) {
+      return {
+        startDay: parseInt(match[1]),
+        endDay: parseInt(match[2]),
+      };
+    }
+    return { startDay: 1, endDay: 31 };
+  };
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // 날짜 범위 설정
-      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-      const lastDay = new Date(year, month, 0).getDate();
-      const endDate = `${year}-${String(month).padStart(2, "0")}-${String(
-        lastDay
+      // 날짜 범위 필터 적용
+      const { startDay, endDay } = getDateRangeFromFilter(dateRange);
+      const startDate = `${year}-${String(month).padStart(2, "0")}-${String(
+        startDay
       ).padStart(2, "0")}`;
+      const endDate = `${year}-${String(month).padStart(2, "0")}-${String(
+        endDay
+      ).padStart(2, "0")}`;
+
+      console.log("데이터 로드 범위:", { startDate, endDate });
+
+      // 예산 정보 조회 (현재 날짜의 일별 예산 사용)
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const budgetResponse = await budgetService.getDailyBudget(today);
+        console.log("일별 예산 API 응답:", budgetResponse);
+
+        if (budgetResponse.result === "SUCCESS" && budgetResponse.data) {
+          setDailyBudget(budgetResponse.data.totalBudget);
+          console.log("일일 예산 설정:", budgetResponse.data.totalBudget);
+        }
+      } catch (budgetErr) {
+        console.warn("예산 조회 실패, 기본값 사용:", budgetErr);
+      }
 
       // 지출 내역 조회
       const expenditureParams: any = {
@@ -80,24 +145,90 @@ const SpendingPage = () => {
         );
       }
 
-      // 일별 통계 조회 (선택적 - 실패해도 페이지는 정상 표시)
+      // 일별 통계 조회
+      console.log("📊 [1/5] 일별 통계 API 호출 시작...");
+      console.log("📊 [2/5] 요청 파라미터:", { startDate, endDate });
+
       try {
         const statisticsResponse = await getDailyStatistics({
           startDate,
           endDate,
         });
 
+        console.log("📊 [3/5] API 호출 완료! 응답 확인 중...");
+        console.log("📊 [4/5] statisticsResponse:", statisticsResponse);
+        console.log(
+          "📊 [4-1/5] statisticsResponse.result:",
+          statisticsResponse?.result
+        );
+        console.log(
+          "📊 [4-2/5] statisticsResponse.data:",
+          statisticsResponse?.data
+        );
+        console.log(
+          "📊 [4-3/5] statisticsResponse.data.dailyStatistics:",
+          statisticsResponse?.data?.dailyStatistics
+        );
+
+        // API 응답 구조 확인
         if (
-          statisticsResponse.result === "SUCCESS" &&
-          statisticsResponse.data
+          statisticsResponse &&
+          statisticsResponse.data &&
+          statisticsResponse.data.dailyStatistics
         ) {
+          console.log("📊 [5/5] ✅ dailyStatistics 발견! 설정 중...");
+          console.log(
+            "📊 dailyStatistics 배열 길이:",
+            statisticsResponse.data.dailyStatistics.length
+          );
+          console.log(
+            "📊 dailyStatistics 첫 번째 항목:",
+            statisticsResponse.data.dailyStatistics[0]
+          );
           setDailyStatistics(statisticsResponse.data.dailyStatistics);
+          console.log("📊 ✅ dailyStatistics 상태 업데이트 완료!");
+        } else {
+          console.log(
+            "📊 [5/5] ⚠️ dailyStatistics를 찾을 수 없습니다. 대체 방법 사용..."
+          );
+
+          // 폴백: 지출 내역에서 직접 생성
+          if (expenditureResponse.data?.expenditures?.content) {
+            console.log("📊 지출 내역에서 통계 생성 시작...");
+            const dailyStats = generateDailyStatisticsFromExpenditures(
+              expenditureResponse.data.expenditures.content,
+              startDate,
+              endDate
+            );
+            console.log("📊 생성된 통계:", dailyStats);
+            setDailyStatistics(dailyStats);
+            console.log("📊 ✅ 생성된 통계로 상태 업데이트 완료!");
+          } else {
+            console.log("📊 지출 내역도 없음. 빈 배열 설정.");
+            setDailyStatistics([]);
+          }
         }
       } catch (statsErr) {
-        // 통계 API가 없어도 페이지는 정상 작동
-        console.log("통계 API 사용 불가:", statsErr);
-        setDailyStatistics([]);
+        console.log("📊 ❌ 통계 API 호출 실패!");
+        console.error("📊 에러 상세:", statsErr);
+
+        // 폴백: 지출 내역에서 직접 생성
+        if (expenditureResponse.data?.expenditures?.content) {
+          console.log("📊 에러 발생, 지출 내역에서 통계 생성...");
+          const dailyStats = generateDailyStatisticsFromExpenditures(
+            expenditureResponse.data.expenditures.content,
+            startDate,
+            endDate
+          );
+          console.log("📊 생성된 통계:", dailyStats);
+          setDailyStatistics(dailyStats);
+        } else {
+          console.log("📊 지출 내역도 없음. 빈 배열 설정.");
+          setDailyStatistics([]);
+        }
       }
+
+      console.log("📊 통계 처리 완료, 다음 단계로...");
     } catch (err: any) {
       console.error("지출 데이터 로드 실패:", err);
       setError(
@@ -110,11 +241,22 @@ const SpendingPage = () => {
   };
 
   // 차트 데이터 변환
-  const chartData = dailyStatistics.map((stat) => ({
-    date: new Date(stat.date).getDate() + "일",
-    budget: 15000, // 임시 예산 값 (추후 실제 예산 API 연동)
-    spending: stat.amount,
-  }));
+  const chartData = dailyStatistics.map((stat) => {
+    const date = new Date(stat.date);
+    // API가 totalSpentAmount 필드를 사용하고, budget도 포함함
+    const spendingAmount = stat.totalSpentAmount ?? stat.amount ?? 0;
+    const budgetAmount = stat.budget ?? dailyBudget;
+
+    return {
+      date: date.getDate() + "일",
+      budget: budgetAmount,
+      spending: spendingAmount,
+    };
+  });
+
+  console.log("📊 최종 차트 데이터:", chartData);
+  console.log("📊 일별 통계 원본:", dailyStatistics);
+  console.log("📊 기본 일일 예산:", dailyBudget);
 
   // 식사 유형 표시
   const getMealTypeLabel = (mealType: string) => {

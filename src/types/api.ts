@@ -282,7 +282,12 @@ export interface ExpenditureListResponse {
 
 export interface DailyStatistic {
   date: string;
-  amount: number;
+  amount?: number; // 구버전 호환
+  totalSpentAmount: number; // 실제 API 응답
+  budget?: number; // API에서 제공하는 예산 정보
+  balance?: number;
+  overBudget?: boolean;
+  budgetRegistered?: boolean;
 }
 
 export interface CategoryStatistic {
