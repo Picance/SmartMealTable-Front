@@ -23,9 +23,11 @@ const CreateExpenditurePage = () => {
 
   // 문자 붙여넣기
   const [messageText, setMessageText] = useState("");
+  const [isParsed, setIsParsed] = useState(false); // SMS 파싱 완료 여부
 
-  // 직접 입력하기
+  // 추출된 정보 (파싱 또는 직접 입력)
   const [date, setDate] = useState("");
+  const [time, setTime] = useState(""); // 시간 추가
   const [storeName, setStoreName] = useState("");
   const [price, setPrice] = useState("");
   const [categoryId, setCategoryId] = useState(1);
@@ -33,102 +35,109 @@ const CreateExpenditurePage = () => {
     "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER"
   >("LUNCH");
 
-  const handleSubmit = async () => {
+  // 탭 전환 시 상태 초기화
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setMessageText("");
+    setIsParsed(false);
+    setDate("");
+    setTime("");
+    setStoreName("");
+    setPrice("");
+    setCategoryId(1);
+    setMealType("LUNCH");
+  };
+
+  // SMS 파싱하기 (문자 붙여넣기 탭)
+  const handleParseSms = async () => {
     try {
+      if (!messageText.trim()) {
+        alert("문자 메시지를 붙여넣어주세요.");
+        return;
+      }
+
+      setLoading(true);
+      console.log("📱 [SMS Parse] SMS 파싱 요청:", messageText);
+
+      const parseResponse = await parseSms({ smsMessage: messageText });
+      console.log("📱 [SMS Parse] 파싱 결과:", parseResponse);
+
+      if (parseResponse.result === "SUCCESS" && parseResponse.data) {
+        const parsed = parseResponse.data;
+
+        // 파싱된 정보를 상태에 저장
+        setStoreName(parsed.storeName);
+        setPrice(parsed.amount.toString());
+        setDate(parsed.date);
+        setTime(parsed.time);
+        setIsParsed(true);
+
+        alert("SMS 파싱이 완료되었습니다. 정보를 확인하고 저장해주세요.");
+      } else {
+        alert(parseResponse.error?.message || "SMS 파싱에 실패했습니다.");
+      }
+    } catch (error: any) {
+      console.error("❌ [SMS Parse] SMS 파싱 오류:", error);
+      alert(
+        error.response?.data?.error?.message ||
+          "SMS 파싱 중 오류가 발생했습니다."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 지출 저장하기 (최종 저장)
+  const handleSaveExpenditure = async () => {
+    try {
+      // 필수 필드 검증
+      if (!date || !storeName || !price) {
+        alert("모든 필수 항목을 입력해주세요.");
+        return;
+      }
+
       setLoading(true);
 
-      if (activeTab === "paste") {
-        // SMS 파싱
-        if (!messageText.trim()) {
-          alert("문자 메시지를 붙여넣어주세요.");
-          return;
-        }
+      const createRequest: CreateExpenditureRequest = {
+        storeName,
+        amount: Number(price),
+        expendedDate: date,
+        expendedTime: time || "12:00:00", // 시간이 없으면 기본값
+        categoryId,
+        mealType,
+        memo: activeTab === "paste" && isParsed ? "SMS 파싱" : null,
+        items: null,
+      };
 
-        console.log("📱 [SMS Parse] SMS 파싱 요청:", messageText);
+      console.log("📝 [CreateExpenditure] 지출 등록 요청:");
+      console.log("  - storeName:", createRequest.storeName);
+      console.log(
+        "  - amount:",
+        createRequest.amount,
+        typeof createRequest.amount
+      );
+      console.log("  - expendedDate:", createRequest.expendedDate);
+      console.log("  - expendedTime:", createRequest.expendedTime);
+      console.log(
+        "  - categoryId:",
+        createRequest.categoryId,
+        typeof createRequest.categoryId
+      );
+      console.log("  - mealType:", createRequest.mealType);
+      console.log("  - memo:", createRequest.memo);
+      console.log("  - items:", createRequest.items);
+      console.log(
+        "📝 [Full Request Object]:",
+        JSON.stringify(createRequest, null, 2)
+      );
 
-        const parseResponse = await parseSms({ smsMessage: messageText });
+      const response = await createExpenditure(createRequest);
 
-        console.log("📱 [SMS Parse] 파싱 결과:", parseResponse);
-
-        if (parseResponse.result === "SUCCESS" && parseResponse.data) {
-          const parsed = parseResponse.data;
-
-          // 파싱된 데이터로 지출 등록
-          const createRequest: CreateExpenditureRequest = {
-            storeName: parsed.storeName,
-            amount: parsed.amount,
-            expendedDate: parsed.date,
-            expendedTime: parsed.time,
-            categoryId: 1, // 기본 카테고리
-            mealType: "LUNCH", // 기본값
-            memo: "SMS 파싱",
-            items: null,
-          };
-
-          console.log(
-            "📝 [CreateExpenditure] SMS 파싱 후 지출 등록:",
-            createRequest
-          );
-
-          const createResponse = await createExpenditure(createRequest);
-
-          if (createResponse.result === "SUCCESS") {
-            alert("문자가 파싱되어 지출이 등록되었습니다.");
-            navigate("/spending");
-          } else {
-            alert(createResponse.error?.message || "지출 등록에 실패했습니다.");
-          }
-        } else {
-          alert(parseResponse.error?.message || "SMS 파싱에 실패했습니다.");
-        }
+      if (response.result === "SUCCESS") {
+        alert("지출이 등록되었습니다.");
+        navigate("/spending");
       } else {
-        // 직접 입력
-        if (!date || !storeName || !price) {
-          alert("모든 필수 항목을 입력해주세요.");
-          return;
-        }
-
-        const createRequest: CreateExpenditureRequest = {
-          storeName,
-          amount: Number(price),
-          expendedDate: date,
-          expendedTime: "12:00:00",
-          categoryId,
-          mealType,
-          memo: null,
-          items: null,
-        };
-
-        console.log("📝 [CreateExpenditure] 지출 등록 요청:");
-        console.log("  - storeName:", createRequest.storeName);
-        console.log(
-          "  - amount:",
-          createRequest.amount,
-          typeof createRequest.amount
-        );
-        console.log("  - expendedDate:", createRequest.expendedDate);
-        console.log("  - expendedTime:", createRequest.expendedTime);
-        console.log(
-          "  - categoryId:",
-          createRequest.categoryId,
-          typeof createRequest.categoryId
-        );
-        console.log("  - mealType:", createRequest.mealType);
-        console.log("  - memo:", createRequest.memo);
-        console.log("  - items:", createRequest.items);
-        console.log(
-          "📝 [Full Request Object]:",
-          JSON.stringify(createRequest, null, 2)
-        );
-
-        const response = await createExpenditure(createRequest);
-
-        if (response.result === "SUCCESS") {
-          alert("지출이 등록되었습니다.");
-          navigate("/spending");
-        } else {
-          alert(response.error?.message || "지출 등록에 실패했습니다.");
-        }
+        alert(response.error?.message || "지출 등록에 실패했습니다.");
       }
     } catch (error: any) {
       console.error("❌ [CreateExpenditure] 지출 등록 오류:", error);
@@ -189,13 +198,13 @@ const CreateExpenditurePage = () => {
       <TabContainer>
         <Tab
           $active={activeTab === "paste"}
-          onClick={() => setActiveTab("paste")}
+          onClick={() => handleTabChange("paste")}
         >
           문자 붙여넣기
         </Tab>
         <Tab
           $active={activeTab === "manual"}
-          onClick={() => setActiveTab("manual")}
+          onClick={() => handleTabChange("manual")}
         >
           직접 입력하기
         </Tab>
@@ -203,15 +212,105 @@ const CreateExpenditurePage = () => {
 
       <Content>
         {activeTab === "paste" ? (
-          <PasteSection>
-            <SectionTitle>지출 내용 붙여넣기</SectionTitle>
-            <Description>여기에 문자 메시지를 붙여넣으세요</Description>
-            <TextArea
-              placeholder="예: [WEB발신]스타벅스 6,500원 결제 승인&#10;10/26 15:30"
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-            />
-          </PasteSection>
+          <>
+            {/* SMS 문자 붙여넣기 섹션 */}
+            <PasteSection>
+              <SectionTitle>지출 내용 붙여넣기</SectionTitle>
+              <Description>여기에 문자 메시지를 붙여넣으세요</Description>
+              <TextArea
+                placeholder="예: [WEB발신]스타벅스 6,500원 결제 승인&#10;10/26 15:30"
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                disabled={isParsed} // 파싱 후에는 수정 불가
+              />
+            </PasteSection>
+
+            {/* 파싱된 정보 표시 */}
+            {isParsed && (
+              <ManualSection>
+                <SectionTitle>추출된 정보</SectionTitle>
+
+                <FormGroup>
+                  <Label>날짜</Label>
+                  <InputWrapper>
+                    <IconWrapper>
+                      <FiCalendar />
+                    </IconWrapper>
+                    <Input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  </InputWrapper>
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>가게명</Label>
+                  <InputWrapper>
+                    <IconWrapper>
+                      <FiShoppingBag />
+                    </IconWrapper>
+                    <Input
+                      type="text"
+                      placeholder="스타벅스 강남점"
+                      value={storeName}
+                      onChange={(e) => setStoreName(e.target.value)}
+                    />
+                  </InputWrapper>
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>금액</Label>
+                  <InputWrapper>
+                    <IconWrapper>
+                      <FiDollarSign />
+                    </IconWrapper>
+                    <Input
+                      type="text"
+                      placeholder="₩ 6,500"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                    />
+                  </InputWrapper>
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>카테고리</Label>
+                  <Select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(Number(e.target.value))}
+                  >
+                    <option value={1}>식비</option>
+                    <option value={2}>교통</option>
+                    <option value={3}>쇼핑</option>
+                    <option value={4}>문화</option>
+                    <option value={5}>기타</option>
+                  </Select>
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>식사 유형</Label>
+                  <Select
+                    value={mealType}
+                    onChange={(e) =>
+                      setMealType(
+                        e.target.value as
+                          | "BREAKFAST"
+                          | "LUNCH"
+                          | "DINNER"
+                          | "OTHER"
+                      )
+                    }
+                  >
+                    <option value="BREAKFAST">아침</option>
+                    <option value="LUNCH">점심</option>
+                    <option value="DINNER">저녁</option>
+                    <option value="OTHER">기타</option>
+                  </Select>
+                </FormGroup>
+              </ManualSection>
+            )}
+          </>
         ) : (
           <ManualSection>
             <SectionTitle>추출된 정보</SectionTitle>
@@ -294,13 +393,18 @@ const CreateExpenditurePage = () => {
           </ManualSection>
         )}
 
-        <SubmitButton onClick={handleSubmit} disabled={loading}>
-          {loading
-            ? "등록 중..."
-            : activeTab === "paste"
-            ? "지출 저장하기"
-            : "지출 등록"}
-        </SubmitButton>
+        {/* 버튼 영역 */}
+        {activeTab === "paste" && !isParsed ? (
+          // 파싱 전: SMS 파싱 버튼
+          <SubmitButton onClick={handleParseSms} disabled={loading}>
+            {loading ? "파싱 중..." : "문자 분석하기"}
+          </SubmitButton>
+        ) : (
+          // 파싱 후 또는 직접 입력: 지출 저장 버튼
+          <SubmitButton onClick={handleSaveExpenditure} disabled={loading}>
+            {loading ? "저장 중..." : "지출 저장하기"}
+          </SubmitButton>
+        )}
       </Content>
     </Container>
   );
