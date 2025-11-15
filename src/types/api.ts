@@ -344,3 +344,83 @@ export interface PolicyDetailResponse {
   content: string;
   updatedAt: string; // 업데이트 일시
 }
+
+// 홈 대시보드 관련
+export interface HomeDashboardLocation {
+  addressHistoryId: number;
+  addressAlias: string;
+  fullAddress: string;
+  roadAddress: string;
+  latitude: number;
+  longitude: number;
+  isPrimary: boolean;
+}
+
+export interface MealBudget {
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER";
+  budget: number;
+  spent: number;
+  remaining: number;
+}
+
+export interface HomeDashboardBudget {
+  todaySpent: number;
+  todayBudget: number;
+  remaining: number;
+  utilizationRate: number;
+  mealBudgets: MealBudget[];
+}
+
+export interface RecommendedMenu {
+  foodId: number;
+  foodName: string;
+  price: number;
+  storeId: number;
+  storeName: string;
+  distance: number;
+  tags: string[];
+  imageUrl: string;
+}
+
+export interface RecommendedStore {
+  storeId: number;
+  storeName: string;
+  categoryName: string;
+  distance: number;
+  distanceText: string;
+  contextInfo: string;
+  averagePrice: number;
+  reviewCount: number;
+  imageUrl: string;
+}
+
+export interface HomeDashboardResponse {
+  location: HomeDashboardLocation;
+  budget: HomeDashboardBudget;
+  recommendedMenus: RecommendedMenu[];
+  recommendedStores: RecommendedStore[];
+}
+
+// 온보딩 상태 관련
+export interface OnboardingStatusResponse {
+  isOnboardingComplete: boolean;
+  hasSelectedRecommendationType: boolean;
+  hasConfirmedMonthlyBudget: boolean;
+  currentMonth: string;
+  showRecommendationTypeModal: boolean;
+  showMonthlyBudgetModal: boolean;
+}
+
+// 월별 예산 확인 관련
+export interface MonthlyBudgetConfirmRequest {
+  year: number;
+  month: number;
+  action: "KEEP" | "CHANGE";
+}
+
+export interface MonthlyBudgetConfirmResponse {
+  year: number;
+  month: number;
+  confirmedAt: string;
+  monthlyBudget: number;
+}

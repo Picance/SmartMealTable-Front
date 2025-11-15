@@ -1,36 +1,161 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiChevronDown, FiMapPin } from "react-icons/fi";
 import BottomNav from "../../components/layout/BottomNav";
+import {
+  getHomeDashboard,
+  getOnboardingStatus,
+  confirmMonthlyBudget,
+} from "../../services/home.service";
+import type {
+  HomeDashboardResponse,
+  OnboardingStatusResponse,
+} from "../../types/api";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"popular" | "healthy">("popular");
+  const [dashboardData, setDashboardData] =
+    useState<HomeDashboardResponse | null>(null);
+  const [onboardingStatus, setOnboardingStatus] =
+    useState<OnboardingStatusResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
 
-  // 샘플 데이터
-  const todaySpent = 80000;
-  const remainingBudget = 20000;
-  const totalBudget = 100000;
+  // 데이터 로드
+  useEffect(() => {
+    loadHomeData();
+  }, []);
 
-  const popularMenus = [
-    { id: 1, name: "맛있는 햄버거", price: 7500, image: "🍔" },
-    { id: 2, name: "코코넛 샐러드", price: 6000, image: "🥗" },
-  ];
+  const loadHomeData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const restaurants = [
-    { id: 1, name: "임식 레스토랑", icon: "🍽️", tag: "도보 5분 거리" },
-    { id: 2, name: "피자 가게", icon: "🍕", tag: "학교 근처" },
-  ];
+      // 홈 대시보드 데이터 로드
+      const dashboardResponse = await getHomeDashboard();
+      console.log("📊 Dashboard Response:", dashboardResponse);
+
+      if (dashboardResponse.result === "SUCCESS" && dashboardResponse.data) {
+        console.log("✅ Dashboard Data:", dashboardResponse.data);
+        setDashboardData(dashboardResponse.data);
+      } else if (dashboardResponse.error?.code === "ADDRESS_002") {
+        // 주소가 없는 경우
+        setError("등록된 주소가 없습니다. 주소를 먼저 등록해주세요.");
+        // 주소 등록 화면으로 이동
+        navigate("/onboarding/address");
+        return;
+      } else {
+        console.error("❌ Dashboard Response Error:", dashboardResponse.error);
+        setError(
+          dashboardResponse.error?.message ||
+            "대시보드 데이터를 불러올 수 없습니다."
+        );
+        return;
+      }
+
+      // 온보딩 상태 확인
+      const statusResponse = await getOnboardingStatus();
+      console.log("📋 Onboarding Status Response:", statusResponse);
+
+      if (statusResponse.result === "SUCCESS" && statusResponse.data) {
+        setOnboardingStatus(statusResponse.data);
+
+        // 월별 예산 모달 표시 여부 확인
+        if (statusResponse.data.showMonthlyBudgetModal) {
+          setShowBudgetModal(true);
+        }
+      }
+    } catch (err: any) {
+      console.error("❌ 홈 데이터 로드 실패:", err);
+      console.error("Error details:", err.response?.data);
+      setError(
+        err.response?.data?.error?.message ||
+          "데이터를 불러오는데 실패했습니다."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBudgetConfirm = async (action: "KEEP" | "CHANGE") => {
+    if (!onboardingStatus) return;
+
+    if (action === "CHANGE") {
+      navigate("/profile/budget");
+      return;
+    }
+
+    try {
+      const [year, month] = onboardingStatus.currentMonth
+        .split("-")
+        .map(Number);
+      await confirmMonthlyBudget({
+        year,
+        month,
+        action: "KEEP",
+      });
+      setShowBudgetModal(false);
+    } catch (err) {
+      console.error("예산 확인 처리 실패:", err);
+    }
+  };
+
+  const handleLocationClick = () => {
+    navigate("/address/management");
+  };
+
+  if (loading) {
+    return (
+      <Container>
+        <LoadingContainer>
+          <LoadingText>로딩 중...</LoadingText>
+        </LoadingContainer>
+        <BottomNav activeTab="home" />
+      </Container>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <Container>
+        <ErrorContainer>
+          <ErrorText>{error || "데이터를 불러올 수 없습니다."}</ErrorText>
+        </ErrorContainer>
+        <BottomNav activeTab="home" />
+      </Container>
+    );
+  }
+
+  const { location, budget, recommendedMenus, recommendedStores } =
+    dashboardData;
+
+  // 데이터 유효성 검증
+  if (!location || !budget) {
+    console.error("❌ Invalid dashboard data structure:", dashboardData);
+    return (
+      <Container>
+        <ErrorContainer>
+          <ErrorText>데이터 구조가 올바르지 않습니다.</ErrorText>
+        </ErrorContainer>
+        <BottomNav activeTab="home" />
+      </Container>
+    );
+  }
 
   return (
     <Container>
       <Header>
         <Logo>알뜰식탁</Logo>
-        <LocationButton>
+        <LocationButton onClick={handleLocationClick}>
           <FiMapPin size={16} />
-          <span>현재 위치: 서울시 노원구 공릉동</span>
+          <span>
+            {location?.addressAlias || "위치"}:{" "}
+            {location?.roadAddress || "주소 없음"}
+          </span>
           <FiChevronDown size={16} />
         </LocationButton>
       </Header>
@@ -47,13 +172,28 @@ const HomePage = () => {
           <BudgetCards>
             <BudgetCard>
               <BudgetLabel>오늘 소비 금액</BudgetLabel>
-              <BudgetAmount>{todaySpent.toLocaleString()}원</BudgetAmount>
+              <BudgetAmount>
+                {(budget?.todaySpent || 0).toLocaleString()}원
+              </BudgetAmount>
+              <ProgressBar>
+                <ProgressFill
+                  $percentage={
+                    (budget?.todayBudget || 0) > 0
+                      ? ((budget?.todaySpent || 0) /
+                          (budget?.todayBudget || 1)) *
+                        100
+                      : 0
+                  }
+                />
+              </ProgressBar>
             </BudgetCard>
             <BudgetCard>
               <BudgetLabel>남은 식비</BudgetLabel>
-              <BudgetAmount>{remainingBudget.toLocaleString()}원</BudgetAmount>
+              <BudgetAmount $isNegative={(budget?.remaining || 0) < 0}>
+                {(budget?.remaining || 0).toLocaleString()}원
+              </BudgetAmount>
               <BudgetSubtext>
-                설정한 식비: {totalBudget.toLocaleString()}원
+                오늘 예산: {(budget?.todayBudget || 0).toLocaleString()}원
               </BudgetSubtext>
             </BudgetCard>
           </BudgetCards>
@@ -77,18 +217,39 @@ const HomePage = () => {
             </Tab>
           </TabContainer>
           <MenuGrid>
-            {popularMenus.map((menu) => (
-              <MenuCard
-                key={menu.id}
-                onClick={() => navigate(`/menu/${menu.id}`)}
-              >
-                <MenuImage>{menu.image}</MenuImage>
-                <MenuInfo>
-                  <MenuName>{menu.name}</MenuName>
-                  <MenuPrice>{menu.price.toLocaleString()}원</MenuPrice>
-                </MenuInfo>
-              </MenuCard>
-            ))}
+            {recommendedMenus && recommendedMenus.length > 0 ? (
+              recommendedMenus.map((menu) => (
+                <MenuCard
+                  key={menu.foodId}
+                  onClick={() => navigate(`/menu/${menu.foodId}`)}
+                >
+                  <MenuImage>
+                    {menu.imageUrl ? (
+                      <img src={menu.imageUrl} alt={menu.foodName || "메뉴"} />
+                    ) : (
+                      <ImagePlaceholder>🍽️</ImagePlaceholder>
+                    )}
+                  </MenuImage>
+                  <MenuInfo>
+                    <MenuName>{menu.foodName || "메뉴명 없음"}</MenuName>
+                    <MenuStoreName>
+                      {menu.storeName || "식당명 없음"}
+                    </MenuStoreName>
+                    <MenuPrice>
+                      {(menu.price || 0).toLocaleString()}원
+                    </MenuPrice>
+                    <MenuTags>
+                      {menu.tags &&
+                        menu.tags.map((tag, idx) => (
+                          <MenuTag key={idx}>{tag}</MenuTag>
+                        ))}
+                    </MenuTags>
+                  </MenuInfo>
+                </MenuCard>
+              ))
+            ) : (
+              <EmptyMessage>추천 메뉴가 없습니다.</EmptyMessage>
+            )}
           </MenuGrid>
         </RecommendSection>
 
@@ -96,21 +257,68 @@ const HomePage = () => {
         <RestaurantSection>
           <SectionTitle>식사 추천</SectionTitle>
           <RestaurantList>
-            {restaurants.map((restaurant) => (
-              <RestaurantCard
-                key={restaurant.id}
-                onClick={() => navigate(`/store/${restaurant.id}`)}
-              >
-                <RestaurantIcon>{restaurant.icon}</RestaurantIcon>
-                <RestaurantInfo>
-                  <RestaurantName>{restaurant.name}</RestaurantName>
-                  <RestaurantTag>{restaurant.tag}</RestaurantTag>
-                </RestaurantInfo>
-              </RestaurantCard>
-            ))}
+            {recommendedStores && recommendedStores.length > 0 ? (
+              recommendedStores.map((store) => (
+                <RestaurantCard
+                  key={store.storeId}
+                  onClick={() => navigate(`/store/${store.storeId}`)}
+                >
+                  <RestaurantIcon>
+                    {store.imageUrl ? (
+                      <img
+                        src={store.imageUrl}
+                        alt={store.storeName || "식당"}
+                      />
+                    ) : (
+                      <ImagePlaceholder>🏪</ImagePlaceholder>
+                    )}
+                  </RestaurantIcon>
+                  <RestaurantInfo>
+                    <RestaurantName>
+                      {store.storeName || "식당명 없음"}
+                    </RestaurantName>
+                    <RestaurantDetails>
+                      {store.categoryName || "카테고리"} ·{" "}
+                      {store.distanceText || "거리 정보 없음"}
+                    </RestaurantDetails>
+                    <RestaurantTag>{store.contextInfo || ""}</RestaurantTag>
+                    <RestaurantPrice>
+                      평균 {(store.averagePrice || 0).toLocaleString()}원
+                    </RestaurantPrice>
+                  </RestaurantInfo>
+                </RestaurantCard>
+              ))
+            ) : (
+              <EmptyMessage>추천 식당이 없습니다.</EmptyMessage>
+            )}
           </RestaurantList>
         </RestaurantSection>
       </Content>
+
+      {/* 월별 예산 확인 모달 */}
+      {showBudgetModal && onboardingStatus && (
+        <ModalOverlay onClick={() => setShowBudgetModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalTitle>이번 달 예산 확인</ModalTitle>
+            <ModalMessage>
+              {onboardingStatus.currentMonth} 예산을 확인해주세요.
+              <br />
+              기존 예산을 유지하시겠습니까?
+            </ModalMessage>
+            <ModalButtons>
+              <ModalButton onClick={() => handleBudgetConfirm("KEEP")}>
+                기존 유지
+              </ModalButton>
+              <ModalButton
+                $primary
+                onClick={() => handleBudgetConfirm("CHANGE")}
+              >
+                변경하기
+              </ModalButton>
+            </ModalButtons>
+          </ModalContent>
+        </ModalOverlay>
+      )}
 
       <BottomNav activeTab="home" />
     </Container>
@@ -229,11 +437,32 @@ const BudgetLabel = styled.div`
   margin-bottom: ${theme.spacing.xs};
 `;
 
-const BudgetAmount = styled.div`
+const BudgetAmount = styled.div<{ $isNegative?: boolean }>`
   font-size: 24px;
   font-weight: ${theme.typography.fontWeight.bold};
-  color: #212121;
+  color: ${(props) => (props.$isNegative ? "#e53935" : "#212121")};
   margin-bottom: 4px;
+`;
+
+const ProgressBar = styled.div`
+  width: 100%;
+  height: 6px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+`;
+
+const ProgressFill = styled.div<{ $percentage: number }>`
+  height: 100%;
+  background-color: ${(props) =>
+    props.$percentage > 100
+      ? "#e53935"
+      : props.$percentage > 80
+      ? "#ffa726"
+      : theme.colors.accent};
+  width: ${(props) => Math.min(props.$percentage, 100)}%;
+  transition: width 0.3s ease;
 `;
 
 const BudgetSubtext = styled.div`
@@ -295,8 +524,28 @@ const MenuCard = styled.div`
 `;
 
 const MenuImage = styled.div`
-  font-size: 60px;
+  width: 100%;
+  height: 120px;
+  background-color: #f5f5f5;
+  border-radius: ${theme.borderRadius.md};
   margin-bottom: ${theme.spacing.sm};
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const ImagePlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  background-color: #f5f5f5;
 `;
 
 const MenuInfo = styled.div`
@@ -305,14 +554,39 @@ const MenuInfo = styled.div`
 
 const MenuName = styled.div`
   font-size: ${theme.typography.fontSize.base};
-  color: #666;
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: #212121;
+  margin-bottom: 4px;
+`;
+
+const MenuStoreName = styled.div`
+  font-size: ${theme.typography.fontSize.xs};
+  color: #999;
   margin-bottom: 4px;
 `;
 
 const MenuPrice = styled.div`
   font-size: ${theme.typography.fontSize.lg};
   font-weight: ${theme.typography.fontWeight.bold};
-  color: #212121;
+  color: ${theme.colors.accent};
+  margin-bottom: 6px;
+`;
+
+const MenuTags = styled.div`
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const MenuTag = styled.span`
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: #fff3e0;
+  color: ${theme.colors.accent};
+  font-size: ${theme.typography.fontSize.xs};
+  border-radius: 12px;
+  font-weight: ${theme.typography.fontWeight.medium};
 `;
 
 const RestaurantSection = styled.section`
@@ -347,12 +621,18 @@ const RestaurantIcon = styled.div`
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #fff3e0;
+  background-color: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
   flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const RestaurantInfo = styled.div`
@@ -366,9 +646,118 @@ const RestaurantName = styled.div`
   margin-bottom: 4px;
 `;
 
+const RestaurantDetails = styled.div`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #666;
+  margin-bottom: 4px;
+`;
+
 const RestaurantTag = styled.div`
   font-size: ${theme.typography.fontSize.sm};
+  color: ${theme.colors.accent};
+  font-weight: ${theme.typography.fontWeight.medium};
+  margin-bottom: 4px;
+`;
+
+const RestaurantPrice = styled.div`
+  font-size: ${theme.typography.fontSize.xs};
   color: #999;
+`;
+
+const EmptyMessage = styled.div`
+  text-align: center;
+  padding: ${theme.spacing.xl};
+  color: #999;
+  font-size: ${theme.typography.fontSize.base};
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 80px);
+`;
+
+const LoadingText = styled.div`
+  font-size: ${theme.typography.fontSize.lg};
+  color: #666;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 80px);
+  padding: ${theme.spacing.lg};
+`;
+
+const ErrorText = styled.div`
+  text-align: center;
+  font-size: ${theme.typography.fontSize.base};
+  color: #e53935;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background-color: white;
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.xl};
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+`;
+
+const ModalTitle = styled.h3`
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin-bottom: ${theme.spacing.md};
+  text-align: center;
+`;
+
+const ModalMessage = styled.p`
+  font-size: ${theme.typography.fontSize.base};
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const ModalButtons = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing.md};
+`;
+
+const ModalButton = styled.button<{ $primary?: boolean }>`
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: all 0.2s;
+  border: ${(props) =>
+    props.$primary ? "none" : `1px solid ${theme.colors.gray[300]}`};
+  background-color: ${(props) =>
+    props.$primary ? theme.colors.accent : "white"};
+  color: ${(props) => (props.$primary ? "white" : "#666")};
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 export default HomePage;
