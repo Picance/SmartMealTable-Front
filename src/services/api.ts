@@ -26,6 +26,10 @@ apiClient.interceptors.request.use(
     console.log("Headers:", config.headers);
     if (config.data) {
       console.log("Request Data:", config.data);
+      console.log(
+        "Request Data (stringified):",
+        JSON.stringify(config.data, null, 2)
+      );
     }
     if (config.params) {
       console.log("Request Params:", config.params);
@@ -35,6 +39,12 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log(
+        "🔑 Authorization Token:",
+        token ? `${token.substring(0, 20)}...` : "None"
+      );
+    } else {
+      console.warn("⚠️ No Authorization Token found in localStorage");
     }
     return config;
   },

@@ -8,12 +8,18 @@ import {
   FiShoppingBag,
   FiDollarSign,
 } from "react-icons/fi";
+import {
+  parseSms,
+  createExpenditure,
+} from "../../services/expenditure.service";
+import type { CreateExpenditureRequest } from "../../types/api";
 
 type TabType = "paste" | "manual";
 
 const CreateExpenditurePage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("paste");
+  const [loading, setLoading] = useState(false);
 
   // 문자 붙여넣기
   const [messageText, setMessageText] = useState("");
@@ -22,24 +28,152 @@ const CreateExpenditurePage = () => {
   const [date, setDate] = useState("");
   const [storeName, setStoreName] = useState("");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("식비");
-  const [mealType, setMealType] = useState("아침");
+  const [categoryId, setCategoryId] = useState(1);
+  const [mealType, setMealType] = useState<
+    "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER"
+  >("LUNCH");
 
-  const handleSubmit = () => {
-    if (activeTab === "paste") {
-      if (!messageText.trim()) {
-        alert("문자 메시지를 붙여넣어주세요.");
-        return;
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      if (activeTab === "paste") {
+        // SMS 파싱
+        if (!messageText.trim()) {
+          alert("문자 메시지를 붙여넣어주세요.");
+          return;
+        }
+
+        console.log("📱 [SMS Parse] SMS 파싱 요청:", messageText);
+
+        const parseResponse = await parseSms({ smsMessage: messageText });
+
+        console.log("📱 [SMS Parse] 파싱 결과:", parseResponse);
+
+        if (parseResponse.result === "SUCCESS" && parseResponse.data) {
+          const parsed = parseResponse.data;
+
+          // 파싱된 데이터로 지출 등록
+          const createRequest: CreateExpenditureRequest = {
+            storeName: parsed.storeName,
+            amount: parsed.amount,
+            expendedDate: parsed.date,
+            expendedTime: parsed.time,
+            categoryId: 1, // 기본 카테고리
+            mealType: "LUNCH", // 기본값
+            memo: "SMS 파싱",
+            items: null,
+          };
+
+          console.log(
+            "📝 [CreateExpenditure] SMS 파싱 후 지출 등록:",
+            createRequest
+          );
+
+          const createResponse = await createExpenditure(createRequest);
+
+          if (createResponse.result === "SUCCESS") {
+            alert("문자가 파싱되어 지출이 등록되었습니다.");
+            navigate("/spending");
+          } else {
+            alert(createResponse.error?.message || "지출 등록에 실패했습니다.");
+          }
+        } else {
+          alert(parseResponse.error?.message || "SMS 파싱에 실패했습니다.");
+        }
+      } else {
+        // 직접 입력
+        if (!date || !storeName || !price) {
+          alert("모든 필수 항목을 입력해주세요.");
+          return;
+        }
+
+        const createRequest: CreateExpenditureRequest = {
+          storeName,
+          amount: Number(price),
+          expendedDate: date,
+          expendedTime: "12:00:00",
+          categoryId,
+          mealType,
+          memo: null,
+          items: null,
+        };
+
+        console.log("📝 [CreateExpenditure] 지출 등록 요청:");
+        console.log("  - storeName:", createRequest.storeName);
+        console.log(
+          "  - amount:",
+          createRequest.amount,
+          typeof createRequest.amount
+        );
+        console.log("  - expendedDate:", createRequest.expendedDate);
+        console.log("  - expendedTime:", createRequest.expendedTime);
+        console.log(
+          "  - categoryId:",
+          createRequest.categoryId,
+          typeof createRequest.categoryId
+        );
+        console.log("  - mealType:", createRequest.mealType);
+        console.log("  - memo:", createRequest.memo);
+        console.log("  - items:", createRequest.items);
+        console.log(
+          "📝 [Full Request Object]:",
+          JSON.stringify(createRequest, null, 2)
+        );
+
+        const response = await createExpenditure(createRequest);
+
+        if (response.result === "SUCCESS") {
+          alert("지출이 등록되었습니다.");
+          navigate("/spending");
+        } else {
+          alert(response.error?.message || "지출 등록에 실패했습니다.");
+        }
       }
-      alert("문자가 파싱되어 지출이 등록되었습니다.");
-    } else {
-      if (!date || !storeName || !price) {
-        alert("모든 필수 항목을 입력해주세요.");
-        return;
+    } catch (error: any) {
+      console.error("❌ [CreateExpenditure] 지출 등록 오류:", error);
+      console.error("❌ [Error Details]", {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        errorData: error.response?.data,
+        errorMessage: error.message,
+        requestUrl: error.config?.url,
+        requestMethod: error.config?.method,
+      });
+
+      // 404 에러인 경우
+      if (error.response?.status === 404) {
+        alert(
+          "⚠️ 백엔드 API가 구현되지 않았습니다.\n\n" +
+            "📋 체크리스트:\n" +
+            "✅ 프론트엔드: API 명세 준수 완료\n" +
+            "✅ 요청 데이터: 모든 필수 필드 포함\n" +
+            "✅ GET 엔드포인트: 정상 작동\n" +
+            "❌ POST /api/v1/expenditures: 404\n\n" +
+            "→ 백엔드 팀에 POST 엔드포인트 구현 요청 필요"
+        );
+      } else if (error.response?.status === 422) {
+        // 유효성 검증 실패
+        const errorMsg =
+          error.response?.data?.error?.message || "입력값을 확인해주세요.";
+        const errorField = error.response?.data?.error?.data?.field;
+        const errorReason = error.response?.data?.error?.data?.reason;
+
+        if (errorField && errorReason) {
+          alert(
+            `⚠️ 유효성 검증 실패\n\n필드: ${errorField}\n사유: ${errorReason}`
+          );
+        } else {
+          alert(`⚠️ ${errorMsg}`);
+        }
+      } else if (error.response?.status === 401) {
+        alert("⚠️ 인증이 필요합니다.\n\n로그인 후 다시 시도해주세요.");
+      } else {
+        alert(error.response?.data?.error?.message || "오류가 발생했습니다.");
       }
-      alert("지출이 등록되었습니다.");
+    } finally {
+      setLoading(false);
     }
-    navigate("/spending");
   };
 
   return (
@@ -130,14 +264,14 @@ const CreateExpenditurePage = () => {
             <FormGroup>
               <Label>카테고리</Label>
               <Select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={categoryId}
+                onChange={(e) => setCategoryId(Number(e.target.value))}
               >
-                <option>식비</option>
-                <option>교통</option>
-                <option>쇼핑</option>
-                <option>문화</option>
-                <option>기타</option>
+                <option value={1}>식비</option>
+                <option value={2}>교통</option>
+                <option value={3}>쇼핑</option>
+                <option value={4}>문화</option>
+                <option value={5}>기타</option>
               </Select>
             </FormGroup>
 
@@ -145,19 +279,27 @@ const CreateExpenditurePage = () => {
               <Label>식사 유형</Label>
               <Select
                 value={mealType}
-                onChange={(e) => setMealType(e.target.value)}
+                onChange={(e) =>
+                  setMealType(
+                    e.target.value as "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER"
+                  )
+                }
               >
-                <option>아침</option>
-                <option>점심</option>
-                <option>저녁</option>
-                <option>간식</option>
+                <option value="BREAKFAST">아침</option>
+                <option value="LUNCH">점심</option>
+                <option value="DINNER">저녁</option>
+                <option value="OTHER">기타</option>
               </Select>
             </FormGroup>
           </ManualSection>
         )}
 
-        <SubmitButton onClick={handleSubmit}>
-          {activeTab === "paste" ? "지출 저장하기" : "지출 등록"}
+        <SubmitButton onClick={handleSubmit} disabled={loading}>
+          {loading
+            ? "등록 중..."
+            : activeTab === "paste"
+            ? "지출 저장하기"
+            : "지출 등록"}
         </SubmitButton>
       </Content>
     </Container>

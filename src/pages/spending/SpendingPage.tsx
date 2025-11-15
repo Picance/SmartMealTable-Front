@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
@@ -12,64 +12,177 @@ import {
   CartesianGrid,
 } from "recharts";
 import BottomNav from "../../components/layout/BottomNav";
+import {
+  getExpenditures,
+  getDailyStatistics,
+} from "../../services/expenditure.service";
+import type { Expenditure, DailyStatistic } from "../../types/api";
 
 const SpendingPage = () => {
   const navigate = useNavigate();
 
   // 필터 상태
   const [period, setPeriod] = useState("월주일");
-  const [year, setYear] = useState("2025");
-  const [month, setMonth] = useState("10월");
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [dateRange, setDateRange] = useState("1일 ~ 7일");
 
-  // 차트 데이터
-  const chartData = [
-    { date: "10월 17일", budget: 20000, spending: 15000 },
-    { date: "10월 19일", budget: 20000, spending: 65000 },
-    { date: "10월 21일", budget: 20000, spending: 35000 },
-    { date: "10월 23일", budget: 20000, spending: 10000 },
-    { date: "10월 26일", budget: 20000, spending: 50000 },
-  ];
+  // 데이터 상태
+  const [expenditures, setExpenditures] = useState<Expenditure[]>([]);
+  const [dailyStatistics, setDailyStatistics] = useState<DailyStatistic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 지출 내역 데이터
-  const expenditures = [
-    {
-      id: 1,
-      icon: "☕",
-      name: "스타벅스",
-      category: "아침",
-      date: "2023-10-26 08:00",
-      amount: 5500,
-      bgColor: "#FFF3E0",
-    },
-    {
-      id: 2,
-      icon: "🛒",
-      name: "이마트",
-      category: "점심",
-      date: "2023-10-25 12:00",
-      amount: 28000,
-      bgColor: "#FFF9C4",
-    },
-    {
-      id: 3,
-      icon: "☕",
-      name: "스타벅스",
-      category: "저녁",
-      date: "2023-10-26 18:00",
-      amount: 5500,
-      bgColor: "#FFF3E0",
-    },
-    {
-      id: 4,
-      icon: "🏪",
-      name: "GS25",
-      category: "기타",
-      date: "2023-10-26 22:00",
-      amount: 5500,
-      bgColor: "#FFF3E0",
-    },
-  ];
+  // 데이터 로드
+  useEffect(() => {
+    loadData();
+  }, [year, month]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 날짜 범위 설정
+      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const endDate = `${year}-${String(month).padStart(2, "0")}-${String(
+        lastDay
+      ).padStart(2, "0")}`;
+
+      // 지출 내역 조회
+      const expenditureParams: any = {
+        startDate,
+        endDate,
+        page: 0,
+        size: 100,
+      };
+
+      const expenditureResponse = await getExpenditures(expenditureParams);
+
+      if (
+        expenditureResponse.result === "SUCCESS" &&
+        expenditureResponse.data
+      ) {
+        const responseData = expenditureResponse.data;
+
+        // API 응답 구조: data.expenditures.content
+        if (responseData.expenditures && responseData.expenditures.content) {
+          setExpenditures(responseData.expenditures.content);
+        } else {
+          console.warn("예상치 못한 API 응답 구조:", responseData);
+          setExpenditures([]);
+        }
+      } else {
+        setError(
+          expenditureResponse.error?.message ||
+            "지출 내역을 불러올 수 없습니다."
+        );
+      }
+
+      // 일별 통계 조회 (선택적 - 실패해도 페이지는 정상 표시)
+      try {
+        const statisticsResponse = await getDailyStatistics({
+          startDate,
+          endDate,
+        });
+
+        if (
+          statisticsResponse.result === "SUCCESS" &&
+          statisticsResponse.data
+        ) {
+          setDailyStatistics(statisticsResponse.data.dailyStatistics);
+        }
+      } catch (statsErr) {
+        // 통계 API가 없어도 페이지는 정상 작동
+        console.log("통계 API 사용 불가:", statsErr);
+        setDailyStatistics([]);
+      }
+    } catch (err: any) {
+      console.error("지출 데이터 로드 실패:", err);
+      setError(
+        err.response?.data?.error?.message ||
+          "데이터를 불러오는데 실패했습니다."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 차트 데이터 변환
+  const chartData = dailyStatistics.map((stat) => ({
+    date: new Date(stat.date).getDate() + "일",
+    budget: 15000, // 임시 예산 값 (추후 실제 예산 API 연동)
+    spending: stat.amount,
+  }));
+
+  // 식사 유형 표시
+  const getMealTypeLabel = (mealType: string) => {
+    const labels: Record<string, string> = {
+      BREAKFAST: "아침",
+      LUNCH: "점심",
+      DINNER: "저녁",
+      OTHER: "기타",
+    };
+    return labels[mealType] || mealType;
+  };
+
+  // 카테고리 아이콘
+  const getCategoryIcon = (category?: string) => {
+    if (!category) return "🍽️";
+    const icons: Record<string, string> = {
+      KOREAN: "🍚",
+      CHINESE: "🥢",
+      JAPANESE: "🍣",
+      WESTERN: "🍝",
+      CAFE: "☕",
+      SNACK: "🍪",
+      CONVENIENCE: "🏪",
+    };
+    return icons[category] || "🍽️";
+  };
+
+  // 카테고리 배경색
+  const getCategoryBgColor = (category?: string) => {
+    if (!category) return "#FFF3E0";
+    const colors: Record<string, string> = {
+      KOREAN: "#FFF3E0",
+      CHINESE: "#FFF9E6",
+      JAPANESE: "#FFF4E6",
+      WESTERN: "#FFE5E5",
+      CAFE: "#F5EDE4",
+      SNACK: "#FFE5F0",
+      CONVENIENCE: "#E6F2FF",
+    };
+    return colors[category] || "#FFF3E0";
+  };
+
+  if (loading) {
+    return (
+      <Container>
+        <Header>
+          <Title>지출 내역</Title>
+        </Header>
+        <LoadingMessage>로딩 중...</LoadingMessage>
+        <BottomNav />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Header>
+          <Title>지출 내역</Title>
+        </Header>
+        <ErrorMessage>
+          <div>{error}</div>
+          <RetryButton onClick={loadData}>다시 시도</RetryButton>
+        </ErrorMessage>
+        <BottomNav />
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -84,21 +197,28 @@ const SpendingPage = () => {
           <FilterRow>
             <FilterLabel>간격</FilterLabel>
             <Select value={period} onChange={(e) => setPeriod(e.target.value)}>
-              <option>월주일</option>
-              <option>주간</option>
-              <option>일간</option>
+              <option value="주간">주간</option>
+              <option value="일간">일간</option>
             </Select>
           </FilterRow>
           <FilterRow>
-            <Select value={year} onChange={(e) => setYear(e.target.value)}>
-              <option>2025</option>
-              <option>2024</option>
-              <option>2023</option>
+            <Select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+            >
+              <option value={2025}>2025</option>
+              <option value={2024}>2024</option>
+              <option value={2023}>2023</option>
             </Select>
-            <Select value={month} onChange={(e) => setMonth(e.target.value)}>
-              <option>10월</option>
-              <option>11월</option>
-              <option>12월</option>
+            <Select
+              value={month}
+              onChange={(e) => setMonth(Number(e.target.value))}
+            >
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}월
+                </option>
+              ))}
             </Select>
           </FilterRow>
           <FilterRow>
@@ -129,79 +249,89 @@ const SpendingPage = () => {
             </LegendItem>
           </Legend>
           <ChartWrapper>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart
-                data={chartData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11, fill: "#999" }}
-                  stroke="#e0e0e0"
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: "#999" }}
-                  stroke="#e0e0e0"
-                  tickLine={false}
-                  domain={[0, 60000]}
-                  ticks={[0, 15000, 30000, 45000, 60000]}
-                  tickFormatter={(value: number) => `${value / 1000}k`}
-                />
-                <Tooltip
-                  formatter={(value: number) => `${value.toLocaleString()}원`}
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "8px",
-                    padding: "8px 12px",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="budget"
-                  stroke="#5B9BD5"
-                  strokeWidth={2.5}
-                  dot={{ fill: "#5B9BD5", r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="spending"
-                  stroke="#FF6B35"
-                  strokeWidth={2.5}
-                  dot={{ fill: "#FF6B35", r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11, fill: "#999" }}
+                    stroke="#e0e0e0"
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#999" }}
+                    stroke="#e0e0e0"
+                    tickLine={false}
+                    domain={[0, 60000]}
+                    ticks={[0, 15000, 30000, 45000, 60000]}
+                    tickFormatter={(value: number) => `${value / 1000}k`}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => `${value.toLocaleString()}원`}
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "8px",
+                      padding: "8px 12px",
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="budget"
+                    stroke="#5B9BD5"
+                    strokeWidth={2.5}
+                    dot={{ fill: "#5B9BD5", r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="spending"
+                    stroke="#FF6B35"
+                    strokeWidth={2.5}
+                    dot={{ fill: "#FF6B35", r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyMessage>통계 데이터를 불러올 수 없습니다.</EmptyMessage>
+            )}
           </ChartWrapper>
         </ChartSection>
 
         {/* 지출 내역 리스트 */}
         <ExpenditureSection>
           <SectionTitle>지출 내역</SectionTitle>
-          <ExpenditureList>
-            {expenditures.map((item) => (
-              <ExpenditureItem
-                key={item.id}
-                onClick={() => navigate(`/spending/${item.id}`)}
-              >
-                <IconWrapper bgColor={item.bgColor}>{item.icon}</IconWrapper>
-                <ExpenditureInfo>
-                  <ExpendName>{item.name}</ExpendName>
-                  <ExpendMeta>
-                    {item.category} • {item.date}
-                  </ExpendMeta>
-                </ExpenditureInfo>
-                <ExpenditureAmount isExpanded={item.id === 2}>
-                  {item.amount.toLocaleString()}원
-                  {item.id === 2 && <ExpandIcon>˅</ExpandIcon>}
-                </ExpenditureAmount>
-              </ExpenditureItem>
-            ))}
-          </ExpenditureList>
+          {expenditures.length === 0 ? (
+            <EmptyMessage>등록된 지출 내역이 없습니다.</EmptyMessage>
+          ) : (
+            <ExpenditureList>
+              {expenditures.map((item) => (
+                <ExpenditureItem
+                  key={item.expenditureId}
+                  onClick={() => navigate(`/spending/${item.expenditureId}`)}
+                >
+                  <IconWrapper $bgColor={getCategoryBgColor(item.categoryName)}>
+                    {getCategoryIcon(item.categoryName)}
+                  </IconWrapper>
+                  <ExpenditureInfo>
+                    <ExpendName>{item.storeName}</ExpendName>
+                    <ExpendMeta>
+                      {getMealTypeLabel(item.mealType)} •{" "}
+                      {new Date(item.expendedDate).toLocaleDateString()}
+                    </ExpendMeta>
+                  </ExpenditureInfo>
+                  <ExpenditureAmount $isExpanded={false}>
+                    {item.amount.toLocaleString()}원
+                  </ExpenditureAmount>
+                </ExpenditureItem>
+              ))}
+            </ExpenditureList>
+          )}
         </ExpenditureSection>
 
         {/* 지출 등록 버튼 */}
@@ -210,7 +340,7 @@ const SpendingPage = () => {
         </RegisterButton>
       </Content>
 
-      <BottomNav activeTab="spending" />
+      <BottomNav />
     </Container>
   );
 };
@@ -371,11 +501,11 @@ const ExpenditureItem = styled.div`
   }
 `;
 
-const IconWrapper = styled.div<{ bgColor?: string }>`
+const IconWrapper = styled.div<{ $bgColor?: string }>`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: ${(props) => props.bgColor || "#FFF3E0"};
+  background-color: ${(props) => props.$bgColor || "#FFF3E0"};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -399,18 +529,13 @@ const ExpendMeta = styled.div`
   color: #757575;
 `;
 
-const ExpenditureAmount = styled.div<{ isExpanded?: boolean }>`
+const ExpenditureAmount = styled.div<{ $isExpanded?: boolean }>`
   font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.bold};
   color: ${theme.colors.accent};
   display: flex;
   align-items: center;
   gap: ${theme.spacing.xs};
-`;
-
-const ExpandIcon = styled.span`
-  font-size: ${theme.typography.fontSize.sm};
-  color: ${theme.colors.accent};
 `;
 
 const RegisterButton = styled.button`
@@ -433,6 +558,50 @@ const RegisterButton = styled.button`
 
   &:active {
     transform: scale(0.98);
+  }
+`;
+
+const EmptyMessage = styled.div`
+  text-align: center;
+  padding: ${theme.spacing.xl};
+  color: #999;
+  font-size: ${theme.typography.fontSize.base};
+`;
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: ${theme.spacing.xl};
+  color: #666;
+  font-size: ${theme.typography.fontSize.lg};
+`;
+
+const ErrorMessage = styled.div`
+  background-color: #ffebee;
+  color: #c62828;
+  padding: ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.md};
+  text-align: center;
+  font-size: ${theme.typography.fontSize.base};
+  margin: ${theme.spacing.lg};
+
+  div {
+    margin-bottom: ${theme.spacing.md};
+  }
+`;
+
+const RetryButton = styled.button`
+  background-color: ${theme.colors.accent};
+  color: white;
+  border: none;
+  padding: ${theme.spacing.sm} ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #e55a2b;
   }
 `;
 

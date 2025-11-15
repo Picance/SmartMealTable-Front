@@ -192,24 +192,41 @@ export interface Menu {
 }
 
 // 지출 관련
+export interface ExpenditureItem {
+  foodId: number; // API 명세: 음식 ID (필수)
+  quantity: number; // API 명세: 수량 (1 이상)
+  price: number; // API 명세: 가격 (0 이상)
+}
+
+export interface ExpenditureItemDetail {
+  expenditureItemId?: number;
+  itemId?: number;
+  foodId?: number;
+  foodName: string;
+  quantity: number;
+  price: number;
+  hasFoodLink?: boolean;
+}
+
 export interface Expenditure {
   expenditureId: number;
   storeName: string;
   amount: number;
-  mealType: "BREAKFAST" | "LUNCH" | "DINNER";
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
   expendedDate: string;
-  expendedTime: string;
-  categoryId: number;
+  expendedTime?: string;
+  categoryId?: number;
   categoryName: string;
   memo?: string;
-  items?: ExpenditureItem[];
+  items?: ExpenditureItemDetail[];
 }
 
-export interface ExpenditureItem {
-  foodName: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
+export interface ExpenditureDetail extends Expenditure {
+  storeId?: number;
+  expendedTime: string;
+  items: ExpenditureItemDetail[];
+  createdAt: string;
+  hasStoreLink?: boolean;
 }
 
 export interface CreateExpenditureRequest {
@@ -218,9 +235,72 @@ export interface CreateExpenditureRequest {
   expendedDate: string;
   expendedTime: string;
   categoryId: number;
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
+  memo?: string | null;
+  items?: ExpenditureItem[] | null;
+}
+
+export interface CreateExpenditureFromCartRequest {
+  storeId: number;
+  storeName: string;
+  amount: number;
+  expendedDate: string;
+  expendedTime: string;
+  categoryId: number;
   mealType: "BREAKFAST" | "LUNCH" | "DINNER";
   memo?: string;
-  items?: ExpenditureItem[];
+  items: Array<{
+    foodId: number;
+    foodName: string;
+    quantity: number;
+    price: number;
+  }>;
+}
+
+export interface ParseSmsRequest {
+  smsMessage: string;
+}
+
+export interface ParseSmsResponse {
+  storeName: string;
+  amount: number;
+  date: string;
+  time: string;
+  isParsed: boolean;
+}
+
+export interface ExpenditureSummary {
+  totalAmount: number;
+  totalCount: number;
+  averageAmount: number;
+}
+
+export interface ExpenditureListResponse {
+  summary: ExpenditureSummary;
+  expenditures: PageResponse<Expenditure>;
+}
+
+export interface DailyStatistic {
+  date: string;
+  amount: number;
+}
+
+export interface CategoryStatistic {
+  categoryId: number;
+  categoryName: string;
+  amount: number;
+}
+
+export interface MealTypeStatistic {
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
+  amount: number;
+}
+
+export interface DailyStatisticsResponse {
+  totalAmount: number;
+  categoryStatistics: CategoryStatistic[];
+  dailyStatistics: DailyStatistic[];
+  mealTypeStatistics: MealTypeStatistic[];
 }
 
 // 장바구니 관련

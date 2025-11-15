@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaEdit, FaTrash } from "react-icons/fa";
-import { expenditureService } from "../../services/expenditure.service";
+import {
+  getExpenditureDetail,
+  deleteExpenditure,
+} from "../../services/expenditure.service";
 import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Card";
-import type { Expenditure } from "../../types/api";
+import type { ExpenditureDetail } from "../../types/api";
 
 const ExpenditureDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [expenditure, setExpenditure] = useState<Expenditure | null>(null);
+  const [expenditure, setExpenditure] = useState<ExpenditureDetail | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,9 +26,7 @@ const ExpenditureDetailPage: React.FC = () => {
   const loadExpenditure = async (expenditureId: number) => {
     setLoading(true);
     try {
-      const response = await expenditureService.getExpenditureDetail(
-        expenditureId
-      );
+      const response = await getExpenditureDetail(expenditureId);
       if (response.result === "SUCCESS" && response.data) {
         setExpenditure(response.data);
       }
@@ -39,13 +42,9 @@ const ExpenditureDetailPage: React.FC = () => {
 
     if (window.confirm("이 지출 내역을 삭제하시겠습니까?")) {
       try {
-        const response = await expenditureService.deleteExpenditure(
-          expenditure.expenditureId
-        );
-        if (response.result === "SUCCESS") {
-          alert("삭제되었습니다.");
-          navigate("/spending");
-        }
+        await deleteExpenditure(expenditure.expenditureId);
+        alert("삭제되었습니다.");
+        navigate("/spending");
       } catch (error) {
         console.error("Failed to delete expenditure:", error);
         alert("삭제에 실패했습니다.");
@@ -73,6 +72,7 @@ const ExpenditureDetailPage: React.FC = () => {
     BREAKFAST: "아침",
     LUNCH: "점심",
     DINNER: "저녁",
+    OTHER: "기타",
   }[expenditure.mealType];
 
   return (
@@ -154,7 +154,10 @@ const ExpenditureDetailPage: React.FC = () => {
                     <span className="item-quantity">x{item.quantity}</span>
                   </div>
                   <span className="item-price">
-                    {item.totalPrice.toLocaleString()}원
+                    {(
+                      (item.price || 0) * (item.quantity || 1)
+                    ).toLocaleString()}
+                    원
                   </span>
                 </div>
               ))}
