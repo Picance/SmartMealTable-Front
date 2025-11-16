@@ -1,5 +1,17 @@
 import api from "./api";
-import type { ApiResponse } from "../types/api";
+import type {
+  ApiResponse,
+  MonthlyBudgetResponse,
+  DailyBudgetResponse,
+  UpdateMonthlyBudgetRequest,
+  UpdateMonthlyBudgetResponse,
+  UpdateDailyBudgetRequest,
+  UpdateDailyBudgetResponse,
+  CreateMonthlyBudgetRequest,
+  CreateMonthlyBudgetResponse,
+  BulkCreateDailyBudgetRequest,
+  BulkCreateDailyBudgetResponse,
+} from "../types/api";
 
 export interface BudgetStatus {
   monthlyBudget: number;
@@ -49,45 +61,80 @@ export interface OnboardingBudgetResponse {
 }
 
 export const budgetService = {
-  // 예산 현황 조회
-  async getBudgetStatus(): Promise<ApiResponse<BudgetStatus>> {
-    const response = await api.get("/api/v1/budgets/status");
-    return response.data;
-  },
-
-  // 일별 예산 조회 (특정 날짜)
-  async getDailyBudget(date: string): Promise<
-    ApiResponse<{
-      date: string;
-      totalBudget: number;
-      totalSpent: number;
-      remainingBudget: number;
-      mealBudgets: Array<{
-        mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
-        budget: number;
-        spent: number;
-        remaining: number;
-      }>;
-    }>
-  > {
-    const response = await api.get("/api/v1/budgets/daily", {
-      params: { date },
-    });
-    return response.data;
-  },
-
   // 월간 예산 조회
   async getMonthlyBudget(
     year: number,
     month: number
-  ): Promise<ApiResponse<BudgetStatus>> {
+  ): Promise<ApiResponse<MonthlyBudgetResponse>> {
     const response = await api.get("/api/v1/budgets/monthly", {
       params: { year, month },
     });
     return response.data;
   },
 
-  // 예산 수정
+  // 일별 예산 조회 (특정 날짜)
+  // 404는 데이터 없음으로 정상 처리
+  async getDailyBudget(
+    date: string
+  ): Promise<ApiResponse<DailyBudgetResponse | null>> {
+    try {
+      const response = await api.get("/api/v1/budgets/daily", {
+        params: { date },
+      });
+      return response.data;
+    } catch (error: any) {
+      // 404는 데이터가 없는 정상 케이스
+      if (error.response?.status === 404) {
+        return {
+          result: "SUCCESS",
+          data: null,
+          error: null,
+        };
+      }
+      throw error;
+    }
+  },
+
+  // 월별 예산 수정
+  async updateMonthlyBudget(
+    data: UpdateMonthlyBudgetRequest
+  ): Promise<ApiResponse<UpdateMonthlyBudgetResponse>> {
+    const response = await api.put("/api/v1/budgets", data);
+    return response.data;
+  },
+
+  // 일별 예산 수정
+  async updateDailyBudget(
+    date: string,
+    data: UpdateDailyBudgetRequest
+  ): Promise<ApiResponse<UpdateDailyBudgetResponse>> {
+    const response = await api.put(`/api/v1/budgets/daily/${date}`, data);
+    return response.data;
+  },
+
+  // 월별 예산 생성
+  async createMonthlyBudget(
+    data: CreateMonthlyBudgetRequest
+  ): Promise<ApiResponse<CreateMonthlyBudgetResponse>> {
+    const response = await api.post("/api/v1/budgets/monthly", data);
+    return response.data;
+  },
+
+  // 일별 예산 일괄 생성
+  async bulkCreateDailyBudget(
+    data: BulkCreateDailyBudgetRequest
+  ): Promise<ApiResponse<BulkCreateDailyBudgetResponse>> {
+    const response = await api.post("/api/v1/budgets/daily/bulk", data);
+    return response.data;
+  },
+
+  // 예산 현황 조회
+  async getBudgetStatus(): Promise<ApiResponse<BudgetStatus>> {
+    const response = await api.get("/api/v1/budgets/status");
+    return response.data;
+  },
+
+  // 예산 수정 (기존 메서드 - 호환성 유지)
   async updateBudget(data: {
     monthlyBudget: number;
     dailyBudget: number;

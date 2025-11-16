@@ -112,6 +112,86 @@ export interface BudgetRequest {
   };
 }
 
+// 월별 예산 조회 응답
+export interface MonthlyBudgetResponse {
+  year: number;
+  month: number;
+  totalBudget: number;
+  totalSpent: number;
+  remainingBudget: number;
+  utilizationRate: number;
+  daysRemaining: number;
+}
+
+// 일별 예산 조회 응답
+export interface DailyBudgetResponse {
+  date: string;
+  totalBudget: number;
+  totalSpent: number;
+  remainingBudget: number;
+  mealBudgets: Array<{
+    mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
+    budget: number;
+    spent: number;
+    remaining: number;
+  }>;
+}
+
+// 월별 예산 수정 요청
+export interface UpdateMonthlyBudgetRequest {
+  monthlyFoodBudget: number;
+  dailyFoodBudget: number;
+}
+
+// 월별 예산 수정 응답
+export interface UpdateMonthlyBudgetResponse {
+  message: string;
+}
+
+// 일별 예산 수정 요청
+export interface UpdateDailyBudgetRequest {
+  dailyFoodBudget: number;
+  applyForward?: boolean;
+}
+
+// 일별 예산 수정 응답
+export interface UpdateDailyBudgetResponse {
+  message: string;
+  targetDate: string;
+  dailyBudget: number;
+  affectedDatesCount?: number;
+}
+
+// 월별 예산 생성 요청
+export interface CreateMonthlyBudgetRequest {
+  monthlyFoodBudget: number;
+  dailyFoodBudget: number;
+}
+
+// 월별 예산 생성 응답
+export interface CreateMonthlyBudgetResponse {
+  message: string;
+}
+
+// 일별 예산 일괄 생성 요청
+export interface BulkCreateDailyBudgetRequest {
+  startDate: string;
+  endDate: string;
+  dailyFoodBudget: number;
+  mealBudgets?: {
+    BREAKFAST?: number;
+    LUNCH?: number;
+    DINNER?: number;
+    OTHER?: number;
+  };
+}
+
+// 일별 예산 일괄 생성 응답
+export interface BulkCreateDailyBudgetResponse {
+  message: string;
+  dailyBudgetCount: number;
+}
+
 export interface PreferenceRequest {
   recommendationType: "SAVER" | "ADVENTURER" | "BALANCED";
   preferences: Array<{
