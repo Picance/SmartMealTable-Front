@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import {
   FiArrowLeft,
@@ -7,234 +7,229 @@ import {
   FiSliders,
   FiChevronDown,
 } from "react-icons/fi";
-import { IoHeartOutline, IoHeartSharp } from "react-icons/io5";
-import { storeService, StoreSearchParams } from "../../services/store.service";
-import { categoryService } from "../../services/category.service";
-import type { Category } from "../../types/api";
+import { IoHeartOutline } from "react-icons/io5";
+import {
+  recommendationService,
+  RecommendationParams,
+  RecommendedStore,
+  AutocompleteItem,
+} from "../../services/recommendation.service";
+import { storeService } from "../../services/store.service";
+import { useAuthStore } from "../../store/authStore";
 import BottomNav from "../../components/layout/BottomNav";
 
-type SortBy = "DISTANCE" | "PRICE" | "RATING" | "POPULARITY";
+type SortBy = "SCORE" | "reviewCount" | "distance";
 type DistanceFilter = 0.5 | 1 | 2 | 5 | 10;
 
 const RecommendationPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, accessToken } = useAuthStore();
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<SortBy>("DISTANCE");
+  const [sortBy, setSortBy] = useState<SortBy>("SCORE");
   const [distance, setDistance] = useState<DistanceFilter>(0.5);
   const [isOpenOnly, setIsOpenOnly] = useState(false);
-  const [excludeDislikes, setExcludeDislikes] = useState(false);
-  const [stores, setStores] = useState<any[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
+  const [excludeDislikes, setExcludeDislikes] = useState(true);
+  const [stores, setStores] = useState<RecommendedStore[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 자동완성 관련 상태
+  const [autocompleteResults, setAutocompleteResults] = useState<
+    AutocompleteItem[]
+  >([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // 사용자 위치 정보 (홈에서 전달받음)
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   // 드롭다운 상태
   const [showDistanceDropdown, setShowDistanceDropdown] = useState(false);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   useEffect(() => {
-    loadCategories();
-    searchStores();
-  }, []);
+    // 로그인 체크
+    console.log("🔐 인증 상태:", { isAuthenticated, hasToken: !!accessToken });
+
+    if (!isAuthenticated || !accessToken) {
+      console.warn("⚠️ 로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+
+    // location.state에서 위치 정보 가져오기
+    if (location.state && location.state.userLocation) {
+      console.log("📍 홈에서 전달받은 위치:", location.state.userLocation);
+      setUserLocation(location.state.userLocation);
+    } else {
+      console.warn("⚠️ 위치 정보 없음, 기본 위치 사용");
+      // 기본 위치 (서울시청)
+      setUserLocation({
+        latitude: 37.5665,
+        longitude: 126.978,
+      });
+    }
+  }, [location.state, isAuthenticated, accessToken, navigate]);
 
   useEffect(() => {
-    if (!isLoading) {
+    if (userLocation) {
       searchStores();
     }
-  }, [selectedCategory, sortBy, distance, isOpenOnly, excludeDislikes]);
-
-  const loadCategories = async () => {
-    try {
-      const response = await categoryService.getCategories();
-      if (response.result === "SUCCESS" && response.data) {
-        setCategories(response.data.categories || []);
-      }
-    } catch (err) {
-      console.error("카테고리 로드 실패:", err);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userLocation, sortBy, distance, isOpenOnly, excludeDislikes]);
 
   // 거리 라벨 가져오기
   const getDistanceLabel = () => {
     return `${distance}km`;
   };
 
-  // 카테고리 라벨 가져오기
-  const getCategoryLabel = () => {
-    if (!selectedCategory) return "모두";
-    const category = categories.find((c) => c.categoryId === selectedCategory);
-    return category?.name || "모두";
-  };
-
   // 정렬 라벨 가져오기
   const getSortLabel = () => {
     switch (sortBy) {
-      case "DISTANCE":
+      case "SCORE":
         return "추천순";
-      case "PRICE":
-        return "가격순";
-      case "RATING":
-        return "평점순";
-      case "POPULARITY":
-        return "인기순";
+      case "reviewCount":
+        return "리뷰순";
+      case "distance":
+        return "거리순";
       default:
         return "추천순";
     }
   };
 
   const searchStores = async () => {
+    if (!userLocation) {
+      console.log("⚠️ 위치 정보 없음, 검색 중단");
+      return;
+    }
+
+    console.log("🔍 추천 검색 시작...", {
+      userLocation,
+      distance,
+      sortBy,
+      isOpenOnly,
+      excludeDislikes,
+    });
+
     setIsLoading(true);
 
     try {
-      const params: StoreSearchParams = {
-        sortBy,
+      const params: RecommendationParams = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        radius: distance,
+        sortBy: sortBy,
+        includeDisliked: !excludeDislikes,
+        openNow: isOpenOnly,
         page: 0,
         size: 20,
       };
 
-      if (selectedCategory) {
-        params.categoryId = selectedCategory;
+      if (searchKeyword.trim()) {
+        params.keyword = searchKeyword.trim();
       }
 
-      const response = await storeService.searchStores(params);
+      console.log("📤 추천 API 요청 파라미터:", params);
+
+      const startTime = performance.now();
+      const response = await recommendationService.getRecommendations(params);
+      const endTime = performance.now();
+
+      console.log(`⏱️ API 응답 시간: ${(endTime - startTime).toFixed(0)}ms`);
+      console.log("📥 추천 API 응답:", response);
 
       if (response.result === "SUCCESS" && response.data) {
-        setStores(response.data.content);
-        setTotalCount(response.data.totalElements);
+        // API 응답 구조: { result: "SUCCESS", data: RecommendedStore[] }
+        const storeList = Array.isArray(response.data) ? response.data : [];
+        console.log("✅ 추천 데이터:", storeList);
+        console.log("📊 가게 수:", storeList.length);
+        setStores(storeList);
       } else {
+        console.warn("⚠️ 응답 실패 또는 데이터 없음:", response);
         setStores([]);
-        setTotalCount(0);
       }
     } catch (err: any) {
-      console.error("가게 검색 실패:", err);
-      // API 실패 시 테스트용 목 데이터 사용
-      const mockStores: any[] = [
-        {
-          storeId: 1,
-          storeName: "맛있는 치킨집",
-          category: "치킨",
-          categoryId: 1,
-          distance: 0.3,
-          reviewCount: 1200,
-          averagePrice: 15000,
-          isOpen: true,
-          popularityTag: "영업중",
-          imageUrl:
-            "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
-          address: "서울시 서대문구",
-          isFavorite: false,
-          menus: [
-            {
-              foodId: 1,
-              foodName: "후라이드 치킨",
-              price: 18000,
-              imageUrl:
-                "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop",
-            },
-            {
-              foodId: 2,
-              foodName: "양념 치킨",
-              price: 19000,
-              imageUrl:
-                "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop",
-            },
-            {
-              foodId: 3,
-              foodName: "마늘 간장 치킨",
-              price: 19500,
-              imageUrl:
-                "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop",
-            },
-          ],
-        },
-        {
-          storeId: 2,
-          storeName: "맛있는 치킨집",
-          category: "치킨",
-          categoryId: 1,
-          distance: 0.3,
-          reviewCount: 1200,
-          averagePrice: 15000,
-          isOpen: true,
-          popularityTag: "영업중",
-          imageUrl:
-            "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
-          address: "서울시 서대문구",
-          isFavorite: true,
-          menus: [
-            {
-              foodId: 4,
-              foodName: "후라이드 치킨",
-              price: 18000,
-              imageUrl:
-                "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop",
-            },
-            {
-              foodId: 5,
-              foodName: "양념 치킨",
-              price: 19000,
-              imageUrl:
-                "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop",
-            },
-            {
-              foodId: 6,
-              foodName: "마늘 간장 치킨",
-              price: 19500,
-              imageUrl:
-                "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop",
-            },
-          ],
-        },
-        {
-          storeId: 3,
-          storeName: "맛있는 치킨집",
-          category: "치킨",
-          categoryId: 1,
-          distance: 0.3,
-          reviewCount: 1200,
-          averagePrice: 15000,
-          isOpen: true,
-          popularityTag: "영업중",
-          imageUrl:
-            "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&h=400&fit=crop",
-          address: "서울시 서대문구",
-          isFavorite: false,
-          menus: [
-            {
-              foodId: 7,
-              foodName: "후라이드 치킨",
-              price: 18000,
-              imageUrl:
-                "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200&h=200&fit=crop",
-            },
-            {
-              foodId: 8,
-              foodName: "양념 치킨",
-              price: 19000,
-              imageUrl:
-                "https://images.unsplash.com/photo-1562967914-608f82629710?w=200&h=200&fit=crop",
-            },
-            {
-              foodId: 9,
-              foodName: "마늘 간장 치킨",
-              price: 19500,
-              imageUrl:
-                "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200&h=200&fit=crop",
-            },
-          ],
-        },
-      ];
-      setStores(mockStores);
-      setTotalCount(359);
+      console.error("❌ 추천 가게 검색 실패:", err);
+      console.error("에러 상세:", err.response?.data || err.message);
+
+      if (err.response?.status === 401) {
+        console.error(
+          "🔐 인증 오류: 로그인이 필요하거나 토큰이 만료되었습니다"
+        );
+        alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
+        navigate("/login");
+      } else if (err.code === "ECONNABORTED") {
+        console.error("⏱️ 요청 타임아웃: 서버 응답이 너무 느립니다");
+        alert("서버 응답 시간이 초과되었습니다. 다시 시도해주세요.");
+      } else if (err.response?.status === 404) {
+        console.error("🔍 API 엔드포인트를 찾을 수 없습니다");
+        alert("서비스를 찾을 수 없습니다.");
+      } else if (err.response?.status === 500) {
+        console.error("💥 서버 내부 오류");
+        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      }
+
+      setStores([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSearch = () => {
+    setShowAutocomplete(false);
     searchStores();
+  };
+
+  // 자동완성 검색
+  const handleAutocompleteSearch = async (keyword: string) => {
+    if (keyword.trim().length < 2) {
+      setAutocompleteResults([]);
+      setShowAutocomplete(false);
+      return;
+    }
+
+    try {
+      const response = await recommendationService.getAutocomplete({
+        keyword: keyword.trim(),
+        limit: 10,
+        storeShortcutsLimit: 5,
+      });
+
+      if (response.result === "SUCCESS" && response.data) {
+        setAutocompleteResults(response.data.suggestions || []);
+        setShowAutocomplete(true);
+      } else {
+        setAutocompleteResults([]);
+        setShowAutocomplete(false);
+      }
+    } catch (err) {
+      console.error("자동완성 검색 실패:", err);
+      setAutocompleteResults([]);
+      setShowAutocomplete(false);
+    }
+  };
+
+  // 검색어 변경 핸들러
+  const handleSearchKeywordChange = (value: string) => {
+    setSearchKeyword(value);
+    handleAutocompleteSearch(value);
+  };
+
+  // 자동완성 아이템 선택
+  const handleAutocompleteItemClick = (item: AutocompleteItem) => {
+    if (item.type === "STORE") {
+      navigate(`/store/${item.id}`);
+    } else if (item.type === "FOOD") {
+      navigate(`/menu/${item.id}`);
+    } else if (item.type === "CATEGORY") {
+      setSearchKeyword(item.name);
+      setShowAutocomplete(false);
+      searchStores();
+    }
   };
 
   const handleStoreClick = (storeId: number) => {
@@ -244,43 +239,80 @@ const RecommendationPage = () => {
   const handleFavoriteToggle = async (storeId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const store = stores.find((s) => s.storeId === storeId);
-      if (store?.isFavorite) {
-        await storeService.removeFavorite(storeId);
-      } else {
-        await storeService.addFavorite(storeId);
-      }
-      setStores(
-        stores.map((s) =>
-          s.storeId === storeId ? { ...s, isFavorite: !s.isFavorite } : s
-        )
-      );
+      // API 호출
+      await storeService.addFavorite(storeId);
+
+      // 성공 피드백
+      alert("즐겨찾기가 추가되었습니다.");
     } catch (err) {
       console.error("즐겨찾기 토글 실패:", err);
+      alert("즐겨찾기 변경에 실패했습니다.");
     }
   };
 
   return (
-    <PageContainer>
+    <PageContainer onClick={() => setShowAutocomplete(false)}>
       {/* 상단 검색바 */}
       <TopBar>
         <BackButton onClick={() => navigate(-1)}>
           <FiArrowLeft size={20} />
         </BackButton>
-        <SearchBox>
-          <FiSearch size={18} color="#999" />
-          <SearchInput
-            type="text"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            placeholder="가게 또는 메뉴 검색"
-            onKeyPress={(e) => {
-              if (e.key === "Enter") {
-                handleSearch();
-              }
-            }}
-          />
-        </SearchBox>
+        <SearchBoxContainer>
+          <SearchBox>
+            <FiSearch size={18} color="#999" />
+            <SearchInput
+              ref={searchInputRef}
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => handleSearchKeywordChange(e.target.value)}
+              onFocus={() => {
+                if (searchKeyword.trim().length >= 2) {
+                  setShowAutocomplete(true);
+                }
+              }}
+              placeholder="가게 또는 메뉴 검색"
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </SearchBox>
+
+          {/* 자동완성 드롭다운 */}
+          {showAutocomplete && autocompleteResults.length > 0 && (
+            <AutocompleteDropdown
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              {autocompleteResults.map((item, index) => (
+                <AutocompleteItemStyled
+                  key={`${item.type}-${item.id}-${index}`}
+                  onClick={() => handleAutocompleteItemClick(item)}
+                >
+                  <AutocompleteIcon>
+                    {item.type === "STORE"
+                      ? "🏪"
+                      : item.type === "FOOD"
+                      ? "🍽️"
+                      : "📂"}
+                  </AutocompleteIcon>
+                  <AutocompleteContent>
+                    <AutocompleteName>{item.name}</AutocompleteName>
+                    {item.categoryName && (
+                      <AutocompleteCategory>
+                        {item.categoryName}
+                      </AutocompleteCategory>
+                    )}
+                    {item.storeName && (
+                      <AutocompleteStore>{item.storeName}</AutocompleteStore>
+                    )}
+                  </AutocompleteContent>
+                </AutocompleteItemStyled>
+              ))}
+            </AutocompleteDropdown>
+          )}
+        </SearchBoxContainer>
         <FilterIconButton>
           <FiSliders size={20} />
         </FilterIconButton>
@@ -290,8 +322,8 @@ const RecommendationPage = () => {
       <FilterBar>
         <FilterButton
           onClick={() => {
+            console.log("📍 거리 필터 클릭, 현재 상태:", showDistanceDropdown);
             setShowDistanceDropdown(!showDistanceDropdown);
-            setShowCategoryDropdown(false);
             setShowSortDropdown(false);
           }}
         >
@@ -300,19 +332,9 @@ const RecommendationPage = () => {
         </FilterButton>
         <FilterButton
           onClick={() => {
-            setShowCategoryDropdown(!showCategoryDropdown);
-            setShowDistanceDropdown(false);
-            setShowSortDropdown(false);
-          }}
-        >
-          <span>🍽️음식: {getCategoryLabel()}</span>
-          <FiChevronDown size={14} />
-        </FilterButton>
-        <FilterButton
-          onClick={() => {
+            console.log("↕️ 정렬 필터 클릭, 현재 상태:", showSortDropdown);
             setShowSortDropdown(!showSortDropdown);
             setShowDistanceDropdown(false);
-            setShowCategoryDropdown(false);
           }}
         >
           <span>↕️정렬: {getSortLabel()}</span>
@@ -322,7 +344,7 @@ const RecommendationPage = () => {
 
       {/* 드롭다운 메뉴들 */}
       {showDistanceDropdown && (
-        <DropdownContainer>
+        <DropdownContainer onClick={(e) => e.stopPropagation()}>
           <DropdownItem
             $active={distance === 0.5}
             onClick={() => {
@@ -371,69 +393,34 @@ const RecommendationPage = () => {
         </DropdownContainer>
       )}
 
-      {showCategoryDropdown && (
-        <DropdownContainer>
-          <DropdownItem
-            $active={selectedCategory === null}
-            onClick={() => {
-              setSelectedCategory(null);
-              setShowCategoryDropdown(false);
-            }}
-          >
-            모두
-          </DropdownItem>
-          {categories.map((category) => (
-            <DropdownItem
-              key={category.categoryId}
-              $active={selectedCategory === category.categoryId}
-              onClick={() => {
-                setSelectedCategory(category.categoryId);
-                setShowCategoryDropdown(false);
-              }}
-            >
-              {category.name}
-            </DropdownItem>
-          ))}
-        </DropdownContainer>
-      )}
-
       {showSortDropdown && (
-        <DropdownContainer>
+        <DropdownContainer onClick={(e) => e.stopPropagation()}>
           <DropdownItem
-            $active={sortBy === "DISTANCE"}
+            $active={sortBy === "SCORE"}
             onClick={() => {
-              setSortBy("DISTANCE");
+              setSortBy("SCORE");
               setShowSortDropdown(false);
             }}
           >
             추천순
           </DropdownItem>
           <DropdownItem
-            $active={sortBy === "PRICE"}
+            $active={sortBy === "reviewCount"}
             onClick={() => {
-              setSortBy("PRICE");
+              setSortBy("reviewCount");
               setShowSortDropdown(false);
             }}
           >
-            가격순
+            리뷰순
           </DropdownItem>
           <DropdownItem
-            $active={sortBy === "RATING"}
+            $active={sortBy === "distance"}
             onClick={() => {
-              setSortBy("RATING");
+              setSortBy("distance");
               setShowSortDropdown(false);
             }}
           >
-            평점순
-          </DropdownItem>
-          <DropdownItem
-            $active={sortBy === "POPULARITY"}
-            onClick={() => {
-              setSortBy("POPULARITY");
-              setShowSortDropdown(false);
-            }}
-          >
-            인기순
+            거리순
           </DropdownItem>
         </DropdownContainer>
       )}
@@ -456,23 +443,26 @@ const RecommendationPage = () => {
         >
           불호제외: {excludeDislikes ? "예" : "아니오"}
         </TagChip>
-        {selectedCategory && <TagChip>음식: {getCategoryLabel()}</TagChip>}
       </TagBar>
 
       {/* 결과 텍스트 */}
-      <ResultHeader>
-        <ResultCount>{totalCount}개 결과</ResultCount>
-        <ResultKeyword>*우리이드 치킨*</ResultKeyword>
-      </ResultHeader>
+      {!isLoading && stores.length > 0 && (
+        <ResultHeader>
+          <ResultCount>{stores.length}개 결과</ResultCount>
+          {searchKeyword && <ResultKeyword>*{searchKeyword}*</ResultKeyword>}
+        </ResultHeader>
+      )}
 
       {/* 상점 리스트 */}
       <StoreList>
-        {isLoading ? (
-          <LoadingText>로딩 중...</LoadingText>
-        ) : stores.length > 0 ? (
-          stores.map((store) => (
+        {!userLocation ? (
+          <LoadingText>위치 정보를 불러오는 중...</LoadingText>
+        ) : isLoading ? (
+          <LoadingText>추천 가게를 검색하는 중...</LoadingText>
+        ) : stores && stores.length > 0 ? (
+          stores.map((store, index) => (
             <StoreCard
-              key={store.storeId}
+              key={`${store.storeId}-${store.cursorId}-${index}`}
               onClick={() => handleStoreClick(store.storeId)}
             >
               {/* 상점 메인 이미지 */}
@@ -487,51 +477,46 @@ const RecommendationPage = () => {
                 />
                 <StoreNameOverlay>
                   <StoreName>{store.storeName}</StoreName>
-                  <StoreLocation>{store.address}</StoreLocation>
+                  <StoreLocation>
+                    {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
+                  </StoreLocation>
                 </StoreNameOverlay>
                 <FavoriteButton
                   onClick={(e) => handleFavoriteToggle(store.storeId, e)}
                 >
-                  {store.isFavorite ? (
-                    <IoHeartSharp size={28} color="#fff" />
-                  ) : (
-                    <IoHeartOutline size={28} color="#fff" />
-                  )}
+                  <IoHeartOutline size={28} color="#fff" />
                 </FavoriteButton>
               </StoreImageContainer>
 
               {/* 상점 정보 */}
               <StoreInfoSection>
                 <InfoRow>
-                  <InfoItem>📍 {store.distance}km</InfoItem>
-                  <InfoItem>💬 {store.reviewCount}개 리뷰</InfoItem>
+                  <InfoItem>📍 {store.distance.toFixed(1)}km</InfoItem>
+                  <InfoItem>
+                    💬 {store.reviewCount.toLocaleString()}개 리뷰
+                  </InfoItem>
                 </InfoRow>
 
                 <BadgeRow>
-                  <StatusBadge $isOpen={store.isOpen}>
-                    {store.popularityTag}
-                  </StatusBadge>
                   <PriceInfo>
                     <PriceIcon>💰</PriceIcon>
-                    {store.averagePrice.toLocaleString()}원
+                    평균{" "}
+                    {store.averagePrice > 0
+                      ? store.averagePrice.toLocaleString()
+                      : "정보없음"}
+                    {store.averagePrice > 0 && "원"}
                   </PriceInfo>
-                  <PopularityBadge>⚡ 매우 인기 많음</PopularityBadge>
+                  {store.score >= 40000 && (
+                    <PopularityBadge>
+                      ⚡ 추천점수 {(store.score / 1000).toFixed(0)}K
+                    </PopularityBadge>
+                  )}
                 </BadgeRow>
 
-                {/* 메뉴 그리드 */}
-                {store.menus && store.menus.length > 0 && (
-                  <MenuGrid>
-                    {store.menus.slice(0, 3).map((menu: any) => (
-                      <MenuCard key={menu.foodId}>
-                        <MenuImage src={menu.imageUrl} alt={menu.foodName} />
-                        <MenuInfo>
-                          <MenuName>{menu.foodName}</MenuName>
-                          <MenuPrice>{menu.price.toLocaleString()}원</MenuPrice>
-                        </MenuInfo>
-                      </MenuCard>
-                    ))}
-                  </MenuGrid>
-                )}
+                {/* 카테고리 정보 */}
+                <CategoryInfo>
+                  <CategoryTag>카테고리 ID: {store.categoryId}</CategoryTag>
+                </CategoryInfo>
               </StoreInfoSection>
             </StoreCard>
           ))
@@ -573,8 +558,12 @@ const BackButton = styled.button`
   justify-content: center;
 `;
 
-const SearchBox = styled.div`
+const SearchBoxContainer = styled.div`
   flex: 1;
+  position: relative;
+`;
+
+const SearchBox = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
@@ -594,6 +583,66 @@ const SearchInput = styled.input`
   &::placeholder {
     color: #999;
   }
+`;
+
+const AutocompleteDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+`;
+
+const AutocompleteItemStyled = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f8f8f8;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const AutocompleteIcon = styled.div`
+  font-size: 24px;
+  flex-shrink: 0;
+`;
+
+const AutocompleteContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const AutocompleteName = styled.div`
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+`;
+
+const AutocompleteCategory = styled.div`
+  font-size: 12px;
+  color: #999;
+`;
+
+const AutocompleteStore = styled.div`
+  font-size: 12px;
+  color: #666;
 `;
 
 const FilterIconButton = styled.button`
@@ -668,6 +717,8 @@ const DropdownContainer = styled.div`
   max-height: 300px;
   overflow-y: auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 100;
 `;
 
 const DropdownItem = styled.div<{ $active?: boolean }>`
@@ -809,15 +860,6 @@ const BadgeRow = styled.div`
   flex-wrap: wrap;
 `;
 
-const StatusBadge = styled.span<{ $isOpen: boolean }>`
-  padding: 6px 12px;
-  border-radius: 14px;
-  font-size: 13px;
-  font-weight: 600;
-  background-color: ${(props) => (props.$isOpen ? "#ff6b35" : "#999")};
-  color: #fff;
-`;
-
 const PriceInfo = styled.div`
   display: flex;
   align-items: center;
@@ -843,46 +885,22 @@ const PopularityBadge = styled.span`
   color: #f57c00;
 `;
 
-const MenuGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 16px;
-`;
-
-const MenuCard = styled.div`
+const CategoryInfo = styled.div`
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
 `;
 
-const MenuImage = styled.img`
-  width: 100%;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 8px;
-  background-color: #f5f5f5;
-  margin-bottom: 8px;
-`;
-
-const MenuInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const MenuName = styled.div`
-  font-size: 13px;
+const CategoryTag = styled.span`
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: 500;
-  color: #333;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const MenuPrice = styled.div`
-  font-size: 13px;
-  font-weight: 600;
-  color: #666;
+  width: fit-content;
 `;
 
 export default RecommendationPage;

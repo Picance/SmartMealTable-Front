@@ -64,14 +64,22 @@ export const storeService = {
   },
 
   // 가게 즐겨찾기 추가
-  async addFavorite(storeId: number): Promise<ApiResponse<void>> {
-    const response = await api.post(`/api/v1/stores/${storeId}/favorite`);
+  async addFavorite(storeId: number): Promise<
+    ApiResponse<{
+      favoriteId: number;
+      storeId: number;
+      storeName: string;
+      displayOrder: number;
+      createdAt: string;
+    }>
+  > {
+    const response = await api.post("/api/v1/favorites", { storeId });
     return response.data;
   },
 
   // 가게 즐겨찾기 해제
-  async removeFavorite(storeId: number): Promise<ApiResponse<void>> {
-    const response = await api.delete(`/api/v1/stores/${storeId}/favorite`);
+  async removeFavorite(favoriteId: number): Promise<ApiResponse<void>> {
+    const response = await api.delete(`/api/v1/favorites/${favoriteId}`);
     return response.data;
   },
 

@@ -4,10 +4,13 @@ import type { ApiResponse } from "../types/api";
 // API Base URL (환경변수로 관리)
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
+console.log("🌐 API Base URL:", BASE_URL);
+console.log("🔧 Environment:", import.meta.env.MODE);
+
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // 30초로 증가
   headers: {
     "Content-Type": "application/json",
     "Accept-Language": "ko-KR",
@@ -21,18 +24,23 @@ apiClient.interceptors.request.use(
     console.group(
       `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
     );
-    console.log("Base URL:", config.baseURL);
-    console.log("Full URL:", `${config.baseURL}${config.url}`);
-    console.log("Headers:", config.headers);
+    console.log("⏰ Timestamp:", new Date().toISOString());
+    console.log("🌐 Base URL:", config.baseURL);
+    console.log("🔗 Full URL:", `${config.baseURL}${config.url}`);
+    console.log("📋 Headers:", config.headers);
     if (config.data) {
-      console.log("Request Data:", config.data);
+      console.log("📦 Request Data:", config.data);
       console.log(
-        "Request Data (stringified):",
+        "📦 Request Data (stringified):",
         JSON.stringify(config.data, null, 2)
       );
     }
     if (config.params) {
-      console.log("Request Params:", config.params);
+      console.log("🔍 Request Params:", config.params);
+      console.log(
+        "🔍 Params (stringified):",
+        JSON.stringify(config.params, null, 2)
+      );
     }
     console.groupEnd();
 
@@ -46,6 +54,9 @@ apiClient.interceptors.request.use(
     } else {
       console.warn("⚠️ No Authorization Token found in localStorage");
     }
+
+    console.log("⏱️ Waiting for response (timeout: 30s)...");
+
     return config;
   },
   (error) => {
@@ -63,8 +74,28 @@ apiClient.interceptors.response.use(
         response.config.url
       }`
     );
-    console.log("Status:", response.status, response.statusText);
-    console.log("Response Data:", response.data);
+    console.log("⏰ Response Time:", new Date().toISOString());
+    console.log("📊 Status:", response.status, response.statusText);
+    console.log("📦 Response Data:", response.data);
+    console.log(
+      "📦 Response Data (stringified):",
+      JSON.stringify(response.data, null, 2)
+    );
+
+    // 데이터 상세 정보
+    if (response.data?.data) {
+      if (Array.isArray(response.data.data)) {
+        console.log("📋 Array Length:", response.data.data.length);
+        console.log("📋 First Item:", response.data.data[0]);
+      } else if (
+        response.data.data.data &&
+        Array.isArray(response.data.data.data)
+      ) {
+        console.log("📋 Nested Array Length:", response.data.data.data.length);
+        console.log("📋 First Item:", response.data.data.data[0]);
+      }
+    }
+
     console.groupEnd();
 
     return response;
@@ -77,12 +108,22 @@ apiClient.interceptors.response.use(
           error.config?.url
         }`
       );
-      console.log("Status:", error.response.status, error.response.statusText);
-      console.log("Error Data:", error.response.data);
-      console.log("Error Config:", error.config);
+      console.log("⏰ Error Time:", new Date().toISOString());
+      console.log(
+        "📊 Status:",
+        error.response.status,
+        error.response.statusText
+      );
+      console.log("📦 Error Data:", error.response.data);
+      console.log("🔧 Error Config:", error.config);
       console.groupEnd();
     } else if (error.request) {
-      console.error("❌ API Error: No response received", error.request);
+      console.group("❌ API Error: No response received");
+      console.log("⏰ Error Time:", new Date().toISOString());
+      console.log("🌐 Request was made but no response:", error.request);
+      console.log("💬 Error Message:", error.message);
+      console.log("🔧 Error Code:", error.code);
+      console.groupEnd();
     } else {
       console.error("❌ API Error:", error.message);
     }

@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiChevronDown, FiMapPin } from "react-icons/fi";
-import BottomNav from "../../components/layout/BottomNav";
 import {
   getHomeDashboard,
   getOnboardingStatus,
   confirmMonthlyBudget,
 } from "../../services/home.service";
+import { useAuthStore } from "../../store/authStore";
 import type {
   HomeDashboardResponse,
   OnboardingStatusResponse,
@@ -16,6 +16,7 @@ import type {
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, accessToken } = useAuthStore();
   const [activeTab, setActiveTab] = useState<"popular" | "healthy">("popular");
   const [dashboardData, setDashboardData] =
     useState<HomeDashboardResponse | null>(null);
@@ -25,10 +26,26 @@ const HomePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
 
+  // 로그인 체크
+  useEffect(() => {
+    console.log("🔐 홈 페이지 - 인증 상태:", {
+      isAuthenticated,
+      hasToken: !!accessToken,
+    });
+
+    if (!isAuthenticated || !accessToken) {
+      console.warn("⚠️ 로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+      navigate("/login");
+      return;
+    }
+  }, [isAuthenticated, accessToken, navigate]);
+
   // 데이터 로드
   useEffect(() => {
-    loadHomeData();
-  }, []);
+    if (isAuthenticated && accessToken) {
+      loadHomeData();
+    }
+  }, [isAuthenticated, accessToken]);
 
   const loadHomeData = async () => {
     try {
@@ -114,7 +131,6 @@ const HomePage = () => {
         <LoadingContainer>
           <LoadingText>로딩 중...</LoadingText>
         </LoadingContainer>
-        <BottomNav activeTab="home" />
       </Container>
     );
   }
@@ -125,7 +141,6 @@ const HomePage = () => {
         <ErrorContainer>
           <ErrorText>{error || "데이터를 불러올 수 없습니다."}</ErrorText>
         </ErrorContainer>
-        <BottomNav activeTab="home" />
       </Container>
     );
   }
@@ -141,7 +156,6 @@ const HomePage = () => {
         <ErrorContainer>
           <ErrorText>데이터 구조가 올바르지 않습니다.</ErrorText>
         </ErrorContainer>
-        <BottomNav activeTab="home" />
       </Container>
     );
   }
@@ -320,7 +334,43 @@ const HomePage = () => {
         </ModalOverlay>
       )}
 
-      <BottomNav activeTab="home" />
+      {/* 위치 정보를 전달하는 커스텀 BottomNav */}
+      <CustomBottomNav>
+        <NavItem onClick={() => navigate("/home")} $active={true}>
+          <NavIcon>🏠</NavIcon>
+          <NavLabel $active={true}>홈</NavLabel>
+        </NavItem>
+        <NavItem onClick={() => navigate("/spending")} $active={false}>
+          <NavIcon>📋</NavIcon>
+          <NavLabel $active={false}>지출 내역</NavLabel>
+        </NavItem>
+        <NavItem
+          onClick={() =>
+            navigate("/recommendation", {
+              state: {
+                userLocation: location
+                  ? {
+                      latitude: location.latitude,
+                      longitude: location.longitude,
+                    }
+                  : null,
+              },
+            })
+          }
+          $active={false}
+        >
+          <NavIcon>🍽️</NavIcon>
+          <NavLabel $active={false}>음식 추천</NavLabel>
+        </NavItem>
+        <NavItem onClick={() => navigate("/favorites")} $active={false}>
+          <NavIcon>❤️</NavIcon>
+          <NavLabel $active={false}>즐겨 찾는 가게</NavLabel>
+        </NavItem>
+        <NavItem onClick={() => navigate("/profile")} $active={false}>
+          <NavIcon>👤</NavIcon>
+          <NavLabel $active={false}>프로필</NavLabel>
+        </NavItem>
+      </CustomBottomNav>
     </Container>
   );
 };
@@ -758,6 +808,53 @@ const ModalButton = styled.button<{ $primary?: boolean }>`
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
+`;
+
+// 커스텀 BottomNav 스타일
+const CustomBottomNav = styled.nav`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-around;
+  padding: ${theme.spacing.sm} 0;
+  z-index: 100;
+
+  @media (min-width: 431px) {
+    max-width: 430px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+`;
+
+const NavItem = styled.div<{ $active?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: ${theme.spacing.xs};
+  cursor: pointer;
+  flex: 1;
+  transition: all 0.2s;
+
+  &:hover {
+    opacity: 0.7;
+  }
+`;
+
+const NavIcon = styled.div`
+  font-size: ${theme.typography.fontSize.xl};
+`;
+
+const NavLabel = styled.span<{ $active?: boolean }>`
+  font-size: ${theme.typography.fontSize.xs};
+  color: ${(props) => (props.$active ? theme.colors.accent : "#757575")};
+  font-weight: ${(props) =>
+    props.$active
+      ? theme.typography.fontWeight.semibold
+      : theme.typography.fontWeight.normal};
 `;
 
 export default HomePage;
