@@ -10,10 +10,11 @@ import {
 import { IoHeartOutline, IoHeartSharp } from "react-icons/io5";
 import { storeService, StoreSearchParams } from "../../services/store.service";
 import { categoryService } from "../../services/category.service";
-import type { Store, Category } from "../../types/api";
+import type { Category } from "../../types/api";
 import BottomNav from "../../components/layout/BottomNav";
 
 type SortBy = "DISTANCE" | "PRICE" | "RATING" | "POPULARITY";
+type DistanceFilter = 0.5 | 1 | 2 | 5 | 10;
 
 const RecommendationPage = () => {
   const navigate = useNavigate();
@@ -21,9 +22,17 @@ const RecommendationPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>("DISTANCE");
+  const [distance, setDistance] = useState<DistanceFilter>(0.5);
+  const [isOpenOnly, setIsOpenOnly] = useState(false);
+  const [excludeDislikes, setExcludeDislikes] = useState(false);
   const [stores, setStores] = useState<any[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 드롭다운 상태
+  const [showDistanceDropdown, setShowDistanceDropdown] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   useEffect(() => {
     loadCategories();
@@ -34,16 +43,44 @@ const RecommendationPage = () => {
     if (!isLoading) {
       searchStores();
     }
-  }, [selectedCategory, sortBy]);
+  }, [selectedCategory, sortBy, distance, isOpenOnly, excludeDislikes]);
 
   const loadCategories = async () => {
     try {
       const response = await categoryService.getCategories();
       if (response.result === "SUCCESS" && response.data) {
-        setCategories(response.data);
+        setCategories(response.data.categories || []);
       }
     } catch (err) {
       console.error("카테고리 로드 실패:", err);
+    }
+  };
+
+  // 거리 라벨 가져오기
+  const getDistanceLabel = () => {
+    return `${distance}km`;
+  };
+
+  // 카테고리 라벨 가져오기
+  const getCategoryLabel = () => {
+    if (!selectedCategory) return "모두";
+    const category = categories.find((c) => c.categoryId === selectedCategory);
+    return category?.name || "모두";
+  };
+
+  // 정렬 라벨 가져오기
+  const getSortLabel = () => {
+    switch (sortBy) {
+      case "DISTANCE":
+        return "추천순";
+      case "PRICE":
+        return "가격순";
+      case "RATING":
+        return "평점순";
+      case "POPULARITY":
+        return "인기순";
+      default:
+        return "추천순";
     }
   };
 
@@ -251,27 +288,175 @@ const RecommendationPage = () => {
 
       {/* 필터 버튼들 */}
       <FilterBar>
-        <FilterButton>
-          <span>📍거리: 0.5km</span>
+        <FilterButton
+          onClick={() => {
+            setShowDistanceDropdown(!showDistanceDropdown);
+            setShowCategoryDropdown(false);
+            setShowSortDropdown(false);
+          }}
+        >
+          <span>📍거리: {getDistanceLabel()}</span>
           <FiChevronDown size={14} />
         </FilterButton>
-        <FilterButton>
-          <span>🍽️음식: 모두</span>
+        <FilterButton
+          onClick={() => {
+            setShowCategoryDropdown(!showCategoryDropdown);
+            setShowDistanceDropdown(false);
+            setShowSortDropdown(false);
+          }}
+        >
+          <span>🍽️음식: {getCategoryLabel()}</span>
           <FiChevronDown size={14} />
         </FilterButton>
-        <FilterButton>
-          <span>↕️정렬: 추천순</span>
+        <FilterButton
+          onClick={() => {
+            setShowSortDropdown(!showSortDropdown);
+            setShowDistanceDropdown(false);
+            setShowCategoryDropdown(false);
+          }}
+        >
+          <span>↕️정렬: {getSortLabel()}</span>
           <FiChevronDown size={14} />
         </FilterButton>
       </FilterBar>
 
+      {/* 드롭다운 메뉴들 */}
+      {showDistanceDropdown && (
+        <DropdownContainer>
+          <DropdownItem
+            $active={distance === 0.5}
+            onClick={() => {
+              setDistance(0.5);
+              setShowDistanceDropdown(false);
+            }}
+          >
+            0.5km
+          </DropdownItem>
+          <DropdownItem
+            $active={distance === 1}
+            onClick={() => {
+              setDistance(1);
+              setShowDistanceDropdown(false);
+            }}
+          >
+            1km
+          </DropdownItem>
+          <DropdownItem
+            $active={distance === 2}
+            onClick={() => {
+              setDistance(2);
+              setShowDistanceDropdown(false);
+            }}
+          >
+            2km
+          </DropdownItem>
+          <DropdownItem
+            $active={distance === 5}
+            onClick={() => {
+              setDistance(5);
+              setShowDistanceDropdown(false);
+            }}
+          >
+            5km
+          </DropdownItem>
+          <DropdownItem
+            $active={distance === 10}
+            onClick={() => {
+              setDistance(10);
+              setShowDistanceDropdown(false);
+            }}
+          >
+            10km
+          </DropdownItem>
+        </DropdownContainer>
+      )}
+
+      {showCategoryDropdown && (
+        <DropdownContainer>
+          <DropdownItem
+            $active={selectedCategory === null}
+            onClick={() => {
+              setSelectedCategory(null);
+              setShowCategoryDropdown(false);
+            }}
+          >
+            모두
+          </DropdownItem>
+          {categories.map((category) => (
+            <DropdownItem
+              key={category.categoryId}
+              $active={selectedCategory === category.categoryId}
+              onClick={() => {
+                setSelectedCategory(category.categoryId);
+                setShowCategoryDropdown(false);
+              }}
+            >
+              {category.name}
+            </DropdownItem>
+          ))}
+        </DropdownContainer>
+      )}
+
+      {showSortDropdown && (
+        <DropdownContainer>
+          <DropdownItem
+            $active={sortBy === "DISTANCE"}
+            onClick={() => {
+              setSortBy("DISTANCE");
+              setShowSortDropdown(false);
+            }}
+          >
+            추천순
+          </DropdownItem>
+          <DropdownItem
+            $active={sortBy === "PRICE"}
+            onClick={() => {
+              setSortBy("PRICE");
+              setShowSortDropdown(false);
+            }}
+          >
+            가격순
+          </DropdownItem>
+          <DropdownItem
+            $active={sortBy === "RATING"}
+            onClick={() => {
+              setSortBy("RATING");
+              setShowSortDropdown(false);
+            }}
+          >
+            평점순
+          </DropdownItem>
+          <DropdownItem
+            $active={sortBy === "POPULARITY"}
+            onClick={() => {
+              setSortBy("POPULARITY");
+              setShowSortDropdown(false);
+            }}
+          >
+            인기순
+          </DropdownItem>
+        </DropdownContainer>
+      )}
+
       {/* 필터 태그 */}
       <TagBar>
-        <TagChip>정렬: 추천순</TagChip>
-        <TagChip>거리: 0.5km</TagChip>
-        <TagChip>물가대: 미로운</TagChip>
-        <TagChip>영업중: 예</TagChip>
-        <TagChip>음식: 모두</TagChip>
+        <TagChip>정렬: {getSortLabel()}</TagChip>
+        <TagChip>거리: {getDistanceLabel()}</TagChip>
+        <TagChip
+          $clickable
+          $active={isOpenOnly}
+          onClick={() => setIsOpenOnly(!isOpenOnly)}
+        >
+          영업중: {isOpenOnly ? "예" : "모두"}
+        </TagChip>
+        <TagChip
+          $clickable
+          $active={excludeDislikes}
+          onClick={() => setExcludeDislikes(!excludeDislikes)}
+        >
+          불호제외: {excludeDislikes ? "예" : "아니오"}
+        </TagChip>
+        {selectedCategory && <TagChip>음식: {getCategoryLabel()}</TagChip>}
       </TagBar>
 
       {/* 결과 텍스트 */}
@@ -461,13 +646,50 @@ const TagBar = styled.div`
   }
 `;
 
-const TagChip = styled.div`
+const TagChip = styled.div<{ $clickable?: boolean; $active?: boolean }>`
   padding: 6px 12px;
-  background-color: #f5f5f5;
+  background-color: ${(props) =>
+    props.$active ? "#ff6b35" : props.$clickable ? "#e8f5e9" : "#f5f5f5"};
   border-radius: 16px;
   font-size: 12px;
-  color: #666;
+  color: ${(props) => (props.$active ? "#fff" : "#666")};
   white-space: nowrap;
+  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
+  transition: all 0.2s;
+
+  &:active {
+    transform: ${(props) => (props.$clickable ? "scale(0.95)" : "none")};
+  }
+`;
+
+const DropdownContainer = styled.div`
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const DropdownItem = styled.div<{ $active?: boolean }>`
+  padding: 14px 16px;
+  font-size: 14px;
+  color: ${(props) => (props.$active ? "#ff6b35" : "#333")};
+  background-color: ${(props) => (props.$active ? "#fff5f2" : "#fff")};
+  cursor: pointer;
+  font-weight: ${(props) => (props.$active ? "600" : "400")};
+  border-bottom: 1px solid #f5f5f5;
+
+  &:hover {
+    background-color: #f9f9f9;
+  }
+
+  &:active {
+    background-color: #f0f0f0;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
 const ResultHeader = styled.div`
