@@ -71,10 +71,12 @@ export interface UpdateCartItemResponse {
 }
 
 export interface CheckoutRequest {
-  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
+  storeId: number; // 필수
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER" | "SNACK";
   discount?: number;
   expendedDate: string; // YYYY-MM-DD
   expendedTime: string; // HH:mm:ss
+  memo?: string; // 선택적
 }
 
 export interface ExpenditureItem {

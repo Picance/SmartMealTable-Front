@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { FiArrowLeft, FiCheck } from "react-icons/fi";
@@ -6,6 +6,7 @@ import BottomNav from "../../components/layout/BottomNav";
 import { useCartStore } from "../../store/cartStore";
 
 interface ExpenditureData {
+  expenditureId: number;
   storeName: string;
   items: Array<{
     foodName: string;
@@ -13,17 +14,17 @@ interface ExpenditureData {
     price: number;
   }>;
   totalAmount: number;
-  mealType: "BREAKFAST" | "LUNCH" | "DINNER";
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK" | "OTHER";
   expendedDate: string;
   expendedTime: string;
-}
-
-interface BudgetSummary {
-  mealSpent: number;
-  mealRemaining: number;
-  dailySpent: number;
-  dailyRemaining: number;
-  monthlyRemaining: number;
+  budgetSummary: {
+    mealBudgetBefore: number;
+    mealBudgetAfter: number;
+    dailyBudgetBefore: number;
+    dailyBudgetAfter: number;
+    monthlyBudgetBefore: number;
+    monthlyBudgetAfter: number;
+  };
 }
 
 const ExpenditureSuccessPage = () => {
@@ -32,13 +33,17 @@ const ExpenditureSuccessPage = () => {
   const { clearCart } = useCartStore();
 
   const expenditureData = location.state?.expenditureData as ExpenditureData;
-  const [budgetSummary] = useState<BudgetSummary>({
-    mealSpent: expenditureData?.totalAmount || 18500,
-    mealRemaining: 1500,
-    dailySpent: expenditureData?.totalAmount || 18500,
-    dailyRemaining: 41500,
-    monthlyRemaining: 345000,
-  });
+
+  // 백엔드에서 받은 실제 예산 데이터
+  const budgetSummary = expenditureData?.budgetSummary;
+
+  // 지출 금액 계산 (Before - After)
+  const mealSpent = budgetSummary
+    ? budgetSummary.mealBudgetBefore - budgetSummary.mealBudgetAfter
+    : 0;
+  const dailySpent = budgetSummary
+    ? budgetSummary.dailyBudgetBefore - budgetSummary.dailyBudgetAfter
+    : 0;
 
   useEffect(() => {
     if (!expenditureData) {
@@ -145,9 +150,7 @@ const ExpenditureSuccessPage = () => {
           <BudgetCard>
             <BudgetRow>
               <BudgetLabel>{getMealTypeLabel()} 지출 식비</BudgetLabel>
-              <BudgetValue>
-                ₩{budgetSummary.mealSpent.toLocaleString()}
-              </BudgetValue>
+              <BudgetValue>₩{mealSpent.toLocaleString()}</BudgetValue>
             </BudgetRow>
 
             <BudgetRow $highlight>
@@ -155,7 +158,7 @@ const ExpenditureSuccessPage = () => {
                 남은 {getMealTypeLabel()} 식비 예산
               </BudgetLabel>
               <BudgetValue $highlight>
-                ₩{budgetSummary.mealRemaining.toLocaleString()}
+                ₩{budgetSummary?.mealBudgetAfter.toLocaleString() || "0"}
               </BudgetValue>
             </BudgetRow>
 
@@ -163,15 +166,13 @@ const ExpenditureSuccessPage = () => {
 
             <BudgetRow>
               <BudgetLabel>오늘 지출 식비</BudgetLabel>
-              <BudgetValue>
-                ₩{budgetSummary.dailySpent.toLocaleString()}
-              </BudgetValue>
+              <BudgetValue>₩{dailySpent.toLocaleString()}</BudgetValue>
             </BudgetRow>
 
             <BudgetRow $highlight>
               <BudgetLabel $highlight>남은 일일 식비 예산</BudgetLabel>
               <BudgetValue $highlight>
-                ₩{budgetSummary.dailyRemaining.toLocaleString()}
+                ₩{budgetSummary?.dailyBudgetAfter.toLocaleString() || "0"}
               </BudgetValue>
             </BudgetRow>
 
@@ -180,7 +181,7 @@ const ExpenditureSuccessPage = () => {
             <BudgetRow $warning>
               <BudgetLabel $warning>남은 월별 식비 예산</BudgetLabel>
               <BudgetValue $warning>
-                ₩{budgetSummary.monthlyRemaining.toLocaleString()}
+                ₩{budgetSummary?.monthlyBudgetAfter.toLocaleString() || "0"}
               </BudgetValue>
             </BudgetRow>
           </BudgetCard>

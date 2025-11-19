@@ -12,7 +12,7 @@ import {
 import { useCartStore } from "../../store/cartStore";
 import BottomNav from "../../components/layout/BottomNav";
 
-type MealType = "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
+type MealType = "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK" | "OTHER";
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -44,6 +44,7 @@ const CartPage = () => {
     { value: "BREAKFAST" as MealType, label: "아침" },
     { value: "LUNCH" as MealType, label: "점심" },
     { value: "DINNER" as MealType, label: "저녁" },
+    { value: "SNACK" as MealType, label: "간식" },
     { value: "OTHER" as MealType, label: "기타" },
   ];
 

@@ -53,7 +53,7 @@ interface CartStore {
 
   // 체크아웃
   checkout: (
-    mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER",
+    mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK" | "OTHER",
     discount?: number,
     expendedDate?: string,
     expendedTime?: string
@@ -260,30 +260,35 @@ export const useCartStore = create<CartStore>()(
           expendedDate,
           expendedTime,
         });
+
+        const { storeId } = get();
+
+        if (!storeId) {
+          throw new Error("장바구니에 상품이 없습니다.");
+        }
+
         set({ isLoading: true, error: null });
         try {
           // 기본값: 현재 날짜/시간
           const now = new Date();
+
+          // YYYY-MM-DD 형식
           const dateStr =
             expendedDate ||
-            now
-              .toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })
-              .replace(/\. /g, "-")
-              .replace(".", "");
+            `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+              2,
+              "0"
+            )}-${String(now.getDate()).padStart(2, "0")}`;
+
+          // HH:mm:ss 형식
           const timeStr =
             expendedTime ||
-            now.toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: false,
-            });
+            `${String(now.getHours()).padStart(2, "0")}:${String(
+              now.getMinutes()
+            ).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
 
           console.log("💳 [CartStore] checkout 파라미터:", {
+            storeId,
             mealType,
             discount,
             dateStr,
@@ -291,6 +296,7 @@ export const useCartStore = create<CartStore>()(
           });
 
           const response = await cartService.checkout({
+            storeId,
             mealType,
             discount,
             expendedDate: dateStr,
