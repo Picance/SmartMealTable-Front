@@ -18,7 +18,7 @@ import { storeService } from "../../services/store.service";
 import { useAuthStore } from "../../store/authStore";
 import BottomNav from "../../components/layout/BottomNav";
 
-type SortBy = "SCORE" | "reviewCount" | "distance";
+type SortBy = "SCORE" | "DISTANCE";
 type DistanceFilter = 0.5 | 1 | 2 | 5 | 10;
 
 const RecommendationPage = () => {
@@ -92,9 +92,7 @@ const RecommendationPage = () => {
     switch (sortBy) {
       case "SCORE":
         return "추천순";
-      case "reviewCount":
-        return "리뷰순";
-      case "distance":
+      case "DISTANCE":
         return "거리순";
       default:
         return "추천순";
@@ -122,12 +120,16 @@ const RecommendationPage = () => {
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
         radius: distance,
-        sortBy: sortBy,
         includeDisliked: !excludeDislikes,
         openNow: isOpenOnly,
         page: 0,
         size: 20,
       };
+
+      // sortBy가 SCORE가 아닐 때만 추가 (기본값이 SCORE이므로)
+      if (sortBy !== "SCORE") {
+        params.sortBy = sortBy;
+      }
 
       if (searchKeyword.trim()) {
         params.keyword = searchKeyword.trim();
@@ -405,18 +407,9 @@ const RecommendationPage = () => {
             추천순
           </DropdownItem>
           <DropdownItem
-            $active={sortBy === "reviewCount"}
+            $active={sortBy === "DISTANCE"}
             onClick={() => {
-              setSortBy("reviewCount");
-              setShowSortDropdown(false);
-            }}
-          >
-            리뷰순
-          </DropdownItem>
-          <DropdownItem
-            $active={sortBy === "distance"}
-            onClick={() => {
-              setSortBy("distance");
+              setSortBy("DISTANCE");
               setShowSortDropdown(false);
             }}
           >
@@ -477,9 +470,6 @@ const RecommendationPage = () => {
                 />
                 <StoreNameOverlay>
                   <StoreName>{store.storeName}</StoreName>
-                  <StoreLocation>
-                    {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
-                  </StoreLocation>
                 </StoreNameOverlay>
                 <FavoriteButton
                   onClick={(e) => handleFavoriteToggle(store.storeId, e)}
@@ -512,11 +502,6 @@ const RecommendationPage = () => {
                     </PopularityBadge>
                   )}
                 </BadgeRow>
-
-                {/* 카테고리 정보 */}
-                <CategoryInfo>
-                  <CategoryTag>카테고리 ID: {store.categoryId}</CategoryTag>
-                </CategoryInfo>
               </StoreInfoSection>
             </StoreCard>
           ))
@@ -812,11 +797,6 @@ const StoreName = styled.h3`
   margin: 0 0 4px 0;
 `;
 
-const StoreLocation = styled.div`
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-`;
-
 const FavoriteButton = styled.button`
   position: absolute;
   top: 16px;
@@ -883,24 +863,6 @@ const PopularityBadge = styled.span`
   font-weight: 600;
   background-color: #fff3e0;
   color: #f57c00;
-`;
-
-const CategoryInfo = styled.div`
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const CategoryTag = styled.span`
-  display: inline-block;
-  padding: 4px 10px;
-  background-color: #e3f2fd;
-  color: #1976d2;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  width: fit-content;
 `;
 
 export default RecommendationPage;

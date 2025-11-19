@@ -41,7 +41,7 @@ export interface RecommendationParams {
   longitude: number;
   keyword?: string;
   radius?: number; // 0.1 ~ 10 km
-  sortBy?: "SCORE" | "reviewCount" | "distance";
+  sortBy?: "SCORE" | "DISTANCE";
   includeDisliked?: boolean;
   openNow?: boolean;
   storeType?: "ALL" | "CAMPUS_RESTAURANT" | "RESTAURANT";
