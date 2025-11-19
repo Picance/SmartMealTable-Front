@@ -34,7 +34,6 @@ export const storeService = {
   // 가게 상세 조회
   async getStoreDetail(storeId: number): Promise<ApiResponse<StoreDetail>> {
     const response = await api.get(`/api/v1/stores/${storeId}`);
-    console.log("🏪 가게 상세 조회 응답:", response.data);
     return response.data;
   },
 
@@ -53,7 +52,6 @@ export const storeService = {
     const response = await api.get(`/api/v1/stores/${storeId}/foods`, {
       params,
     });
-    console.log("🍽️ 가게 메뉴 조회 응답:", response.data);
     return response.data;
   },
 

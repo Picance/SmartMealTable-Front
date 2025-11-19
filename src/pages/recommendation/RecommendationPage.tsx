@@ -53,10 +53,7 @@ const RecommendationPage = () => {
 
   useEffect(() => {
     // 로그인 체크
-    console.log("🔐 인증 상태:", { isAuthenticated, hasToken: !!accessToken });
-
     if (!isAuthenticated || !accessToken) {
-      console.warn("⚠️ 로그인이 필요합니다. 로그인 페이지로 이동합니다.");
       alert("로그인이 필요한 서비스입니다.");
       navigate("/login");
       return;
@@ -64,10 +61,8 @@ const RecommendationPage = () => {
 
     // location.state에서 위치 정보 가져오기
     if (location.state && location.state.userLocation) {
-      console.log("📍 홈에서 전달받은 위치:", location.state.userLocation);
       setUserLocation(location.state.userLocation);
     } else {
-      console.warn("⚠️ 위치 정보 없음, API에서 사용자 주소 가져오기");
       // API에서 사용자의 현재 주소 가져오기
       fetchUserLocation();
     }
@@ -82,13 +77,8 @@ const RecommendationPage = () => {
         dashboardResponse.data?.location
       ) {
         const { latitude, longitude } = dashboardResponse.data.location;
-        console.log("✅ API에서 사용자 위치 가져오기 성공:", {
-          latitude,
-          longitude,
-        });
         setUserLocation({ latitude, longitude });
       } else {
-        console.warn("⚠️ API 응답에 위치 정보 없음, 기본 위치 사용");
         // 기본 위치 (서울시청)
         setUserLocation({
           latitude: 37.5665,
@@ -96,7 +86,6 @@ const RecommendationPage = () => {
         });
       }
     } catch (err) {
-      console.error("❌ 사용자 위치 가져오기 실패:", err);
       // 실패 시 기본 위치 사용
       setUserLocation({
         latitude: 37.5665,
@@ -131,17 +120,8 @@ const RecommendationPage = () => {
 
   const searchStores = async () => {
     if (!userLocation) {
-      console.log("⚠️ 위치 정보 없음, 검색 중단");
       return;
     }
-
-    console.log("🔍 추천 검색 시작...", {
-      userLocation,
-      distance,
-      sortBy,
-      isOpenOnly,
-      excludeDislikes,
-    });
 
     setIsLoading(true);
 
@@ -165,43 +145,24 @@ const RecommendationPage = () => {
         params.keyword = searchKeyword.trim();
       }
 
-      console.log("📤 추천 API 요청 파라미터:", params);
-
-      const startTime = performance.now();
       const response = await recommendationService.getRecommendations(params);
-      const endTime = performance.now();
-
-      console.log(`⏱️ API 응답 시간: ${(endTime - startTime).toFixed(0)}ms`);
-      console.log("📥 추천 API 응답:", response);
 
       if (response.result === "SUCCESS" && response.data) {
         // API 응답 구조: { result: "SUCCESS", data: RecommendedStore[] }
         const storeList = Array.isArray(response.data) ? response.data : [];
-        console.log("✅ 추천 데이터:", storeList);
-        console.log("📊 가게 수:", storeList.length);
         setStores(storeList);
       } else {
-        console.warn("⚠️ 응답 실패 또는 데이터 없음:", response);
         setStores([]);
       }
     } catch (err: any) {
-      console.error("❌ 추천 가게 검색 실패:", err);
-      console.error("에러 상세:", err.response?.data || err.message);
-
       if (err.response?.status === 401) {
-        console.error(
-          "🔐 인증 오류: 로그인이 필요하거나 토큰이 만료되었습니다"
-        );
         alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
         navigate("/login");
       } else if (err.code === "ECONNABORTED") {
-        console.error("⏱️ 요청 타임아웃: 서버 응답이 너무 느립니다");
         alert("서버 응답 시간이 초과되었습니다. 다시 시도해주세요.");
       } else if (err.response?.status === 404) {
-        console.error("🔍 API 엔드포인트를 찾을 수 없습니다");
         alert("서비스를 찾을 수 없습니다.");
       } else if (err.response?.status === 500) {
-        console.error("💥 서버 내부 오류");
         alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       }
 
@@ -239,7 +200,6 @@ const RecommendationPage = () => {
         setShowAutocomplete(false);
       }
     } catch (err) {
-      console.error("자동완성 검색 실패:", err);
       setAutocompleteResults([]);
       setShowAutocomplete(false);
     }

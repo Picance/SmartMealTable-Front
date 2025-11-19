@@ -11,7 +11,7 @@ import BottomNav from "../../components/layout/BottomNav";
 const StoreDetailPage = () => {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
-  const { items } = useCartStore();
+  const { items, fetchCart } = useCartStore();
   const [store, setStore] = useState<StoreDetail | null>(null);
   const [recommendedMenus, setRecommendedMenus] = useState<Menu[]>([]);
   const [allMenus, setAllMenus] = useState<Menu[]>([]);
@@ -25,18 +25,24 @@ const StoreDetailPage = () => {
     }
   }, [storeId]);
 
+  // 컴포넌트 마운트 및 페이지 재진입 시 장바구니 동기화
+  useEffect(() => {
+    console.log("� [StoreDetailPage] 장바구니 상태 동기화");
+    fetchCart();
+  }, []); // fetchCart는 stable하므로 deps에서 제외
+
+  useEffect(() => {
+    console.log("[StoreDetailPage] Cart items changed:", items.length);
+  }, [items]);
   const loadStoreData = async (id: number) => {
     setLoading(true);
-    console.log("🚀 loadStoreData 시작, storeId:", id);
 
     try {
       let menusLoaded = false;
       let loadedMenus: Menu[] = [];
 
       // 가게 상세 정보 로드
-      console.log("📞 가게 상세 API 호출 전...");
       const storeResponse = await storeService.getStoreDetail(id);
-      console.log("📦 가게 상세 응답 데이터:", storeResponse.data);
 
       if (storeResponse.result === "SUCCESS" && storeResponse.data) {
         // API 응답 필드명 정규화
@@ -49,87 +55,50 @@ const StoreDetailPage = () => {
             "기타",
         };
 
-        console.log("🏪 가게 정보:", {
-          storeName: normalizedData.storeName,
-          category: normalizedData.category,
-          categoryId: normalizedData.categoryId,
-          address: normalizedData.address,
-          averagePrice: normalizedData.averagePrice,
-          isOpen: normalizedData.isOpen,
-        });
-
         setStore(normalizedData);
         setIsFavorite(normalizedData.isFavorite || false);
 
         // 가게 상세에서 메뉴 가져오기
         if (normalizedData.menus && normalizedData.menus.length > 0) {
-          console.log("✅ 가게 상세 응답에 메뉴 포함:", normalizedData.menus);
           loadedMenus = normalizedData.menus;
           menusLoaded = true;
         } else if (
           normalizedData.recommendedMenus &&
           normalizedData.recommendedMenus.length > 0
         ) {
-          console.log(
-            "✅ 가게 상세 응답에 추천 메뉴 포함:",
-            normalizedData.recommendedMenus
-          );
           // API 명세의 recommendedMenus 필드 사용
           loadedMenus = normalizedData.recommendedMenus;
           menusLoaded = true;
-        } else {
-          console.log("⚠️ 가게 상세 응답에 메뉴 없음, 별도 API 호출 시도");
         }
       }
 
       // 가게 상세에 메뉴가 없으면 별도 메뉴 API 호출
       if (!menusLoaded) {
         try {
-          console.log(`🔄 메뉴 API 호출 시작: /api/v1/stores/${id}/foods`);
           const menusResponse = await storeService.getStoreMenus(id);
-          console.log("📦 메뉴 API 응답:", menusResponse);
 
           if (menusResponse.result === "SUCCESS" && menusResponse.data) {
             loadedMenus = menusResponse.data.foods || [];
-            console.log("✅ 메뉴 API에서 foods 추출:", loadedMenus);
             menusLoaded = loadedMenus.length > 0;
           }
         } catch (menuError: any) {
-          console.error("❌ 메뉴 API 호출 실패:", menuError);
-          console.log("메뉴 API 에러 상세:", {
-            message: menuError.message,
-            status: menuError.response?.status,
-            data: menuError.response?.data,
-          });
+          // 메뉴 API 호출 실패 시 무시
         }
       }
 
       // 메뉴가 로드되었으면 상태 업데이트
       if (menusLoaded && loadedMenus.length > 0) {
-        console.log("✅ 메뉴 로드 성공, 상태 업데이트:", {
-          total: loadedMenus.length,
-          recommended: loadedMenus.filter((m) => m.isRecommended).length,
-        });
         setRecommendedMenus(
           loadedMenus.filter((m) => m.isRecommended).slice(0, 2)
         );
         setAllMenus(loadedMenus);
       } else {
         // 메뉴가 없으면 빈 배열로 설정
-        console.log("⚠️ 메뉴 정보 없음");
         setRecommendedMenus([]);
         setAllMenus([]);
       }
     } catch (error: any) {
-      console.error("❌ Failed to load store data:", error);
-      console.log("에러 상세:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-
       // 에러 발생 시에도 빈 배열로 설정
-      console.log("⚠️ 에러 발생 - 메뉴 정보 없음");
       setRecommendedMenus([]);
       setAllMenus([]);
     } finally {
@@ -148,7 +117,6 @@ const StoreDetailPage = () => {
       }
       setIsFavorite(!isFavorite);
     } catch (error) {
-      console.error("Failed to toggle favorite:", error);
       alert("즐겨찾기 변경에 실패했습니다.");
     }
   };
@@ -167,7 +135,10 @@ const StoreDetailPage = () => {
   };
 
   const getTotalAmount = () => {
-    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return items.reduce((sum, item) => {
+      const itemTotal = item.totalPrice || item.subtotal || 0;
+      return sum + itemTotal;
+    }, 0);
   };
 
   if (loading) {
@@ -352,17 +323,19 @@ const StoreDetailPage = () => {
               </CartSummaryValue>
             </CartSummaryRow>
             <CartSummaryRow>
-              <CartSummaryLabel strikethrough>남은 예상 식비:</CartSummaryLabel>
-              <CartSummaryValue strikethrough>₩15,000</CartSummaryValue>
+              <CartSummaryLabel $strikethrough>
+                남은 예상 식비:
+              </CartSummaryLabel>
+              <CartSummaryValue $strikethrough>₩15,000</CartSummaryValue>
             </CartSummaryRow>
             <CartSummaryRow>
-              <CartSummaryLabel warning>정산 예산 초과:</CartSummaryLabel>
-              <CartSummaryValue warning>₩5,000</CartSummaryValue>
+              <CartSummaryLabel $warning>정산 예산 초과:</CartSummaryLabel>
+              <CartSummaryValue $warning>₩5,000</CartSummaryValue>
             </CartSummaryRow>
             <CartDivider />
-            <CartSummaryRow bold>
-              <CartSummaryLabel bold>현재 장바구니 합계:</CartSummaryLabel>
-              <CartSummaryValue bold>
+            <CartSummaryRow $bold>
+              <CartSummaryLabel $bold>현재 장바구니 합계:</CartSummaryLabel>
+              <CartSummaryValue $bold>
                 ₩{getTotalAmount().toLocaleString()}
               </CartSummaryValue>
             </CartSummaryRow>
@@ -981,44 +954,44 @@ const CartSummary = styled.div`
   gap: 6px;
 `;
 
-const CartSummaryRow = styled.div<{ bold?: boolean }>`
+const CartSummaryRow = styled.div<{ $bold?: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
 `;
 
 const CartSummaryLabel = styled.span<{
-  bold?: boolean;
-  strikethrough?: boolean;
-  warning?: boolean;
+  $bold?: boolean;
+  $strikethrough?: boolean;
+  $warning?: boolean;
 }>`
-  font-size: ${(props) => (props.bold ? "15px" : "13px")};
+  font-size: ${(props) => (props.$bold ? "15px" : "13px")};
   color: ${(props) => {
-    if (props.warning) return "#ff4444";
-    if (props.strikethrough) return "#999";
-    if (props.bold) return "#000";
+    if (props.$warning) return "#ff4444";
+    if (props.$strikethrough) return "#999";
+    if (props.$bold) return "#000";
     return "#666";
   }};
-  font-weight: ${(props) => (props.bold ? "700" : "400")};
+  font-weight: ${(props) => (props.$bold ? "700" : "400")};
   text-decoration: ${(props) =>
-    props.strikethrough ? "line-through" : "none"};
+    props.$strikethrough ? "line-through" : "none"};
 `;
 
 const CartSummaryValue = styled.span<{
-  bold?: boolean;
-  strikethrough?: boolean;
-  warning?: boolean;
+  $bold?: boolean;
+  $strikethrough?: boolean;
+  $warning?: boolean;
 }>`
-  font-size: ${(props) => (props.bold ? "18px" : "14px")};
+  font-size: ${(props) => (props.$bold ? "18px" : "14px")};
   color: ${(props) => {
-    if (props.warning) return "#ff4444";
-    if (props.strikethrough) return "#999";
-    if (props.bold) return "#000";
+    if (props.$warning) return "#ff4444";
+    if (props.$strikethrough) return "#999";
+    if (props.$bold) return "#000";
     return "#000";
   }};
-  font-weight: ${(props) => (props.bold ? "700" : "600")};
+  font-weight: ${(props) => (props.$bold ? "700" : "600")};
   text-decoration: ${(props) =>
-    props.strikethrough ? "line-through" : "none"};
+    props.$strikethrough ? "line-through" : "none"};
 `;
 
 const CartDivider = styled.div`

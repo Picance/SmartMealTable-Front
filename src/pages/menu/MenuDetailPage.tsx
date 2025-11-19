@@ -11,13 +11,6 @@ import {
 import { useCartStore } from "../../store/cartStore";
 import type { Menu } from "../../types/api";
 
-interface MenuOption {
-  id: string;
-  name: string;
-  price: number;
-  isRequired?: boolean;
-}
-
 const MenuDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,14 +21,10 @@ const MenuDetailPage = () => {
   const storeName = location.state?.storeName as string;
   const storeId = location.state?.storeId as number;
 
-  // 메뉴 옵션 (실제로는 API에서 가져와야 함)
-  const [options] = useState<MenuOption[]>([
-    { id: "500ml", name: "500ML", price: 1800, isRequired: true },
-    { id: "1.25l", name: "1.25L", price: 2800 },
-  ]);
-
-  const [selectedOption, setSelectedOption] = useState<string>("500ml");
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [conflictData, setConflictData] = useState<any>(null);
 
   if (!menu) {
     return (
@@ -48,8 +37,7 @@ const MenuDetailPage = () => {
     );
   }
 
-  const selectedOptionData = options.find((opt) => opt.id === selectedOption);
-  const totalPrice = (selectedOptionData?.price || menu.price) * quantity;
+  const totalPrice = menu.price * quantity;
   const cartTotal = getTotalPrice();
 
   const handleQuantityChange = (change: number) => {
@@ -59,21 +47,110 @@ const MenuDetailPage = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    if (!storeId || !storeName) return;
-
-    for (let i = 0; i < quantity; i++) {
-      addItem({
-        foodId: menu.foodId,
-        foodName: `${menu.foodName} (${selectedOptionData?.name || "기본"})`,
-        price: selectedOptionData?.price || menu.price,
-        imageUrl: menu.imageUrl,
-        storeId: storeId,
-        storeName: storeName,
-      });
+  const handleAddToCart = async () => {
+    if (!storeId || !storeName) {
+      alert("가게 정보가 없습니다.");
+      return;
     }
 
-    navigate(-1);
+    setIsAddingToCart(true);
+    try {
+      console.log("🔵 [MenuDetailPage] 장바구니 추가 시작:", {
+        storeId,
+        storeName,
+        foodId: menu.foodId,
+        foodName: menu.foodName,
+        quantity,
+      });
+
+      const result = await addItem(
+        storeId,
+        menu.foodId,
+        menu.foodName,
+        menu.price,
+        quantity,
+        menu.imageUrl
+      );
+
+      console.log(
+        "🔵 [MenuDetailPage] addItem 결과:",
+        JSON.stringify(result, null, 2)
+      );
+      console.log("🔵 [MenuDetailPage] result.success:", result.success);
+      console.log("🔵 [MenuDetailPage] result.conflict:", result.conflict);
+
+      if (result.success) {
+        console.log("✅ [MenuDetailPage] 장바구니 추가 성공");
+        // 성공 메시지를 모달로 표시
+        setConflictData({ success: true });
+        setShowConflictModal(true);
+      } else if (result.conflict) {
+        // 409 Conflict: 다른 가게 상품이 있을 때
+        console.log("⚠️ [MenuDetailPage] Conflict 발생, 모달 표시");
+        console.log(
+          "⚠️ [MenuDetailPage] Conflict 데이터:",
+          JSON.stringify(result.conflict, null, 2)
+        );
+
+        setConflictData(result.conflict);
+        setShowConflictModal(true);
+      } else {
+        console.log("❌ [MenuDetailPage] 알 수 없는 실패");
+        alert("장바구니 추가에 실패했습니다.");
+      }
+    } catch (error: any) {
+      console.error("🔴 [MenuDetailPage] handleAddToCart 에러:", error);
+      alert(error.message || "장바구니 추가 중 오류가 발생했습니다.");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleReplaceCart = async () => {
+    if (!storeId) return;
+
+    setShowConflictModal(false);
+    setIsAddingToCart(true);
+
+    try {
+      console.log("🔵 [MenuDetailPage] replaceCart=true로 재시도");
+      const retryResult = await addItem(
+        storeId,
+        menu.foodId,
+        menu.foodName,
+        menu.price,
+        quantity,
+        menu.imageUrl,
+        true // replaceCart
+      );
+
+      console.log(
+        "🔵 [MenuDetailPage] 재시도 결과:",
+        JSON.stringify(retryResult, null, 2)
+      );
+
+      if (retryResult.success) {
+        console.log("✅ [MenuDetailPage] 재시도 성공");
+        setConflictData({ success: true });
+        setShowConflictModal(true);
+      } else {
+        console.log("❌ [MenuDetailPage] 재시도 실패");
+        alert("장바구니 추가에 실패했습니다.");
+      }
+    } catch (error: any) {
+      console.error("🔴 [MenuDetailPage] handleReplaceCart 에러:", error);
+      alert(error.message || "장바구니 추가 중 오류가 발생했습니다.");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowConflictModal(false);
+    setConflictData(null);
+    if (conflictData?.success) {
+      navigate(-1); // 성공 시 이전 페이지로
+    }
   };
 
   const handleShare = () => {
@@ -130,29 +207,13 @@ const MenuDetailPage = () => {
           </MenuDescription>
         </MenuInfo>
 
-        {/* 가격 옵션 */}
+        {/* 가격 정보 */}
         <PriceSection>
           <SectionTitle>가격</SectionTitle>
-          <OptionsContainer>
-            {options.map((option) => (
-              <OptionRow key={option.id}>
-                <RadioButton
-                  type="radio"
-                  id={option.id}
-                  name="menuOption"
-                  checked={selectedOption === option.id}
-                  onChange={() => setSelectedOption(option.id)}
-                />
-                <RadioLabel htmlFor={option.id}>
-                  <OptionName>
-                    {option.name}
-                    {option.isRequired && <RequiredBadge>필수</RequiredBadge>}
-                  </OptionName>
-                  <OptionPrice>{option.price.toLocaleString()}원</OptionPrice>
-                </RadioLabel>
-              </OptionRow>
-            ))}
-          </OptionsContainer>
+          <PriceInfoBox>
+            <PriceLabel>단가</PriceLabel>
+            <PriceValue>{menu.price.toLocaleString()}원</PriceValue>
+          </PriceInfoBox>
         </PriceSection>
 
         {/* 수량 선택 */}
@@ -185,10 +246,53 @@ const MenuDetailPage = () => {
             {(cartTotal + totalPrice).toLocaleString()}
           </CartAmount>
         </CartSummary>
-        <AddToCartButton onClick={handleAddToCart}>
-          {totalPrice.toLocaleString()}원 담기
+        <AddToCartButton onClick={handleAddToCart} disabled={isAddingToCart}>
+          {isAddingToCart
+            ? "추가 중..."
+            : `${totalPrice.toLocaleString()}원 담기`}
         </AddToCartButton>
       </BottomBar>
+
+      {/* Conflict/Success Modal */}
+      {showConflictModal && (
+        <ModalOverlay onClick={handleCloseModal}>
+          <ModalContainer onClick={(e) => e.stopPropagation()}>
+            {conflictData?.success ? (
+              // 성공 모달
+              <>
+                <ModalIcon>✅</ModalIcon>
+                <ModalTitle>장바구니에 추가되었습니다</ModalTitle>
+                <ModalMessage>
+                  {menu.foodName} {quantity}개가 장바구니에 담겼습니다.
+                </ModalMessage>
+                <ModalButtons>
+                  <ModalButton onClick={handleCloseModal} $primary>
+                    확인
+                  </ModalButton>
+                </ModalButtons>
+              </>
+            ) : (
+              // Conflict 모달
+              <>
+                <ModalIcon>⚠️</ModalIcon>
+                <ModalTitle>다른 가게의 상품이 있습니다</ModalTitle>
+                <ModalMessage>
+                  {conflictData?.currentStoreName || "현재 장바구니"}의 상품이
+                  장바구니에 있습니다.
+                  <br />
+                  기존 장바구니를 비우고 새로운 상품을 추가하시겠습니까?
+                </ModalMessage>
+                <ModalButtons>
+                  <ModalButton onClick={handleCloseModal}>취소</ModalButton>
+                  <ModalButton onClick={handleReplaceCart} $primary>
+                    장바구니 비우고 추가
+                  </ModalButton>
+                </ModalButtons>
+              </>
+            )}
+          </ModalContainer>
+        </ModalOverlay>
+      )}
     </PageContainer>
   );
 };
@@ -323,56 +427,25 @@ const SectionTitle = styled.h2`
   margin: 0 0 16px 0;
 `;
 
-const OptionsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const OptionRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const RadioButton = styled.input`
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: #ff6b35;
-`;
-
-const RadioLabel = styled.label`
-  flex: 1;
+const PriceInfoBox = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
 `;
 
-const OptionName = styled.span`
+const PriceLabel = styled.span`
   font-size: 16px;
   font-weight: 600;
-  color: #000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: #666;
 `;
 
-const RequiredBadge = styled.span`
-  display: inline-block;
-  padding: 2px 8px;
-  background-color: #ff4444;
-  color: white;
-  font-size: 12px;
+const PriceValue = styled.span`
+  font-size: 20px;
   font-weight: 700;
-  border-radius: 4px;
-`;
-
-const OptionPrice = styled.span`
-  font-size: 16px;
-  font-weight: 700;
-  color: #000;
+  color: #ff6b35;
 `;
 
 const QuantitySection = styled.div`
@@ -462,24 +535,24 @@ const CartAmount = styled.div`
   color: #000;
 `;
 
-const AddToCartButton = styled.button`
+const AddToCartButton = styled.button<{ disabled?: boolean }>`
   padding: 14px 24px;
-  background-color: #ff6b35;
+  background-color: ${(props) => (props.disabled ? "#ccc" : "#ff6b35")};
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 700;
-  cursor: pointer;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   white-space: nowrap;
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #ff5722;
+    background-color: ${(props) => (props.disabled ? "#ccc" : "#ff5722")};
   }
 
   &:active {
-    transform: scale(0.98);
+    transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
   }
 `;
 
@@ -510,6 +583,99 @@ const ErrorButton = styled.button`
 
   &:hover {
     background-color: #ff5722;
+  }
+`;
+
+// Modal Styled Components
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
+const ModalContainer = styled.div`
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  max-width: 340px;
+  width: calc(100% - 40px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out;
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+`;
+
+const ModalIcon = styled.div`
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 16px;
+`;
+
+const ModalTitle = styled.h2`
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+  text-align: center;
+  margin: 0 0 12px 0;
+`;
+
+const ModalMessage = styled.p`
+  font-size: 15px;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 12px;
+`;
+
+const ModalButton = styled.button<{ $primary?: boolean }>`
+  flex: 1;
+  padding: 14px;
+  border: ${(props) => (props.$primary ? "none" : "1px solid #e0e0e0")};
+  border-radius: 8px;
+  background-color: ${(props) => (props.$primary ? "#ff6b35" : "#ffffff")};
+  color: ${(props) => (props.$primary ? "#ffffff" : "#666")};
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: ${(props) => (props.$primary ? "#ff5722" : "#f5f5f5")};
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 `;
 

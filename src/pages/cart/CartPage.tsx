@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -12,85 +12,84 @@ import {
 import { useCartStore } from "../../store/cartStore";
 import BottomNav from "../../components/layout/BottomNav";
 
-type MealType = "BREAKFAST" | "LUNCH" | "DINNER";
+type MealType = "BREAKFAST" | "LUNCH" | "DINNER" | "OTHER";
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { items, removeItem, updateQuantity, getTotalPrice } = useCartStore();
+  const {
+    items,
+    budgetInfo,
+    fetchCart,
+    updateQuantity,
+    removeItem,
+    checkout,
+    getTotalPrice,
+  } = useCartStore();
 
   const [couponCode, setCouponCode] = useState("");
   const [selectedMealType, setSelectedMealType] =
     useState<MealType>("BREAKFAST");
   const [showMealTypeDropdown, setShowMealTypeDropdown] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  // 예산 데이터 (실제로는 API에서 가져와야 함)
-  const dailyBudget = 80000;
-  const breakfastBudget = 15000;
+  // 컴포넌트 마운트 시 장바구니 조회
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+
+  // 백엔드에서 제공하는 예산 정보 사용
   const totalCartPrice = getTotalPrice();
-  const remainingDailyAfterPurchase = dailyBudget - totalCartPrice;
-  const remainingMealAfterPurchase = breakfastBudget - totalCartPrice;
 
   const mealTypeOptions = [
     { value: "BREAKFAST" as MealType, label: "아침" },
     { value: "LUNCH" as MealType, label: "점심" },
     { value: "DINNER" as MealType, label: "저녁" },
+    { value: "OTHER" as MealType, label: "기타" },
   ];
 
-  const handleQuantityChange = (
-    foodId: number,
+  const handleQuantityChange = async (
+    cartItemId: number,
     currentQuantity: number,
     change: number
   ) => {
     const newQuantity = currentQuantity + change;
     if (newQuantity >= 1 && newQuantity <= 99) {
-      updateQuantity(foodId, newQuantity);
+      await updateQuantity(cartItemId, newQuantity);
     } else if (newQuantity < 1) {
-      removeItem(foodId);
+      await removeItem(cartItemId);
     }
   };
 
-  const handleAddExpenditure = () => {
+  const handleCheckout = async () => {
     if (items.length === 0) {
       alert("장바구니가 비어있습니다.");
       return;
     }
 
-    // 현재 날짜와 시간
-    const now = new Date();
-    const dateStr = now
-      .toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      })
-      .replace(/\. /g, "-")
-      .replace(".", "");
-    const timeStr = now.toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+    setIsCheckingOut(true);
+    try {
+      const response = await checkout(selectedMealType);
 
-    // 상점명 (첫 번째 아이템의 상점명 사용, 또는 모두 같은 상점이라 가정)
-    const storeName = items[0]?.storeName || "상점명";
-
-    // 지출 등록 완료 페이지로 바로 이동
-    navigate("/spending/success", {
-      state: {
-        expenditureData: {
-          storeName: storeName,
-          items: items.map((item) => ({
-            foodName: item.foodName,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-          totalAmount: totalCartPrice,
-          mealType: selectedMealType,
-          expendedDate: dateStr,
-          expendedTime: timeStr,
+      // 체크아웃 성공 → 지출 등록 완료 페이지로 이동
+      navigate("/spending/success", {
+        state: {
+          expenditureData: {
+            expenditureId: response.expenditureId,
+            storeName: response.storeName,
+            items: response.items,
+            totalAmount: response.finalAmount,
+            mealType: response.mealType,
+            expendedDate: response.expendedDate,
+            expendedTime: response.expendedTime,
+            budgetSummary: response.budgetSummary,
+          },
         },
-      },
-    });
+      });
+    } catch (error: any) {
+      alert(error.message || "체크아웃 중 오류가 발생했습니다.");
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   const getMealTypeLabel = () => {
@@ -138,23 +137,26 @@ const CartPage = () => {
         {/* 장바구니 아이템 리스트 */}
         <CartItemList>
           {items.map((item) => (
-            <CartItem key={item.foodId}>
+            <CartItem key={item.cartItemId}>
               <ItemImage
                 src={item.imageUrl || "/placeholder-menu.jpg"}
                 alt={item.foodName}
               />
               <ItemInfo>
                 <ItemName>{item.foodName}</ItemName>
-                <ItemPrice>{item.price.toLocaleString()}원 / 개</ItemPrice>
+                <ItemPrice>
+                  {(item.price || item.averagePrice || 0).toLocaleString()}원 /
+                  개
+                </ItemPrice>
                 <ItemTotalPrice>
-                  {(item.price * item.quantity).toLocaleString()}원
+                  {(item.totalPrice || item.subtotal || 0).toLocaleString()}원
                 </ItemTotalPrice>
               </ItemInfo>
               <ItemControls>
                 <QuantityControl>
                   <QuantityButton
                     onClick={() =>
-                      handleQuantityChange(item.foodId, item.quantity, -1)
+                      handleQuantityChange(item.cartItemId, item.quantity, -1)
                     }
                   >
                     <FiMinus size={16} />
@@ -162,13 +164,13 @@ const CartPage = () => {
                   <QuantityDisplay>{item.quantity}</QuantityDisplay>
                   <QuantityButton
                     onClick={() =>
-                      handleQuantityChange(item.foodId, item.quantity, 1)
+                      handleQuantityChange(item.cartItemId, item.quantity, 1)
                     }
                   >
                     <FiPlus size={16} />
                   </QuantityButton>
                 </QuantityControl>
-                <DeleteButton onClick={() => removeItem(item.foodId)}>
+                <DeleteButton onClick={() => removeItem(item.cartItemId)}>
                   <FiTrash2 size={20} color="#ff4444" />
                 </DeleteButton>
               </ItemControls>
@@ -215,41 +217,59 @@ const CartPage = () => {
 
         {/* 가격 요약 */}
         <PriceSummary>
-          <SummaryRow>
-            <SummaryLabel>남은 일일 식비 예산</SummaryLabel>
-            <SummaryValue>{dailyBudget.toLocaleString()}원</SummaryValue>
-          </SummaryRow>
-          <SummaryRow>
-            <SummaryLabel>남은 {getMealTypeLabel()} 식사 예산</SummaryLabel>
-            <SummaryValue>{breakfastBudget.toLocaleString()}원</SummaryValue>
-          </SummaryRow>
-          <Divider />
+          {budgetInfo && (
+            <>
+              <SummaryRow>
+                <SummaryLabel>남은 일일 식비 예산</SummaryLabel>
+                <SummaryValue>
+                  {budgetInfo.dailyBudgetBefore.toLocaleString()}원
+                </SummaryValue>
+              </SummaryRow>
+              <SummaryRow>
+                <SummaryLabel>남은 {getMealTypeLabel()} 식사 예산</SummaryLabel>
+                <SummaryValue>
+                  {budgetInfo.mealBudget.toLocaleString()}원
+                </SummaryValue>
+              </SummaryRow>
+              <Divider />
+            </>
+          )}
           <SummaryRow>
             <SummaryLabel $bold>총 장바구니 금액</SummaryLabel>
             <SummaryValue $bold>
               {totalCartPrice.toLocaleString()}원
             </SummaryValue>
           </SummaryRow>
-          <Divider />
-          <SummaryRow>
-            <SummaryLabel $highlight>구매 후 남은 일일 예산</SummaryLabel>
-            <SummaryValue $highlight>
-              {remainingDailyAfterPurchase.toLocaleString()}원
-            </SummaryValue>
-          </SummaryRow>
-          <SummaryRow>
-            <SummaryLabel $negative>
-              구매 후 남은 {getMealTypeLabel()} 식사 예산
-            </SummaryLabel>
-            <SummaryValue $negative>
-              {remainingMealAfterPurchase.toLocaleString()}원
-            </SummaryValue>
-          </SummaryRow>
+          {budgetInfo && (
+            <>
+              <Divider />
+              <SummaryRow>
+                <SummaryLabel $highlight>구매 후 남은 일일 예산</SummaryLabel>
+                <SummaryValue $highlight>
+                  {budgetInfo.dailyBudgetAfter.toLocaleString()}원
+                </SummaryValue>
+              </SummaryRow>
+              <SummaryRow>
+                <SummaryLabel $negative={budgetInfo.isOverBudget}>
+                  구매 후 남은 {getMealTypeLabel()} 식사 예산
+                </SummaryLabel>
+                <SummaryValue $negative={budgetInfo.isOverBudget}>
+                  {budgetInfo.monthlyBudgetAfter.toLocaleString()}원
+                </SummaryValue>
+              </SummaryRow>
+              {budgetInfo.isOverBudget && (
+                <WarningMessage>⚠️ 예산을 초과했습니다!</WarningMessage>
+              )}
+            </>
+          )}
         </PriceSummary>
 
         {/* 하단 버튼 */}
-        <AddExpenditureButton onClick={handleAddExpenditure}>
-          식비 지출 내역 추가
+        <AddExpenditureButton
+          onClick={handleCheckout}
+          disabled={isCheckingOut || items.length === 0}
+        >
+          {isCheckingOut ? "처리 중..." : "식비 지출 내역 추가"}
         </AddExpenditureButton>
       </Content>
 
@@ -548,24 +568,35 @@ const Divider = styled.div`
   margin: 12px 0;
 `;
 
-const AddExpenditureButton = styled.button`
+const WarningMessage = styled.div`
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fff3e0;
+  border-radius: 8px;
+  color: #ff6b35;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+`;
+
+const AddExpenditureButton = styled.button<{ disabled?: boolean }>`
   width: 100%;
   padding: 16px;
-  background-color: #ff6b35;
+  background-color: ${(props) => (props.disabled ? "#ccc" : "#ff6b35")};
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 700;
-  cursor: pointer;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #ff5722;
+    background-color: ${(props) => (props.disabled ? "#ccc" : "#ff5722")};
   }
 
   &:active {
-    transform: scale(0.98);
+    transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
   }
 `;
 

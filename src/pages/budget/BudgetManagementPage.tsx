@@ -267,8 +267,6 @@ const BudgetManagementPage = () => {
       } catch (apiErr: any) {
         // PUT 실패 시 (404 등) POST로 재시도
         if (apiErr.response?.status === 404 && hasExistingBudget) {
-          console.log("PUT 실패, POST로 재시도...");
-
           const endDate = applyToFuture
             ? `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(
                 new Date(currentYear, currentMonth, 0).getDate()
@@ -297,7 +295,6 @@ const BudgetManagementPage = () => {
         }
       }
     } catch (err: any) {
-      console.error("일별 예산 저장 실패:", err);
       const errorMessage =
         err.response?.data?.error?.message || "예산 저장에 실패했습니다.";
       alert(errorMessage);
