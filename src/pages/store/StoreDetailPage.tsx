@@ -99,54 +99,10 @@ const StoreDetailPage = () => {
         );
         setAllMenus(loadedMenus);
       } else {
-        // 메뉴가 없으면 더미 데이터 사용
-        console.log("⚠️ 메뉴 로드 실패 - 더미 데이터 사용");
-        const dummyMenus: Menu[] = [
-          {
-            foodId: 1,
-            foodName: "치즈 김밥",
-            price: 5000,
-            imageUrl: "",
-            description: "고소한 치즈가 듬뿍 들어간 맛있는 김밥입니다.",
-            budgetDifference: 500,
-            isRecommended: true,
-          },
-          {
-            foodId: 2,
-            foodName: "참치 김밥",
-            price: 5500,
-            imageUrl: "",
-            description: "신선한 참치와 야채가 어우러진 풍미 깊은 김밥입니다.",
-            budgetDifference: 1000,
-            isRecommended: true,
-          },
-          {
-            foodId: 3,
-            foodName: "원조 김밥",
-            price: 4500,
-            imageUrl: "",
-            description: "기본에 충실한 클래식 김밥 맛.",
-            budgetDifference: -500,
-          },
-          {
-            foodId: 4,
-            foodName: "새우 튀김 김밥",
-            price: 8000,
-            imageUrl: "",
-            description: "바삭한 새우 튀김이 들어간 프리미엄 조합.",
-            budgetDifference: 2000,
-          },
-          {
-            foodId: 5,
-            foodName: "라볶이",
-            price: 7000,
-            imageUrl: "",
-            description: "매콤달콤한 라볶이 소스에 쫄깃한 떡과 라면이 조화.",
-            budgetDifference: 1000,
-          },
-        ];
-        setRecommendedMenus(dummyMenus.filter((m) => m.isRecommended));
-        setAllMenus(dummyMenus);
+        // 메뉴가 없으면 빈 배열로 설정
+        console.log("⚠️ 메뉴 정보 없음");
+        setRecommendedMenus([]);
+        setAllMenus([]);
       }
     } catch (error: any) {
       console.error("❌ Failed to load store data:", error);
@@ -156,54 +112,10 @@ const StoreDetailPage = () => {
         data: error.response?.data,
       });
 
-      // 에러 발생 시에도 더미 데이터 사용
-      console.log("⚠️ 에러 발생으로 더미 데이터 사용");
-      const dummyMenus: Menu[] = [
-        {
-          foodId: 1,
-          foodName: "치즈 김밥",
-          price: 5000,
-          imageUrl: "",
-          description: "고소한 치즈가 듬뿍 들어간 맛있는 김밥입니다.",
-          budgetDifference: 500,
-          isRecommended: true,
-        },
-        {
-          foodId: 2,
-          foodName: "참치 김밥",
-          price: 5500,
-          imageUrl: "",
-          description: "신선한 참치와 야채가 어우러진 풍미 깊은 김밥입니다.",
-          budgetDifference: 1000,
-          isRecommended: true,
-        },
-        {
-          foodId: 3,
-          foodName: "원조 김밥",
-          price: 4500,
-          imageUrl: "",
-          description: "기본에 충실한 클래식 김밥 맛.",
-          budgetDifference: -500,
-        },
-        {
-          foodId: 4,
-          foodName: "새우 튀김 김밥",
-          price: 8000,
-          imageUrl: "",
-          description: "바삭한 새우 튀김이 들어간 프리미엄 조합.",
-          budgetDifference: 2000,
-        },
-        {
-          foodId: 5,
-          foodName: "라볶이",
-          price: 7000,
-          imageUrl: "",
-          description: "매콤달콤한 라볶이 소스에 쫄깃한 떡과 라면이 조화.",
-          budgetDifference: 1000,
-        },
-      ];
-      setRecommendedMenus(dummyMenus.filter((m) => m.isRecommended));
-      setAllMenus(dummyMenus);
+      // 에러 발생 시에도 빈 배열로 설정
+      console.log("⚠️ 에러 발생 - 메뉴 정보 없음");
+      setRecommendedMenus([]);
+      setAllMenus([]);
     } finally {
       setLoading(false);
     }
@@ -347,7 +259,15 @@ const StoreDetailPage = () => {
           <SectionTitle>전체 메뉴</SectionTitle>
           <AllMenuList>
             {allMenus.length === 0 ? (
-              <EmptyState>등록된 메뉴가 없습니다.</EmptyState>
+              <NoMenuContainer>
+                <NoMenuIcon>🍽️</NoMenuIcon>
+                <NoMenuTitle>등록된 메뉴가 없습니다</NoMenuTitle>
+                <NoMenuDescription>
+                  현재 이 가게의 메뉴 정보를 준비중입니다.
+                  <br />
+                  빠른 시일 내에 업데이트하겠습니다.
+                </NoMenuDescription>
+              </NoMenuContainer>
             ) : (
               allMenus.map((menu) => (
                 <MenuListItem
@@ -829,11 +749,33 @@ const AllMenuList = styled.div`
   padding: 0 16px;
 `;
 
-const EmptyState = styled.div`
-  padding: 40px 20px;
+const NoMenuContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
   text-align: center;
-  color: #999;
+`;
+
+const NoMenuIcon = styled.div`
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+`;
+
+const NoMenuTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 12px 0;
+`;
+
+const NoMenuDescription = styled.p`
   font-size: 14px;
+  color: #999;
+  line-height: 1.6;
+  margin: 0;
 `;
 
 const MenuListItem = styled.div`
