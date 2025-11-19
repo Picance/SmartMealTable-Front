@@ -4,6 +4,10 @@ import styled from "styled-components";
 import { FiHeart, FiInfo } from "react-icons/fi";
 import { IoHeartSharp } from "react-icons/io5";
 import { storeService } from "../../services/store.service";
+import {
+  budgetService,
+  type BudgetStatus,
+} from "../../services/budget.service";
 import { useCartStore } from "../../store/cartStore";
 import type { StoreDetail, Menu } from "../../types/api";
 import BottomNav from "../../components/layout/BottomNav";
@@ -18,6 +22,7 @@ const StoreDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null);
 
   useEffect(() => {
     if (storeId) {
@@ -29,11 +34,76 @@ const StoreDetailPage = () => {
   useEffect(() => {
     console.log("� [StoreDetailPage] 장바구니 상태 동기화");
     fetchCart();
+    loadBudgetStatus(); // 예산 정보도 함께 로드
   }, []); // fetchCart는 stable하므로 deps에서 제외
 
   useEffect(() => {
     console.log("[StoreDetailPage] Cart items changed:", items.length);
   }, [items]);
+
+  const loadBudgetStatus = async () => {
+    try {
+      // 오늘 날짜 가져오기
+      const today = new Date();
+      const dateString = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+      const response = await budgetService.getDailyBudget(dateString);
+      if (response.result === "SUCCESS" && response.data) {
+        console.log("[StoreDetailPage] Daily budget loaded:", response.data);
+
+        // DailyBudgetResponse를 BudgetStatus 형식으로 변환
+        const dailyData = response.data;
+        const budgetStatusData: BudgetStatus = {
+          monthlyBudget: 0,
+          monthlySpent: 0,
+          monthlyRemaining: 0,
+          dailyBudget: dailyData.totalBudget,
+          dailySpent: dailyData.totalSpent,
+          dailyRemaining: dailyData.remainingBudget,
+          mealBudgets: {
+            BREAKFAST: {
+              budget: 0,
+              spent: 0,
+              remaining: 0,
+            },
+            LUNCH: {
+              budget: 0,
+              spent: 0,
+              remaining: 0,
+            },
+            DINNER: {
+              budget: 0,
+              spent: 0,
+              remaining: 0,
+            },
+          },
+        };
+
+        // mealBudgets 데이터 매핑
+        dailyData.mealBudgets.forEach((meal) => {
+          if (
+            meal.mealType === "BREAKFAST" ||
+            meal.mealType === "LUNCH" ||
+            meal.mealType === "DINNER"
+          ) {
+            budgetStatusData.mealBudgets[meal.mealType] = {
+              budget: meal.budget,
+              spent: meal.spent,
+              remaining: meal.remaining,
+            };
+          }
+        });
+
+        setBudgetStatus(budgetStatusData);
+      }
+    } catch (error) {
+      console.error("[StoreDetailPage] Failed to load budget status:", error);
+      // 404 에러는 예산이 설정되지 않은 것이므로 조용히 무시
+    }
+  };
+
   const loadStoreData = async (id: number) => {
     setLoading(true);
 
@@ -322,16 +392,29 @@ const StoreDetailPage = () => {
                 ₩{getTotalAmount().toLocaleString()}
               </CartSummaryValue>
             </CartSummaryRow>
-            <CartSummaryRow>
-              <CartSummaryLabel $strikethrough>
-                남은 예상 식비:
-              </CartSummaryLabel>
-              <CartSummaryValue $strikethrough>₩15,000</CartSummaryValue>
-            </CartSummaryRow>
-            <CartSummaryRow>
-              <CartSummaryLabel $warning>정산 예산 초과:</CartSummaryLabel>
-              <CartSummaryValue $warning>₩5,000</CartSummaryValue>
-            </CartSummaryRow>
+            {budgetStatus && (
+              <>
+                <CartSummaryRow>
+                  <CartSummaryLabel $strikethrough>
+                    남은 일일 식비:
+                  </CartSummaryLabel>
+                  <CartSummaryValue $strikethrough>
+                    ₩{budgetStatus.dailyRemaining.toLocaleString()}
+                  </CartSummaryValue>
+                </CartSummaryRow>
+                {getTotalAmount() > budgetStatus.dailyRemaining && (
+                  <CartSummaryRow>
+                    <CartSummaryLabel $warning>예산 초과:</CartSummaryLabel>
+                    <CartSummaryValue $warning>
+                      ₩
+                      {(
+                        getTotalAmount() - budgetStatus.dailyRemaining
+                      ).toLocaleString()}
+                    </CartSummaryValue>
+                  </CartSummaryRow>
+                )}
+              </>
+            )}
             <CartDivider />
             <CartSummaryRow $bold>
               <CartSummaryLabel $bold>현재 장바구니 합계:</CartSummaryLabel>

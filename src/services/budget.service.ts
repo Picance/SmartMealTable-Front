@@ -128,11 +128,11 @@ export const budgetService = {
     return response.data;
   },
 
-  // 예산 현황 조회
-  async getBudgetStatus(): Promise<ApiResponse<BudgetStatus>> {
-    const response = await api.get("/api/v1/budgets/status");
-    return response.data;
-  },
+  // 예산 현황 조회 (API 엔드포인트 없음 - 대신 getDailyBudget 사용)
+  // async getBudgetStatus(): Promise<ApiResponse<BudgetStatus>> {
+  //   const response = await api.get("/api/v1/budgets/status");
+  //   return response.data;
+  // },
 
   // 예산 수정 (기존 메서드 - 호환성 유지)
   async updateBudget(data: {
