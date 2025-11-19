@@ -15,6 +15,7 @@ import {
   AutocompleteItem,
 } from "../../services/recommendation.service";
 import { storeService } from "../../services/store.service";
+import { getHomeDashboard } from "../../services/home.service";
 import { useAuthStore } from "../../store/authStore";
 import BottomNav from "../../components/layout/BottomNav";
 
@@ -66,14 +67,43 @@ const RecommendationPage = () => {
       console.log("📍 홈에서 전달받은 위치:", location.state.userLocation);
       setUserLocation(location.state.userLocation);
     } else {
-      console.warn("⚠️ 위치 정보 없음, 기본 위치 사용");
-      // 기본 위치 (서울시청)
+      console.warn("⚠️ 위치 정보 없음, API에서 사용자 주소 가져오기");
+      // API에서 사용자의 현재 주소 가져오기
+      fetchUserLocation();
+    }
+  }, [location.state, isAuthenticated, accessToken, navigate]);
+
+  const fetchUserLocation = async () => {
+    try {
+      const dashboardResponse = await getHomeDashboard();
+
+      if (
+        dashboardResponse.result === "SUCCESS" &&
+        dashboardResponse.data?.location
+      ) {
+        const { latitude, longitude } = dashboardResponse.data.location;
+        console.log("✅ API에서 사용자 위치 가져오기 성공:", {
+          latitude,
+          longitude,
+        });
+        setUserLocation({ latitude, longitude });
+      } else {
+        console.warn("⚠️ API 응답에 위치 정보 없음, 기본 위치 사용");
+        // 기본 위치 (서울시청)
+        setUserLocation({
+          latitude: 37.5665,
+          longitude: 126.978,
+        });
+      }
+    } catch (err) {
+      console.error("❌ 사용자 위치 가져오기 실패:", err);
+      // 실패 시 기본 위치 사용
       setUserLocation({
         latitude: 37.5665,
         longitude: 126.978,
       });
     }
-  }, [location.state, isAuthenticated, accessToken, navigate]);
+  };
 
   useEffect(() => {
     if (userLocation) {
