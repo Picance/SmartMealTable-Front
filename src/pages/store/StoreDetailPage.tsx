@@ -28,7 +28,7 @@ const StoreDetailPage = () => {
   const loadStoreData = async (id: number) => {
     setLoading(true);
     console.log("🚀 loadStoreData 시작, storeId:", id);
-    
+
     try {
       let menusLoaded = false;
       let loadedMenus: Menu[] = [];
@@ -44,7 +44,10 @@ const StoreDetailPage = () => {
 
         // 가게 상세에서 메뉴 가져오기
         if (storeResponse.data.menus && storeResponse.data.menus.length > 0) {
-          console.log("✅ 가게 상세 응답에 메뉴 포함:", storeResponse.data.menus);
+          console.log(
+            "✅ 가게 상세 응답에 메뉴 포함:",
+            storeResponse.data.menus
+          );
           loadedMenus = storeResponse.data.menus;
           menusLoaded = true;
         } else if (
@@ -437,10 +440,8 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
 
   const handleDirections = () => {
     // 네이버 지도 앱으로 길찾기
-    const lat =
-      store.location?.latitude || store.latitude || 37.5665;
-    const lng =
-      store.location?.longitude || store.longitude || 126.978;
+    const lat = store.location?.latitude || store.latitude || 37.5665;
+    const lng = store.location?.longitude || store.longitude || 126.978;
     const naverMapUrl = `nmap://place?lat=${lat}&lng=${lng}&name=${encodeURIComponent(
       store.storeName
     )}&appname=com.smartmealtable`;
