@@ -39,27 +39,43 @@ const StoreDetailPage = () => {
       console.log("📦 가게 상세 응답 데이터:", storeResponse.data);
 
       if (storeResponse.result === "SUCCESS" && storeResponse.data) {
-        setStore(storeResponse.data);
-        setIsFavorite(storeResponse.data.isFavorite || false);
+        // API 응답 필드명 정규화
+        const normalizedData = {
+          ...storeResponse.data,
+          storeName: storeResponse.data.name || storeResponse.data.storeName,
+          category:
+            storeResponse.data.categoryName ||
+            storeResponse.data.category ||
+            "기타",
+        };
+
+        console.log("🏪 가게 정보:", {
+          storeName: normalizedData.storeName,
+          category: normalizedData.category,
+          categoryId: normalizedData.categoryId,
+          address: normalizedData.address,
+          averagePrice: normalizedData.averagePrice,
+          isOpen: normalizedData.isOpen,
+        });
+
+        setStore(normalizedData);
+        setIsFavorite(normalizedData.isFavorite || false);
 
         // 가게 상세에서 메뉴 가져오기
-        if (storeResponse.data.menus && storeResponse.data.menus.length > 0) {
-          console.log(
-            "✅ 가게 상세 응답에 메뉴 포함:",
-            storeResponse.data.menus
-          );
-          loadedMenus = storeResponse.data.menus;
+        if (normalizedData.menus && normalizedData.menus.length > 0) {
+          console.log("✅ 가게 상세 응답에 메뉴 포함:", normalizedData.menus);
+          loadedMenus = normalizedData.menus;
           menusLoaded = true;
         } else if (
-          storeResponse.data.recommendedMenus &&
-          storeResponse.data.recommendedMenus.length > 0
+          normalizedData.recommendedMenus &&
+          normalizedData.recommendedMenus.length > 0
         ) {
           console.log(
             "✅ 가게 상세 응답에 추천 메뉴 포함:",
-            storeResponse.data.recommendedMenus
+            normalizedData.recommendedMenus
           );
           // API 명세의 recommendedMenus 필드 사용
-          loadedMenus = storeResponse.data.recommendedMenus;
+          loadedMenus = normalizedData.recommendedMenus;
           menusLoaded = true;
         } else {
           console.log("⚠️ 가게 상세 응답에 메뉴 없음, 별도 API 호출 시도");
@@ -144,7 +160,7 @@ const StoreDetailPage = () => {
     navigate(`/menu/${menu.foodId}`, {
       state: {
         menu: menu,
-        storeName: store.storeName,
+        storeName: store.storeName || store.name,
         storeId: store.storeId,
       },
     });
@@ -178,54 +194,62 @@ const StoreDetailPage = () => {
 
   return (
     <PageContainer>
-      {/* 상단 이미지 헤더 */}
+      {/* 상단 이미지 헤더 - 와이어프레임 스타일 */}
       <StoreImageHeader>
         <StoreImage
           src={store.imageUrl || "/placeholder-store.jpg"}
-          alt={store.storeName}
+          alt={store.storeName || store.name || "가게"}
         />
-        <FavoriteButton onClick={handleFavoriteToggle} $isFavorite={isFavorite}>
-          {isFavorite ? <IoHeartSharp size={24} /> : <FiHeart size={24} />}
-        </FavoriteButton>
+        <StoreHeaderOverlay>
+          <StoreHeaderContent>
+            <StoreName>
+              {store.storeName || store.name || "가게명 없음"}
+            </StoreName>
+            <StoreMetaRow>
+              <MetaText>
+                {store.category || store.categoryName || "기타"}
+              </MetaText>
+              <MetaSeparator>•</MetaSeparator>
+              <MetaText>
+                {store.distance
+                  ? `${(store.distance / 1000).toFixed(1)} km`
+                  : "0.8 km"}
+              </MetaText>
+            </StoreMetaRow>
+            <StoreBadgeRow>
+              <PriceBadge>
+                평균 {store.averagePrice.toLocaleString()}원
+              </PriceBadge>
+              <StatusBadge $isOpen={store.isOpen}>
+                {store.isOpen ? "영업 중" : "영업 종료"}
+              </StatusBadge>
+            </StoreBadgeRow>
+            <PopularityBadge>
+              <BadgeIcon>🔥</BadgeIcon>
+              <BadgeText>
+                배달 인기 맛집 ({store.reviewCount || 1250} 리뷰)
+              </BadgeText>
+            </PopularityBadge>
+            <InfoButton onClick={() => setShowInfoModal(true)}>
+              <FiInfo size={18} />
+              <InfoButtonText>정보</InfoButtonText>
+            </InfoButton>
+          </StoreHeaderContent>
+          <FavoriteButton
+            onClick={handleFavoriteToggle}
+            $isFavorite={isFavorite}
+          >
+            {isFavorite ? <IoHeartSharp size={24} /> : <FiHeart size={24} />}
+          </FavoriteButton>
+        </StoreHeaderOverlay>
       </StoreImageHeader>
 
       {/* 가게 정보 */}
       <Content>
-        <StoreInfoSection>
-          <StoreName>{store.storeName}</StoreName>
-          <StoreMetaRow>
-            <MetaText>{store.category}</MetaText>
-            <MetaSeparator>•</MetaSeparator>
-            <MetaText>
-              {store.distance
-                ? `${(store.distance / 1000).toFixed(1)} km`
-                : "0.8 km"}
-            </MetaText>
-          </StoreMetaRow>
-          <StoreBadgeRow>
-            <PriceBadge>
-              평균 {store.averagePrice.toLocaleString()}원
-            </PriceBadge>
-            <StatusBadge $isOpen={store.isOpen}>
-              {store.isOpen ? "영업 중" : "영업 종료"}
-            </StatusBadge>
-          </StoreBadgeRow>
-          <PopularityBadge>
-            <BadgeIcon>🔥</BadgeIcon>
-            <BadgeText>
-              배달 인기 맛집 ({store.reviewCount || 1250} 리뷰)
-            </BadgeText>
-          </PopularityBadge>
-          <InfoButton onClick={() => setShowInfoModal(true)}>
-            <FiInfo size={20} />
-            <span>정보</span>
-          </InfoButton>
-        </StoreInfoSection>
-
         {/* 추천 메뉴 */}
-        {recommendedMenus.length > 0 && (
-          <MenuSection>
-            <SectionTitle>추천 메뉴</SectionTitle>
+        <MenuSection>
+          <SectionTitle>추천 메뉴</SectionTitle>
+          {recommendedMenus.length > 0 ? (
             <RecommendedMenuGrid>
               {recommendedMenus.map((menu) => (
                 <RecommendedMenuCard
@@ -236,23 +260,36 @@ const StoreDetailPage = () => {
                     src={menu.imageUrl || "/placeholder-menu.jpg"}
                     alt={menu.foodName}
                   />
-                  <MenuName>{menu.foodName}</MenuName>
-                  <MenuPriceRow>
-                    <MenuPrice>₩{menu.price.toLocaleString()}</MenuPrice>
-                    {menu.budgetDifference && (
-                      <BudgetBadge $isPositive={menu.budgetDifference > 0}>
-                        +₩{Math.abs(menu.budgetDifference).toLocaleString()}
-                      </BudgetBadge>
-                    )}
-                  </MenuPriceRow>
-                  {menu.description && (
-                    <MenuDescription>{menu.description}</MenuDescription>
-                  )}
+                  <RecommendedMenuInfo>
+                    <MenuName>{menu.foodName}</MenuName>
+                    <MenuPriceRow>
+                      <MenuPrice>₩{menu.price.toLocaleString()}</MenuPrice>
+                      {menu.budgetDifference && (
+                        <BudgetBadge $isPositive={menu.budgetDifference > 0}>
+                          +₩{Math.abs(menu.budgetDifference).toLocaleString()}
+                        </BudgetBadge>
+                      )}
+                    </MenuPriceRow>
+                    <MenuDescription>
+                      {menu.description ||
+                        "고소한 치즈가 듬뿍 들어간 인기 메뉴입니다."}
+                    </MenuDescription>
+                  </RecommendedMenuInfo>
                 </RecommendedMenuCard>
               ))}
             </RecommendedMenuGrid>
-          </MenuSection>
-        )}
+          ) : (
+            <NoRecommendedContainer>
+              <NoRecommendedIcon>🔍</NoRecommendedIcon>
+              <NoRecommendedText>추천 메뉴가 없습니다</NoRecommendedText>
+              <NoRecommendedDescription>
+                현재 예산에 맞는 추천 메뉴가 없습니다.
+                <br />
+                전체 메뉴를 확인해보세요.
+              </NoRecommendedDescription>
+            </NoRecommendedContainer>
+          )}
+        </MenuSection>
 
         {/* 전체 메뉴 */}
         <MenuSection>
@@ -307,23 +344,31 @@ const StoreDetailPage = () => {
       {/* 장바구니 하단 바 */}
       {items.length > 0 && (
         <CartBottomBar>
-          <CartInfo>
-            <CartLabel>현재 장바구니 내역:</CartLabel>
-            <CartAmounts>
-              <CartOriginal>냉은 원상 식비:</CartOriginal>
-              <CartOriginalAmount>
-                ₩{(getTotalAmount() + 15000).toLocaleString()}
-              </CartOriginalAmount>
-            </CartAmounts>
-            <CartAmounts>
-              <CartSavings>정산 예상 금액:</CartSavings>
-              <CartSavingsAmount>
+          <CartSummary>
+            <CartSummaryRow>
+              <CartSummaryLabel>현재 장바구니 합계:</CartSummaryLabel>
+              <CartSummaryValue>
                 ₩{getTotalAmount().toLocaleString()}
-              </CartSavingsAmount>
-            </CartAmounts>
-          </CartInfo>
+              </CartSummaryValue>
+            </CartSummaryRow>
+            <CartSummaryRow>
+              <CartSummaryLabel strikethrough>남은 예상 식비:</CartSummaryLabel>
+              <CartSummaryValue strikethrough>₩15,000</CartSummaryValue>
+            </CartSummaryRow>
+            <CartSummaryRow>
+              <CartSummaryLabel warning>정산 예산 초과:</CartSummaryLabel>
+              <CartSummaryValue warning>₩5,000</CartSummaryValue>
+            </CartSummaryRow>
+            <CartDivider />
+            <CartSummaryRow bold>
+              <CartSummaryLabel bold>현재 장바구니 합계:</CartSummaryLabel>
+              <CartSummaryValue bold>
+                ₩{getTotalAmount().toLocaleString()}
+              </CartSummaryValue>
+            </CartSummaryRow>
+          </CartSummary>
           <CartButton onClick={() => navigate("/cart")}>
-            장바구니 담기
+            장바구니 보기
           </CartButton>
         </CartBottomBar>
       )}
@@ -362,8 +407,9 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
     // 네이버 지도 앱으로 길찾기
     const lat = store.location?.latitude || store.latitude || 37.5665;
     const lng = store.location?.longitude || store.longitude || 126.978;
+    const storeName = store.storeName || store.name || "매장";
     const naverMapUrl = `nmap://place?lat=${lat}&lng=${lng}&name=${encodeURIComponent(
-      store.storeName
+      storeName
     )}&appname=com.smartmealtable`;
     window.location.href = naverMapUrl;
   };
@@ -390,7 +436,7 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
           {/* 매장명 및 주소 */}
           <StoreInfoCard>
             <StoreTitleRow>
-              <StoreTitle>{store.storeName}</StoreTitle>
+              <StoreTitle>{store.storeName || store.name}</StoreTitle>
             </StoreTitleRow>
             <AddressRow>
               <AddressText>{store.address}</AddressText>
@@ -536,7 +582,7 @@ const ErrorButton = styled.button`
 const StoreImageHeader = styled.div`
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 280px;
   background-color: #f5f5f5;
 `;
 
@@ -546,10 +592,33 @@ const StoreImage = styled.img`
   object-fit: cover;
 `;
 
-const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
+const StoreHeaderOverlay = styled.div`
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+`;
+
+const StoreHeaderContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  padding-bottom: 8px;
+`;
+
+const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -562,6 +631,7 @@ const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
   color: ${(props) => (props.$isFavorite ? "#ff6b35" : "#666")};
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
+  flex-shrink: 0;
 
   &:hover {
     transform: scale(1.1);
@@ -577,16 +647,12 @@ const Content = styled.div`
   padding: 0 0 120px 0;
 `;
 
-const StoreInfoSection = styled.div`
-  padding: 20px 16px;
-  border-bottom: 8px solid #f8f9fa;
-`;
-
 const StoreName = styled.h1`
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
-  color: #000;
+  color: #ffffff;
   margin: 0 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 `;
 
 const StoreMetaRow = styled.div`
@@ -598,11 +664,12 @@ const StoreMetaRow = styled.div`
 
 const MetaText = styled.span`
   font-size: 14px;
-  color: #666;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const MetaSeparator = styled.span`
-  color: #ccc;
+  color: rgba(255, 255, 255, 0.7);
 `;
 
 const StoreBadgeRow = styled.div`
@@ -615,7 +682,7 @@ const StoreBadgeRow = styled.div`
 const PriceBadge = styled.span`
   display: inline-block;
   padding: 4px 10px;
-  background-color: #f5f5f5;
+  background-color: rgba(255, 255, 255, 0.9);
   color: #333;
   font-size: 13px;
   font-weight: 600;
@@ -636,7 +703,7 @@ const PopularityBadge = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 `;
 
 const BadgeIcon = styled.span`
@@ -645,35 +712,42 @@ const BadgeIcon = styled.span`
 
 const BadgeText = styled.span`
   font-size: 13px;
-  color: #ff6b35;
+  color: #ffffff;
   font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const InfoButton = styled.button`
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background-color: #f8f9fa;
-  border: 1px solid #e5e5e5;
-  border-radius: 20px;
-  font-size: 14px;
+  gap: 4px;
+  padding: 6px 12px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 16px;
+  font-size: 13px;
   color: #333;
   cursor: pointer;
   transition: all 0.2s;
+  align-self: flex-start;
 
   &:hover {
-    background-color: #e9ecef;
+    background-color: rgba(255, 255, 255, 1);
   }
 `;
 
+const InfoButtonText = styled.span`
+  font-size: 13px;
+  font-weight: 500;
+`;
+
 const MenuSection = styled.section`
-  padding: 20px 0;
-  border-bottom: 8px solid #f8f9fa;
+  padding: 24px 0;
+  background-color: #ffffff;
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: #000;
   margin: 0 0 16px 0;
@@ -683,20 +757,17 @@ const SectionTitle = styled.h2`
 const RecommendedMenuGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 16px;
   padding: 0 16px;
 `;
 
 const RecommendedMenuCard = styled.div`
-  background-color: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
   }
 `;
@@ -705,48 +776,91 @@ const MenuImage = styled.img`
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+`;
+
+const RecommendedMenuInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 `;
 
 const MenuName = styled.div`
-  padding: 12px 12px 8px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   color: #000;
 `;
 
 const MenuPriceRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 12px 8px;
+  gap: 8px;
 `;
 
 const MenuPrice = styled.span`
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: #000;
+  color: #ff6b35;
 `;
 
 const BudgetBadge = styled.span<{ $isPositive: boolean }>`
   display: inline-block;
-  padding: 2px 8px;
-  background-color: ${(props) => (props.$isPositive ? "#ffe5e5" : "#e5f5ff")};
-  color: ${(props) => (props.$isPositive ? "#ff4444" : "#0066ff")};
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 10px;
+  padding: 3px 8px;
+  background-color: ${(props) =>
+    props.$isPositive ? "rgba(255, 107, 53, 0.15)" : "#e5f5ff"};
+  color: ${(props) => (props.$isPositive ? "#ff6b35" : "#0066ff")};
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 12px;
 `;
 
 const MenuDescription = styled.p`
-  padding: 0 12px 12px;
   font-size: 12px;
   color: #666;
-  line-height: 1.4;
+  line-height: 1.5;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 `;
 
 const AllMenuList = styled.div`
   padding: 0 16px;
+`;
+
+const NoRecommendedContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background-color: #fafafa;
+  border-radius: 12px;
+  margin: 0 16px;
+`;
+
+const NoRecommendedIcon = styled.div`
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+`;
+
+const NoRecommendedText = styled.p`
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  margin: 0 0 8px 0;
+`;
+
+const NoRecommendedDescription = styled.p`
+  font-size: 13px;
+  color: #999;
+  line-height: 1.5;
+  margin: 0;
 `;
 
 const NoMenuContainer = styled.div`
@@ -780,14 +894,14 @@ const NoMenuDescription = styled.p`
 
 const MenuListItem = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 16px;
   padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #f9f9f9;
+    background-color: #fafafa;
   }
 
   &:last-child {
@@ -796,9 +910,9 @@ const MenuListItem = styled.div`
 `;
 
 const MenuListImage = styled.img`
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
 `;
@@ -807,12 +921,12 @@ const MenuListInfo = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
 const MenuListName = styled.div`
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: #000;
 `;
 
@@ -823,15 +937,15 @@ const MenuListPriceRow = styled.div`
 `;
 
 const MenuListPrice = styled.span`
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: #000;
+  color: #ff6b35;
 `;
 
 const MenuListDescription = styled.p`
   font-size: 13px;
   color: #666;
-  line-height: 1.4;
+  line-height: 1.5;
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -849,10 +963,9 @@ const CartBottomBar = styled.div`
   border-top: 1px solid #e5e5e5;
   padding: 16px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
   z-index: 50;
 
   @media (min-width: 431px) {
@@ -862,60 +975,69 @@ const CartBottomBar = styled.div`
   }
 `;
 
-const CartInfo = styled.div`
-  flex: 1;
+const CartSummary = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 `;
 
-const CartLabel = styled.div`
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
-`;
-
-const CartAmounts = styled.div`
+const CartSummaryRow = styled.div<{ bold?: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
 `;
 
-const CartOriginal = styled.span`
-  font-size: 12px;
-  color: #999;
-  text-decoration: line-through;
+const CartSummaryLabel = styled.span<{
+  bold?: boolean;
+  strikethrough?: boolean;
+  warning?: boolean;
+}>`
+  font-size: ${(props) => (props.bold ? "15px" : "13px")};
+  color: ${(props) => {
+    if (props.warning) return "#ff4444";
+    if (props.strikethrough) return "#999";
+    if (props.bold) return "#000";
+    return "#666";
+  }};
+  font-weight: ${(props) => (props.bold ? "700" : "400")};
+  text-decoration: ${(props) =>
+    props.strikethrough ? "line-through" : "none"};
 `;
 
-const CartOriginalAmount = styled.span`
-  font-size: 12px;
-  color: #999;
-  text-decoration: line-through;
+const CartSummaryValue = styled.span<{
+  bold?: boolean;
+  strikethrough?: boolean;
+  warning?: boolean;
+}>`
+  font-size: ${(props) => (props.bold ? "18px" : "14px")};
+  color: ${(props) => {
+    if (props.warning) return "#ff4444";
+    if (props.strikethrough) return "#999";
+    if (props.bold) return "#000";
+    return "#000";
+  }};
+  font-weight: ${(props) => (props.bold ? "700" : "600")};
+  text-decoration: ${(props) =>
+    props.strikethrough ? "line-through" : "none"};
 `;
 
-const CartSavings = styled.span`
-  font-size: 13px;
-  color: #000;
-  font-weight: 600;
-`;
-
-const CartSavingsAmount = styled.span`
-  font-size: 14px;
-  color: #ff6b35;
-  font-weight: 700;
+const CartDivider = styled.div`
+  height: 1px;
+  background-color: #e5e5e5;
+  margin: 8px 0;
 `;
 
 const CartButton = styled.button`
-  padding: 14px 24px;
+  width: 100%;
+  padding: 18px;
   background-color: #ff6b35;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 12px;
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 
   &:hover {
     background-color: #ff5722;

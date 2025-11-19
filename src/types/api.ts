@@ -231,21 +231,23 @@ export interface PolicyAgreementResponse {
 // 가게 관련
 export interface Store {
   storeId: number;
-  storeName: string;
-  category: string;
+  name?: string; // API 응답에서 사용하는 필드명
+  storeName?: string; // 기존 코드 호환성을 위해 유지
+  category?: string;
+  categoryName?: string; // API 응답에서 사용하는 필드명
   categoryId: number;
   distance: number;
   reviewCount: number;
   averagePrice: number;
   isOpen: boolean;
-  popularityTag: string;
+  popularityTag?: string;
   imageUrl: string;
   address: string;
   isFavorite?: boolean;
 }
 
 export interface StoreDetail extends Store {
-  description: string;
+  description?: string;
   operatingHours?: Array<{
     dayOfWeek: string;
     openTime: string;
@@ -297,6 +299,7 @@ export interface StoreDetail extends Store {
     ownerName: string;
   };
   registeredAt?: string;
+  storeType?: string;
 }
 
 export interface Menu {
