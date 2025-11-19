@@ -204,13 +204,27 @@ export const useCartStore = create<CartStore>()(
         });
         set({ isLoading: true, error: null });
         try {
-          await cartService.updateCartItemQuantity(cartItemId, quantity);
-          console.log("🔄 [CartStore] updateQuantity 성공, 장바구니 재조회");
+          const response = await cartService.updateCartItemQuantity(
+            cartItemId,
+            quantity
+          );
+          console.log("🔄 [CartStore] updateQuantity 성공:", response);
+          console.log("🔄 [CartStore] 장바구니 재조회 시작");
           await get().fetchCart();
           set({ isLoading: false });
         } catch (error: any) {
-          console.error("🔄 [CartStore] updateQuantity 실패:", error);
-          set({ error: error.message || "수량 변경 실패", isLoading: false });
+          console.error("🔄 [CartStore] updateQuantity 실패:", {
+            error,
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+          });
+          const errorMessage =
+            error.response?.data?.error?.message ||
+            error.message ||
+            "수량 변경 실패";
+          set({ error: errorMessage, isLoading: false });
+          throw error; // 에러를 다시 throw하여 UI에서 처리할 수 있도록
         }
       },
 

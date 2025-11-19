@@ -235,17 +235,60 @@ export const updateCartItemQuantity = async (
   console.log(
     `🔄 [Cart API] 수량 변경 요청: cartItemId=${cartItemId}, quantity=${quantity}`
   );
-  const response = await api.put<ApiResponse<UpdateCartItemResponse>>(
-    `/api/v1/cart/items/${cartItemId}`,
-    { quantity }
-  );
-  console.log("🔄 [Cart API] 수량 변경 응답:", response.data);
+  console.log(`🔄 [Cart API] URL: /api/v1/cart/items/${cartItemId}`);
+  console.log(`🔄 [Cart API] Body:`, { quantity });
 
-  if (response.data.result === "SUCCESS" && response.data.data) {
-    return response.data.data;
+  try {
+    const response = await api.put<ApiResponse<UpdateCartItemResponse>>(
+      `/api/v1/cart/items/${cartItemId}`,
+      { quantity }
+    );
+    console.log("🔄 [Cart API] HTTP Status:", response.status);
+    console.log(
+      "🔄 [Cart API] 수량 변경 응답 (전체):",
+      JSON.stringify(response.data, null, 2)
+    );
+    console.log("🔄 [Cart API] response.data.result:", response.data.result);
+    console.log("🔄 [Cart API] response.data.data:", response.data.data);
+
+    // 204 No Content 처리
+    if (response.status === 204) {
+      console.log("🔄 [Cart API] 204 No Content - 성공으로 처리");
+      return {
+        cartItemId,
+        quantity,
+        totalPrice: 0,
+        cartTotalAmount: 0,
+      };
+    }
+
+    if (response.data.result === "SUCCESS") {
+      // data가 있으면 반환, 없으면 기본값 반환
+      if (response.data.data) {
+        return response.data.data;
+      }
+
+      // data가 없지만 SUCCESS인 경우 fallback
+      console.log("🔄 [Cart API] data가 없지만 SUCCESS - 빈 응답 처리");
+      return {
+        cartItemId,
+        quantity,
+        totalPrice: 0,
+        cartTotalAmount: 0,
+      };
+    }
+
+    console.error("🔄 [Cart API] result가 SUCCESS가 아님:", response.data);
+    throw new Error("수량 변경 실패");
+  } catch (error: any) {
+    console.error("🔄 [Cart API] 수량 변경 에러:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      url: `/api/v1/cart/items/${cartItemId}`,
+    });
+    throw error;
   }
-
-  throw new Error("수량 변경 실패");
 };
 
 /**

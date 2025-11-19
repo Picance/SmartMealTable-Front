@@ -54,10 +54,26 @@ const CartPage = () => {
     change: number
   ) => {
     const newQuantity = currentQuantity + change;
-    if (newQuantity >= 1 && newQuantity <= 99) {
-      await updateQuantity(cartItemId, newQuantity);
-    } else if (newQuantity < 1) {
-      await removeItem(cartItemId);
+    console.log("📝 [CartPage] handleQuantityChange:", {
+      cartItemId,
+      currentQuantity,
+      change,
+      newQuantity,
+    });
+
+    try {
+      if (newQuantity >= 1 && newQuantity <= 99) {
+        await updateQuantity(cartItemId, newQuantity);
+      } else if (newQuantity < 1) {
+        await removeItem(cartItemId);
+      }
+    } catch (error: any) {
+      console.error("📝 [CartPage] 수량 변경 에러:", error);
+      alert(
+        error.response?.data?.error?.message ||
+          error.message ||
+          "수량 변경에 실패했습니다."
+      );
     }
   };
 
@@ -137,46 +153,53 @@ const CartPage = () => {
       <Content>
         {/* 장바구니 아이템 리스트 */}
         <CartItemList>
-          {items.map((item) => (
-            <CartItem key={item.cartItemId}>
-              <ItemImage
-                src={item.imageUrl || "/placeholder-menu.jpg"}
-                alt={item.foodName}
-              />
-              <ItemInfo>
-                <ItemName>{item.foodName}</ItemName>
-                <ItemPrice>
-                  {(item.price || item.averagePrice || 0).toLocaleString()}원 /
-                  개
-                </ItemPrice>
-                <ItemTotalPrice>
-                  {(item.totalPrice || item.subtotal || 0).toLocaleString()}원
-                </ItemTotalPrice>
-              </ItemInfo>
-              <ItemControls>
-                <QuantityControl>
-                  <QuantityButton
-                    onClick={() =>
-                      handleQuantityChange(item.cartItemId, item.quantity, -1)
-                    }
-                  >
-                    <FiMinus size={16} />
-                  </QuantityButton>
-                  <QuantityDisplay>{item.quantity}</QuantityDisplay>
-                  <QuantityButton
-                    onClick={() =>
-                      handleQuantityChange(item.cartItemId, item.quantity, 1)
-                    }
-                  >
-                    <FiPlus size={16} />
-                  </QuantityButton>
-                </QuantityControl>
-                <DeleteButton onClick={() => removeItem(item.cartItemId)}>
-                  <FiTrash2 size={20} color="#ff4444" />
-                </DeleteButton>
-              </ItemControls>
-            </CartItem>
-          ))}
+          {items.map((item) => {
+            console.log("🛒 [CartPage] 렌더링 중인 아이템:", {
+              cartItemId: item.cartItemId,
+              foodName: item.foodName,
+              quantity: item.quantity,
+            });
+            return (
+              <CartItem key={item.cartItemId}>
+                <ItemImage
+                  src={item.imageUrl || "/placeholder-menu.jpg"}
+                  alt={item.foodName}
+                />
+                <ItemInfo>
+                  <ItemName>{item.foodName}</ItemName>
+                  <ItemPrice>
+                    {(item.price || item.averagePrice || 0).toLocaleString()}원
+                    / 개
+                  </ItemPrice>
+                  <ItemTotalPrice>
+                    {(item.totalPrice || item.subtotal || 0).toLocaleString()}원
+                  </ItemTotalPrice>
+                </ItemInfo>
+                <ItemControls>
+                  <QuantityControl>
+                    <QuantityButton
+                      onClick={() =>
+                        handleQuantityChange(item.cartItemId, item.quantity, -1)
+                      }
+                    >
+                      <FiMinus size={16} />
+                    </QuantityButton>
+                    <QuantityDisplay>{item.quantity}</QuantityDisplay>
+                    <QuantityButton
+                      onClick={() =>
+                        handleQuantityChange(item.cartItemId, item.quantity, 1)
+                      }
+                    >
+                      <FiPlus size={16} />
+                    </QuantityButton>
+                  </QuantityControl>
+                  <DeleteButton onClick={() => removeItem(item.cartItemId)}>
+                    <FiTrash2 size={20} color="#ff4444" />
+                  </DeleteButton>
+                </ItemControls>
+              </CartItem>
+            );
+          })}
         </CartItemList>
 
         {/* 할인 쿠폰 입력 */}
