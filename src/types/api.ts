@@ -246,19 +246,57 @@ export interface Store {
 
 export interface StoreDetail extends Store {
   description: string;
-  operatingHours: Array<{
+  operatingHours?: Array<{
     dayOfWeek: string;
     openTime: string;
     closeTime: string;
     isHoliday: boolean;
+    breakStartTime?: string;
+    breakEndTime?: string;
   }>;
-  phone: string;
-  location: {
+  openingHours?: Array<{
+    // API 명세에서 사용하는 필드명
+    dayOfWeek: string;
+    openTime: string;
+    closeTime: string;
+    isHoliday: boolean;
+    breakStartTime?: string;
+    breakEndTime?: string;
+  }>;
+  phone?: string;
+  phoneNumber?: string; // API 명세에서 사용하는 필드명
+  location?: {
     latitude: number;
     longitude: number;
   };
-  menus: Menu[];
+  latitude?: number;
+  longitude?: number;
+  menus?: Menu[];
+  recommendedMenus?: Menu[]; // API 명세에서 제공하는 추천 메뉴
   isFavorite: boolean;
+  lotNumberAddress?: string;
+  images?: Array<{
+    storeImageId: number;
+    imageUrl: string;
+    isMain: boolean;
+    displayOrder: number;
+  }>;
+  temporaryClosures?: Array<{
+    closureDate: string;
+    startTime: string;
+    endTime: string;
+    reason: string;
+  }>;
+  isCampusRestaurant?: boolean;
+  isTemporaryClosed?: boolean;
+  favoriteCount?: number;
+  viewCount?: number;
+  seller?: {
+    sellerId: number;
+    businessNumber: string;
+    ownerName: string;
+  };
+  registeredAt?: string;
 }
 
 export interface Menu {
@@ -266,9 +304,21 @@ export interface Menu {
   foodName: string;
   price: number;
   imageUrl: string;
-  description: string;
+  description?: string;
   budgetDifference?: number;
   isRecommended?: boolean;
+  isMain?: boolean; // 대표 메뉴 여부
+  displayOrder?: number; // 표시 순서
+  isAvailable?: boolean; // 판매 가능 여부
+  registeredDt?: string; // 메뉴 등록일
+  budgetComparison?: {
+    // API 명세의 예산 비교 정보
+    userMealBudget: number;
+    difference: number;
+    isOverBudget: boolean;
+    differenceText: string;
+  };
+  recommendationScore?: number; // 추천 점수
 }
 
 // 지출 관련

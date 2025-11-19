@@ -27,32 +27,77 @@ const StoreDetailPage = () => {
 
   const loadStoreData = async (id: number) => {
     setLoading(true);
+    console.log("🚀 loadStoreData 시작, storeId:", id);
+    
     try {
+      let menusLoaded = false;
+      let loadedMenus: Menu[] = [];
+
       // 가게 상세 정보 로드
+      console.log("📞 가게 상세 API 호출 전...");
       const storeResponse = await storeService.getStoreDetail(id);
+      console.log("📦 가게 상세 응답 데이터:", storeResponse.data);
+
       if (storeResponse.result === "SUCCESS" && storeResponse.data) {
         setStore(storeResponse.data);
         setIsFavorite(storeResponse.data.isFavorite || false);
 
         // 가게 상세에서 메뉴 가져오기
-        if (storeResponse.data.menus) {
-          const menus = storeResponse.data.menus;
-          // 추천 메뉴는 isRecommended가 true인 것들
-          setRecommendedMenus(menus.filter((m) => m.isRecommended).slice(0, 2));
-          setAllMenus(menus);
+        if (storeResponse.data.menus && storeResponse.data.menus.length > 0) {
+          console.log("✅ 가게 상세 응답에 메뉴 포함:", storeResponse.data.menus);
+          loadedMenus = storeResponse.data.menus;
+          menusLoaded = true;
+        } else if (
+          storeResponse.data.recommendedMenus &&
+          storeResponse.data.recommendedMenus.length > 0
+        ) {
+          console.log(
+            "✅ 가게 상세 응답에 추천 메뉴 포함:",
+            storeResponse.data.recommendedMenus
+          );
+          // API 명세의 recommendedMenus 필드 사용
+          loadedMenus = storeResponse.data.recommendedMenus;
+          menusLoaded = true;
+        } else {
+          console.log("⚠️ 가게 상세 응답에 메뉴 없음, 별도 API 호출 시도");
         }
       }
 
-      // 별도 메뉴 API 호출
-      const menusResponse = await storeService.getStoreMenus(id);
-      if (menusResponse.result === "SUCCESS" && menusResponse.data) {
-        const menus = menusResponse.data;
-        setRecommendedMenus(menus.filter((m) => m.isRecommended).slice(0, 2));
-        setAllMenus(menus);
+      // 가게 상세에 메뉴가 없으면 별도 메뉴 API 호출
+      if (!menusLoaded) {
+        try {
+          console.log(`🔄 메뉴 API 호출 시작: /api/v1/stores/${id}/foods`);
+          const menusResponse = await storeService.getStoreMenus(id);
+          console.log("📦 메뉴 API 응답:", menusResponse);
+
+          if (menusResponse.result === "SUCCESS" && menusResponse.data) {
+            loadedMenus = menusResponse.data.foods || [];
+            console.log("✅ 메뉴 API에서 foods 추출:", loadedMenus);
+            menusLoaded = loadedMenus.length > 0;
+          }
+        } catch (menuError: any) {
+          console.error("❌ 메뉴 API 호출 실패:", menuError);
+          console.log("메뉴 API 에러 상세:", {
+            message: menuError.message,
+            status: menuError.response?.status,
+            data: menuError.response?.data,
+          });
+        }
       }
 
-      // 메뉴가 없으면 더미 데이터 사용
-      if (allMenus.length === 0 && recommendedMenus.length === 0) {
+      // 메뉴가 로드되었으면 상태 업데이트
+      if (menusLoaded && loadedMenus.length > 0) {
+        console.log("✅ 메뉴 로드 성공, 상태 업데이트:", {
+          total: loadedMenus.length,
+          recommended: loadedMenus.filter((m) => m.isRecommended).length,
+        });
+        setRecommendedMenus(
+          loadedMenus.filter((m) => m.isRecommended).slice(0, 2)
+        );
+        setAllMenus(loadedMenus);
+      } else {
+        // 메뉴가 없으면 더미 데이터 사용
+        console.log("⚠️ 메뉴 로드 실패 - 더미 데이터 사용");
         const dummyMenus: Menu[] = [
           {
             foodId: 1,
@@ -77,7 +122,7 @@ const StoreDetailPage = () => {
             foodName: "원조 김밥",
             price: 4500,
             imageUrl: "",
-            description: "가본에 충실한 클래식 김밥 맛.",
+            description: "기본에 충실한 클래식 김밥 맛.",
             budgetDifference: -500,
           },
           {
@@ -85,7 +130,7 @@ const StoreDetailPage = () => {
             foodName: "새우 튀김 김밥",
             price: 8000,
             imageUrl: "",
-            description: "바삭한 새우 튀김이 튀김이 들어간 프리미엄 조합.",
+            description: "바삭한 새우 튀김이 들어간 프리미엄 조합.",
             budgetDifference: 2000,
           },
           {
@@ -100,10 +145,16 @@ const StoreDetailPage = () => {
         setRecommendedMenus(dummyMenus.filter((m) => m.isRecommended));
         setAllMenus(dummyMenus);
       }
-    } catch (error) {
-      console.error("Failed to load store data:", error);
+    } catch (error: any) {
+      console.error("❌ Failed to load store data:", error);
+      console.log("에러 상세:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
 
       // 에러 발생 시에도 더미 데이터 사용
+      console.log("⚠️ 에러 발생으로 더미 데이터 사용");
       const dummyMenus: Menu[] = [
         {
           foodId: 1,
@@ -128,7 +179,7 @@ const StoreDetailPage = () => {
           foodName: "원조 김밥",
           price: 4500,
           imageUrl: "",
-          description: "가본에 충실한 클래식 김밥 맛.",
+          description: "기본에 충실한 클래식 김밥 맛.",
           budgetDifference: -500,
         },
         {
@@ -160,13 +211,14 @@ const StoreDetailPage = () => {
 
     try {
       if (isFavorite) {
-        await storeService.removeFavorite(store.storeId);
+        await storeService.removeFavoriteByStoreId(store.storeId);
       } else {
         await storeService.addFavorite(store.storeId);
       }
       setIsFavorite(!isFavorite);
     } catch (error) {
       console.error("Failed to toggle favorite:", error);
+      alert("즐겨찾기 변경에 실패했습니다.");
     }
   };
 
@@ -377,20 +429,26 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
   };
 
   const handleCall = () => {
-    if (store.phone) {
-      window.location.href = `tel:${store.phone}`;
+    const phoneNumber = store.phoneNumber || store.phone;
+    if (phoneNumber) {
+      window.location.href = `tel:${phoneNumber}`;
     }
   };
 
   const handleDirections = () => {
     // 네이버 지도 앱으로 길찾기
-    const naverMapUrl = `nmap://place?lat=${
-      store.location?.latitude || 37.5665
-    }&lng=${store.location?.longitude || 126.978}&name=${encodeURIComponent(
+    const lat =
+      store.location?.latitude || store.latitude || 37.5665;
+    const lng =
+      store.location?.longitude || store.longitude || 126.978;
+    const naverMapUrl = `nmap://place?lat=${lat}&lng=${lng}&name=${encodeURIComponent(
       store.storeName
     )}&appname=com.smartmealtable`;
     window.location.href = naverMapUrl;
   };
+
+  // openingHours 또는 operatingHours 사용
+  const hours = store.openingHours || store.operatingHours || [];
 
   return (
     <ModalOverlay onClick={onClose}>
@@ -426,14 +484,18 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
           {/* 영업시간 */}
           <BusinessHoursSection>
             <BusinessHoursTitle>영업시간</BusinessHoursTitle>
-            {store.operatingHours && store.operatingHours.length > 0 ? (
-              store.operatingHours.map((hours, index) => (
+            {hours && hours.length > 0 ? (
+              hours.map((hour, index) => (
                 <BusinessHourRow key={index}>
-                  <DayLabel>{hours.dayOfWeek}:</DayLabel>
+                  <DayLabel>{hour.dayOfWeek}:</DayLabel>
                   <TimeText>
-                    {hours.isHoliday
+                    {hour.isHoliday
                       ? "휴무"
-                      : `${hours.openTime} ~ ${hours.closeTime}`}
+                      : `${hour.openTime} ~ ${hour.closeTime}${
+                          hour.breakStartTime && hour.breakEndTime
+                            ? ` (브레이크타임: ${hour.breakStartTime} ~ ${hour.breakEndTime})`
+                            : ""
+                        }`}
                   </TimeText>
                 </BusinessHourRow>
               ))

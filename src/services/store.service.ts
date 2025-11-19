@@ -34,12 +34,26 @@ export const storeService = {
   // 가게 상세 조회
   async getStoreDetail(storeId: number): Promise<ApiResponse<StoreDetail>> {
     const response = await api.get(`/api/v1/stores/${storeId}`);
+    console.log("🏪 가게 상세 조회 응답:", response.data);
     return response.data;
   },
 
-  // 가게 메뉴 조회
-  async getStoreMenus(storeId: number): Promise<ApiResponse<Menu[]>> {
-    const response = await api.get(`/api/v1/stores/${storeId}/menus`);
+  // 가게 메뉴 조회 (API 명세: /api/v1/stores/{storeId}/foods)
+  async getStoreMenus(
+    storeId: number,
+    sort?: string
+  ): Promise<
+    ApiResponse<{
+      storeId: number;
+      storeName: string;
+      foods: Menu[];
+    }>
+  > {
+    const params = sort ? { sort } : {};
+    const response = await api.get(`/api/v1/stores/${storeId}/foods`, {
+      params,
+    });
+    console.log("🍽️ 가게 메뉴 조회 응답:", response.data);
     return response.data;
   },
 
@@ -77,15 +91,56 @@ export const storeService = {
     return response.data;
   },
 
-  // 가게 즐겨찾기 해제
+  // 가게 즐겨찾기 해제 (storeId 기반)
+  async removeFavoriteByStoreId(storeId: number): Promise<ApiResponse<void>> {
+    // 먼저 즐겨찾기 목록에서 해당 storeId의 favoriteId를 찾아야 함
+    const favoritesResponse = await this.getFavoriteStores();
+    if (favoritesResponse.result === "SUCCESS" && favoritesResponse.data) {
+      const favorite = favoritesResponse.data.favorites?.find(
+        (f: any) => f.storeId === storeId
+      );
+      if (favorite) {
+        const response = await api.delete(
+          `/api/v1/favorites/${favorite.favoriteId}`
+        );
+        return response.data;
+      }
+    }
+    throw new Error("Favorite not found");
+  },
+
+  // 가게 즐겨찾기 해제 (favoriteId 기반 - 기존 메서드 유지)
   async removeFavorite(favoriteId: number): Promise<ApiResponse<void>> {
     const response = await api.delete(`/api/v1/favorites/${favoriteId}`);
     return response.data;
   },
 
   // 즐겨찾는 가게 목록
-  async getFavoriteStores(): Promise<ApiResponse<Store[]>> {
-    const response = await api.get("/api/v1/stores/favorites");
+  async getFavoriteStores(): Promise<
+    ApiResponse<{
+      favorites: Array<{
+        favoriteId: number;
+        storeId: number;
+        storeName: string;
+        categoryId: number;
+        categoryName: string;
+        address: string;
+        distance: number;
+        averagePrice: number;
+        reviewCount: number;
+        displayOrder: number;
+        isOpenNow: boolean;
+        imageUrl: string;
+        createdAt: string;
+      }>;
+      totalCount: number;
+      openCount: number;
+      page: number;
+      size: number;
+      totalPages: number;
+    }>
+  > {
+    const response = await api.get("/api/v1/favorites");
     return response.data;
   },
 };
