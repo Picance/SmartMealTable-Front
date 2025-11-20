@@ -1,140 +1,147 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiMoreVertical, FiFilter } from "react-icons/fi";
 import BottomNavigation from "../../components/layout/BottomNav";
-
-interface Restaurant {
-  id: number;
-  name: string;
-  image: string;
-  rating: number;
-  price: string;
-  categories: string[];
-  address: string;
-  isOpen: boolean;
-}
+import { favoriteService, type Favorite, type SortBy } from "../../services/favorite.service";
 
 const FavoritesPage = () => {
   const navigate = useNavigate();
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<SortBy>("priority");
+  const [isOpenOnly, setIsOpenOnly] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [openCount, setOpenCount] = useState(0);
 
-  // 임시 데이터
-  const [restaurants] = useState<Restaurant[]>([
-    {
-      id: 1,
-      name: "비스트로 서울",
-      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
-      rating: 4.5,
-      price: "₩500",
-      categories: ["한식", "퓨전"],
-      address: "서울시 강남구 테헤란로 123",
-      isOpen: true,
-    },
-    {
-      id: 2,
-      name: "파스타 피아노",
-      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400",
-      rating: 4.8,
-      price: "₩500",
-      categories: ["이탈리안"],
-      address: "서울시 중구구 상일대로 456",
-      isOpen: true,
-    },
-    {
-      id: 3,
-      name: "스시 마스터",
-      image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400",
-      rating: 4.6,
-      price: "₩500",
-      categories: ["일식"],
-      address: "서울시 중구 명동길 789",
-      isOpen: true,
-    },
-    {
-      id: 4,
-      name: "차이나 다운",
-      image: "https://images.unsplash.com/photo-1525755662778-989d0524087e?w=400",
-      rating: 4.7,
-      price: "₩500",
-      categories: ["중식"],
-      address: "서울시 영등포구 국제금융로 10",
-      isOpen: true,
-    },
-    {
-      id: 5,
-      name: "타이 스페이스",
-      image: "https://images.unsplash.com/photo-1559847844-5315695dadae?w=400",
-      rating: 4.5,
-      price: "₩500",
-      categories: ["태국 음식"],
-      address: "서울시 마포구 독막로 22",
-      isOpen: true,
-    },
-  ]);
+  useEffect(() => {
+    loadFavorites();
+  }, [sortBy, isOpenOnly]);
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("즐겨찾기에서 삭제하시겠습니까?")) {
-      // TODO: API 호출
-      console.log("Delete restaurant:", id);
+  const loadFavorites = async () => {
+    setLoading(true);
+    try {
+      const response = await favoriteService.getFavorites({
+        sortBy,
+        isOpenOnly,
+        size: 50,
+      });
+
+      if (response.result === "SUCCESS" && response.data) {
+        setFavorites(response.data.favorites);
+        setTotalCount(response.data.totalCount);
+        setOpenCount(response.data.openCount);
+      }
+    } catch (error) {
+      console.error("즐겨찾기 목록 조회 실패:", error);
+      alert("즐겨찾기 목록을 불러오는데 실패했습니다.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleMoreOptions = (id: number) => {
+  const handleDelete = async (favoriteId: number) => {
+    if (window.confirm("즐겨찾기에서 삭제하시겠습니까?")) {
+      try {
+        await favoriteService.deleteFavorite(favoriteId);
+        // 목록 새로고침
+        await loadFavorites();
+      } catch (error) {
+        console.error("즐겨찾기 삭제 실패:", error);
+        alert("즐겨찾기 삭제에 실패했습니다.");
+      }
+    }
+  };
+
+  const handleMoreOptions = (favoriteId: number) => {
     // TODO: 옵션 모달 표시
-    console.log("More options for:", id);
+    console.log("More options for:", favoriteId);
+  };
+
+  const toggleFilter = () => {
+    setIsOpenOnly(!isOpenOnly);
   };
 
   return (
     <Container>
       <Header>
         <Title>나의 즐겨찾는 레스토랑</Title>
-        <FilterButton>
+        <FilterButton onClick={toggleFilter} $active={isOpenOnly}>
           <FiFilter />
         </FilterButton>
       </Header>
 
-      <Content>
-        <RestaurantList>
-          {restaurants.map((restaurant) => (
-            <RestaurantCard key={restaurant.id}>
-              <CardHeader>
-                <MoreButton onClick={() => handleMoreOptions(restaurant.id)}>
-                  <FiMoreVertical />
-                </MoreButton>
-                <DeleteButton onClick={() => handleDelete(restaurant.id)}>
-                  🗑️
-                </DeleteButton>
-              </CardHeader>
+      {loading ? (
+        <LoadingContainer>
+          <LoadingSpinner />
+          <LoadingText>로딩 중...</LoadingText>
+        </LoadingContainer>
+      ) : favorites.length === 0 ? (
+        <EmptyContainer>
+          <EmptyIcon>⭐</EmptyIcon>
+          <EmptyTitle>즐겨찾기가 비어있습니다</EmptyTitle>
+          <EmptyDescription>
+            마음에 드는 가게를 즐겨찾기에 추가해보세요!
+            {isOpenOnly && "\n\n현재 영업 중인 가게만 표시하고 있습니다."}
+          </EmptyDescription>
+          {isOpenOnly && (
+            <EmptyButton onClick={() => setIsOpenOnly(false)}>
+              모든 즐겨찾기 보기
+            </EmptyButton>
+          )}
+        </EmptyContainer>
+      ) : (
+        <Content>
+          <StatusBar>
+            <StatusText>
+              전체 {totalCount}개 · 영업 중 {openCount}개
+            </StatusText>
+          </StatusBar>
+          
+          <RestaurantList>
+            {favorites.map((favorite) => (
+              <RestaurantCard key={favorite.favoriteId}>
+                <CardHeader>
+                  <MoreButton onClick={() => handleMoreOptions(favorite.favoriteId)}>
+                    <FiMoreVertical />
+                  </MoreButton>
+                  <DeleteButton onClick={() => handleDelete(favorite.favoriteId)}>
+                    🗑️
+                  </DeleteButton>
+                </CardHeader>
 
-              <RestaurantImage
-                src={restaurant.image}
-                alt={restaurant.name}
-                onClick={() => navigate(`/store/${restaurant.id}`)}
-              />
+                <RestaurantImage
+                  src={favorite.imageUrl || "/placeholder-store.jpg"}
+                  alt={favorite.storeName}
+                  onClick={() => navigate(`/store/${favorite.storeId}`)}
+                />
 
-              <RestaurantInfo>
-                <RestaurantName>{restaurant.name}</RestaurantName>
-                
-                <MetaRow>
-                  <Rating>⭐ 리뷰 {restaurant.rating.toFixed(1)}</Rating>
-                  <Price>{restaurant.price}</Price>
-                </MetaRow>
+                <RestaurantInfo>
+                  <RestaurantName>{favorite.storeName}</RestaurantName>
+                  
+                  <MetaRow>
+                    <Rating>⭐ {favorite.reviewCount.toLocaleString()} 리뷰</Rating>
+                    <Price>평균 ₩{favorite.averagePrice.toLocaleString()}</Price>
+                  </MetaRow>
 
-                <Categories>
-                  {restaurant.categories.join(", ")}
-                </Categories>
+                  <Categories>{favorite.categoryName}</Categories>
 
-                <Address>{restaurant.address}</Address>
+                  <Address>
+                    {favorite.address} · {favorite.distance.toFixed(1)}km
+                  </Address>
 
-                {restaurant.isOpen && (
-                  <OpenBadge>지금 영업 중</OpenBadge>
-                )}
-              </RestaurantInfo>
-            </RestaurantCard>
-          ))}
-        </RestaurantList>
-      </Content>
+                  {favorite.isOpenNow ? (
+                    <OpenBadge>지금 영업 중</OpenBadge>
+                  ) : (
+                    <ClosedBadge>영업 종료</ClosedBadge>
+                  )}
+                </RestaurantInfo>
+              </RestaurantCard>
+            ))}
+          </RestaurantList>
+        </Content>
+      )}
 
       {/* 하단 네비게이션 */}
       <BottomNavigation activeTab="favorites" />
@@ -169,20 +176,113 @@ const Title = styled.h1`
   flex: 1;
 `;
 
-const FilterButton = styled.button`
-  background: transparent;
+const FilterButton = styled.button<{ $active?: boolean }>`
+  background: ${props => props.$active ? theme.colors.primary : 'transparent'};
   border: none;
   font-size: ${theme.typography.fontSize.xl};
-  color: #424242;
+  color: ${props => props.$active ? 'white' : '#424242'};
   cursor: pointer;
   padding: ${theme.spacing.xs};
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: ${theme.borderRadius.sm};
+  transition: all 0.2s;
 
   &:hover {
     opacity: 0.7;
   }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: ${theme.spacing.md};
+`;
+
+const LoadingSpinner = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid ${theme.colors.primary};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const LoadingText = styled.p`
+  font-size: ${theme.typography.fontSize.md};
+  color: #666;
+`;
+
+const EmptyContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: ${theme.spacing.xl};
+  text-align: center;
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 64px;
+  margin-bottom: ${theme.spacing.lg};
+  opacity: 0.5;
+`;
+
+const EmptyTitle = styled.h2`
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: #212121;
+  margin: 0 0 ${theme.spacing.md} 0;
+`;
+
+const EmptyDescription = styled.p`
+  font-size: ${theme.typography.fontSize.md};
+  color: #757575;
+  line-height: 1.6;
+  margin: 0 0 ${theme.spacing.xl} 0;
+  white-space: pre-line;
+`;
+
+const EmptyButton = styled.button`
+  padding: ${theme.spacing.md} ${theme.spacing.xl};
+  background-color: ${theme.colors.primary};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.md};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const StatusBar = styled.div`
+  padding: ${theme.spacing.sm} 0;
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const StatusText = styled.span`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
+  font-weight: ${theme.typography.fontWeight.medium};
 `;
 
 const Content = styled.div`
@@ -317,6 +417,16 @@ const OpenBadge = styled.div`
   display: inline-block;
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
   background-color: ${theme.colors.secondary};
+  color: white;
+  border-radius: ${theme.borderRadius.sm};
+  font-size: ${theme.typography.fontSize.xs};
+  font-weight: ${theme.typography.fontWeight.semibold};
+`;
+
+const ClosedBadge = styled.div`
+  display: inline-block;
+  padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  background-color: #9e9e9e;
   color: white;
   border-radius: ${theme.borderRadius.sm};
   font-size: ${theme.typography.fontSize.xs};

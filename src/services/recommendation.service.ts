@@ -22,6 +22,9 @@ export interface RecommendedStore {
   latitude: number;
   longitude: number;
   cursorId: number;
+  isFavorite: boolean;
+  favoriteId?: number;
+  isOpen?: boolean;
 }
 
 // 추천 목록 응답
@@ -132,7 +135,7 @@ export const recommendationService = {
   // 개인화 추천 (기본)
   async getRecommendations(
     params: RecommendationParams
-  ): Promise<ApiResponse<RecommendationResponse>> {
+  ): Promise<ApiResponse<RecommendedStore[]>> {
     const response = await api.get("/api/v1/recommendations", { params });
     return response.data;
   },
