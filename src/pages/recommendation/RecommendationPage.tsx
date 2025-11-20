@@ -22,8 +22,6 @@ import BottomNav from "../../components/layout/BottomNav";
 type SortBy = "SCORE" | "DISTANCE";
 type DistanceFilter = 0.5 | 1 | 2 | 5 | 10;
 
-console.log("🚨🚨🚨 RecommendationPage.tsx 파일이 로드되었습니다! 🚨🚨🚨");
-
 const RecommendationPage = () => {
   console.log("🎯🎯🎯 [RecommendationPage] 함수 컴포넌트 실행 시작!!! 🎯🎯🎯");
 
