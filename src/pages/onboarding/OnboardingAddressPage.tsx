@@ -371,18 +371,21 @@ const OnboardingAddressPage = () => {
 
         <Section>
           <SectionLabel>주소 추가</SectionLabel>
-          <SearchInputWrapper>
-            <SearchIcon>
-              <FiSearch />
-            </SearchIcon>
-            <SearchInput
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="주소 검색..."
-            />
-          </SearchInputWrapper>
+          <SearchContainer>
+            <SearchInputWrapper>
+              <SearchIcon>
+                <FiSearch />
+              </SearchIcon>
+              <SearchInput
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="주소 검색..."
+              />
+            </SearchInputWrapper>
+            <SearchButton onClick={handleSearch}>검색</SearchButton>
+          </SearchContainer>
 
           {/* 검색 결과 */}
           {searchResults.length > 0 && (
@@ -571,9 +574,15 @@ const SectionLabel = styled.label`
   color: #000000;
 `;
 
+const SearchContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+`;
+
 const SearchInputWrapper = styled.div`
   position: relative;
-  width: 100%;
+  flex: 1;
 `;
 
 const SearchIcon = styled.div`
@@ -602,6 +611,28 @@ const SearchInput = styled.input`
   &:focus {
     outline: none;
     border-color: #ff6b35;
+  }
+`;
+
+const SearchButton = styled.button`
+  height: 48px;
+  padding: 0 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #ff6b35;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #ff5722;
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 `;
 
