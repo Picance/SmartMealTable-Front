@@ -12,19 +12,24 @@ export interface RecommendationScores {
 // 추천 가게 정보
 export interface RecommendedStore {
   storeId: number;
-  storeName: string;
-  categoryId: number;
-  score: number;
+  name: string; // API 명세에서는 name
+  storeName?: string; // 하위 호환성
+  categoryId?: number;
+  categoryName?: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
   distance: number;
   averagePrice: number;
   reviewCount: number;
-  imageUrl: string;
-  latitude: number;
-  longitude: number;
-  cursorId: number;
+  recommendationScore?: number; // API 명세에 있음
+  score?: number; // 하위 호환성
+  scores?: RecommendationScores; // 세부 점수
   isFavorite: boolean;
   favoriteId?: number;
   isOpen?: boolean;
+  imageUrl: string;
+  cursorId?: number;
 }
 
 // 추천 목록 응답
@@ -44,7 +49,7 @@ export interface RecommendationParams {
   longitude: number;
   keyword?: string;
   radius?: number; // 0.1 ~ 10 km
-  sortBy?: "SCORE" | "DISTANCE";
+  sortBy?: "SCORE" | "DISTANCE" | "reviewCount" | "distance";
   includeDisliked?: boolean;
   openNow?: boolean;
   storeType?: "ALL" | "CAMPUS_RESTAURANT" | "RESTAURANT";

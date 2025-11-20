@@ -235,6 +235,14 @@ const RecommendationPage = () => {
           "🔍 [RecommendationPage] 첫 번째 가게의 favoriteId:",
           storeList[0]?.favoriteId
         );
+        console.log(
+          "🔍 [RecommendationPage] 첫 번째 가게의 categoryName:",
+          storeList[0]?.categoryName
+        );
+        console.log(
+          "🔍 [RecommendationPage] 첫 번째 가게의 isOpen:",
+          storeList[0]?.isOpen
+        );
         setStores(storeList);
 
         // API 응답의 isFavorite와 favoriteId를 활용하여 상태 초기화
@@ -243,9 +251,13 @@ const RecommendationPage = () => {
 
         storeList.forEach((store, index) => {
           console.log(
-            `🔍 [RecommendationPage] 가게 #${index} (${store.storeName}):`,
+            `🔍 [RecommendationPage] 가게 #${index} (${
+              store.name || store.storeName
+            }):`,
             {
               storeId: store.storeId,
+              name: store.name,
+              storeName: store.storeName,
               isFavorite: store.isFavorite,
               favoriteId: store.favoriteId,
             }
@@ -363,13 +375,72 @@ const RecommendationPage = () => {
     try {
       if (isFavorite) {
         // 즐겨찾기 제거
-        const favoriteId = favoriteIdMap.get(storeId);
+        let favoriteId = favoriteIdMap.get(storeId);
+
+        // favoriteId가 없으면 즐겨찾기 목록을 조회해서 찾기
         if (!favoriteId) {
-          console.error(
-            "⚠️ [RecommendationPage] favoriteId를 찾을 수 없습니다:",
+          console.log(
+            "⚠️ [RecommendationPage] favoriteId가 없어서 즐겨찾기 목록 조회:",
             storeId
           );
-          // 상태 불일치 해결을 위해 전체 목록 다시 로드
+
+          try {
+            // 파라미터 없이 전체 목록 조회
+            const favoritesResponse = await favoriteService.getFavorites();
+
+            console.log(
+              "📋 [RecommendationPage] 즐겨찾기 응답:",
+              favoritesResponse
+            );
+
+            if (
+              favoritesResponse.result === "SUCCESS" &&
+              favoritesResponse.data
+            ) {
+              const favoritesList = favoritesResponse.data.favorites;
+              console.log(
+                "📋 [RecommendationPage] 즐겨찾기 목록:",
+                favoritesList
+              );
+
+              const favoriteItem = favoritesList.find(
+                (item) => item.storeId === storeId
+              );
+
+              if (favoriteItem) {
+                favoriteId = favoriteItem.favoriteId;
+                console.log(
+                  "✅ [RecommendationPage] favoriteId 찾음:",
+                  favoriteId
+                );
+                // 찾은 favoriteId를 맵에 저장
+                setFavoriteIdMap((prev) => {
+                  const newMap = new Map(prev);
+                  newMap.set(storeId, favoriteId!);
+                  return newMap;
+                });
+              } else {
+                console.log(
+                  "⚠️ [RecommendationPage] 즐겨찾기 목록에서 storeId를 찾을 수 없음:",
+                  storeId
+                );
+              }
+            }
+          } catch (err) {
+            console.error(
+              "❌ [RecommendationPage] 즐겨찾기 목록 조회 실패:",
+              err
+            );
+          }
+        }
+
+        if (!favoriteId) {
+          console.error(
+            "❌ [RecommendationPage] favoriteId를 찾을 수 없습니다:",
+            storeId
+          );
+          alert("즐겨찾기 정보를 찾을 수 없습니다. 다시 시도해주세요.");
+          // 상태 동기화를 위해 전체 목록 다시 로드
           await searchStores();
           return;
         }
@@ -654,7 +725,10 @@ const RecommendationPage = () => {
                   }}
                 />
                 <StoreNameOverlay>
-                  <StoreName>{store.storeName}</StoreName>
+                  <StoreName>{store.name || store.storeName}</StoreName>
+                  <StoreCategoryName>
+                    {store.categoryName || `카테고리 ${store.categoryId || ""}`}
+                  </StoreCategoryName>
                 </StoreNameOverlay>
                 <FavoriteButton
                   onClick={(e) => handleFavoriteToggle(store.storeId, e)}
@@ -678,17 +752,24 @@ const RecommendationPage = () => {
                 </InfoRow>
 
                 <BadgeRow>
+                  {store.isOpen ? (
+                    <OpenBadge>영업중</OpenBadge>
+                  ) : (
+                    <ClosedBadge>영업종료</ClosedBadge>
+                  )}
                   <PriceInfo>
-                    <PriceIcon>💰</PriceIcon>
-                    평균{" "}
+                    💰 평균{" "}
                     {store.averagePrice > 0
-                      ? store.averagePrice.toLocaleString()
+                      ? `${store.averagePrice.toLocaleString()}원`
                       : "정보없음"}
-                    {store.averagePrice > 0 && "원"}
                   </PriceInfo>
-                  {store.score >= 40000 && (
+                  {(store.score || store.recommendationScore || 0) >= 40000 && (
                     <PopularityBadge>
-                      ⚡ 추천점수 {(store.score / 1000).toFixed(0)}K
+                      ⚡ 추천점수{" "}
+                      {(
+                        (store.score || store.recommendationScore || 0) / 1000
+                      ).toFixed(0)}
+                      K
                     </PopularityBadge>
                   )}
                 </BadgeRow>
@@ -976,15 +1057,29 @@ const StoreNameOverlay = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  padding: 24px 20px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    transparent 100%
+  );
 `;
 
 const StoreName = styled.h3`
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: #fff;
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  line-height: 1.2;
+`;
+
+const StoreCategoryName = styled.div`
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 `;
 
 const FavoriteButton = styled.button<{ $isFavorite?: boolean }>`
@@ -1031,8 +1126,8 @@ const InfoItem = styled.span`
 const BadgeRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 `;
 
@@ -1040,16 +1135,33 @@ const PriceInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
-  background-color: #f5f5f5;
-  border-radius: 14px;
   font-size: 13px;
-  font-weight: 600;
-  color: #333;
+  font-weight: 500;
+  color: #666;
 `;
 
-const PriceIcon = styled.span`
-  font-size: 14px;
+const OpenBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  background: #ff6b35;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 6px 12px;
+  letter-spacing: -0.3px;
+`;
+
+const ClosedBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  background: #666;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 6px 12px;
+  letter-spacing: -0.3px;
 `;
 
 const PopularityBadge = styled.span`

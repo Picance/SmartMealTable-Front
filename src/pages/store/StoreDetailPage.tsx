@@ -23,6 +23,7 @@ const StoreDetailPage = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (storeId) {
@@ -748,7 +749,7 @@ const PriceBadge = styled.span`
 const StatusBadge = styled.span<{ $isOpen: boolean }>`
   display: inline-block;
   padding: 4px 10px;
-  background-color: ${(props) => (props.$isOpen ? "#ff6b35" : "#999")};
+  background-color: ${(props) => (props.$isOpen ? "#ff6b35" : "#666")};
   color: white;
   font-size: 13px;
   font-weight: 600;
