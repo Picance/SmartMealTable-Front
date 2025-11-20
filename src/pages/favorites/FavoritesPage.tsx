@@ -4,7 +4,11 @@ import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiMoreVertical, FiFilter } from "react-icons/fi";
 import BottomNavigation from "../../components/layout/BottomNav";
-import { favoriteService, type Favorite, type SortBy } from "../../services/favorite.service";
+import {
+  favoriteService,
+  type Favorite,
+  type SortBy,
+} from "../../services/favorite.service";
 
 const FavoritesPage = () => {
   const navigate = useNavigate();
@@ -98,15 +102,19 @@ const FavoritesPage = () => {
               전체 {totalCount}개 · 영업 중 {openCount}개
             </StatusText>
           </StatusBar>
-          
+
           <RestaurantList>
             {favorites.map((favorite) => (
               <RestaurantCard key={favorite.favoriteId}>
                 <CardHeader>
-                  <MoreButton onClick={() => handleMoreOptions(favorite.favoriteId)}>
+                  <MoreButton
+                    onClick={() => handleMoreOptions(favorite.favoriteId)}
+                  >
                     <FiMoreVertical />
                   </MoreButton>
-                  <DeleteButton onClick={() => handleDelete(favorite.favoriteId)}>
+                  <DeleteButton
+                    onClick={() => handleDelete(favorite.favoriteId)}
+                  >
                     🗑️
                   </DeleteButton>
                 </CardHeader>
@@ -119,10 +127,14 @@ const FavoritesPage = () => {
 
                 <RestaurantInfo>
                   <RestaurantName>{favorite.storeName}</RestaurantName>
-                  
+
                   <MetaRow>
-                    <Rating>⭐ {favorite.reviewCount.toLocaleString()} 리뷰</Rating>
-                    <Price>평균 ₩{favorite.averagePrice.toLocaleString()}</Price>
+                    <Rating>
+                      ⭐ {favorite.reviewCount.toLocaleString()} 리뷰
+                    </Rating>
+                    <Price>
+                      평균 ₩{favorite.averagePrice.toLocaleString()}
+                    </Price>
                   </MetaRow>
 
                   <Categories>{favorite.categoryName}</Categories>
@@ -177,10 +189,11 @@ const Title = styled.h1`
 `;
 
 const FilterButton = styled.button<{ $active?: boolean }>`
-  background: ${props => props.$active ? theme.colors.primary : 'transparent'};
+  background: ${(props) =>
+    props.$active ? theme.colors.primary : "transparent"};
   border: none;
   font-size: ${theme.typography.fontSize.xl};
-  color: ${props => props.$active ? 'white' : '#424242'};
+  color: ${(props) => (props.$active ? "white" : "#424242")};
   cursor: pointer;
   padding: ${theme.spacing.xs};
   display: flex;
@@ -212,8 +225,12 @@ const LoadingSpinner = styled.div`
   animation: spin 1s linear infinite;
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;
 

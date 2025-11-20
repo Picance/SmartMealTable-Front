@@ -26,15 +26,18 @@ console.log("🚨🚨🚨 RecommendationPage.tsx 파일이 로드되었습니다
 
 const RecommendationPage = () => {
   console.log("🎯🎯🎯 [RecommendationPage] 함수 컴포넌트 실행 시작!!! 🎯🎯🎯");
-  
+
   const navigate = useNavigate();
   console.log("✅ useNavigate 성공");
-  
+
   const location = useLocation();
   console.log("✅ useLocation 성공");
-  
+
   const { isAuthenticated, accessToken } = useAuthStore();
-  console.log("✅ useAuthStore 성공:", { isAuthenticated, hasToken: !!accessToken });
+  console.log("✅ useAuthStore 성공:", {
+    isAuthenticated,
+    hasToken: !!accessToken,
+  });
   const [searchKeyword, setSearchKeyword] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("SCORE");
   const [distance, setDistance] = useState<DistanceFilter>(0.5);
@@ -43,12 +46,14 @@ const RecommendationPage = () => {
   const [stores, setStores] = useState<RecommendedStore[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [favoriteStores, setFavoriteStores] = useState<Set<number>>(new Set());
-  const [favoriteIdMap, setFavoriteIdMap] = useState<Map<number, number>>(new Map()); // storeId -> favoriteId
-  
-  console.log("🎯 [RecommendationPage] 현재 상태:", { 
-    isAuthenticated, 
+  const [favoriteIdMap, setFavoriteIdMap] = useState<Map<number, number>>(
+    new Map()
+  ); // storeId -> favoriteId
+
+  console.log("🎯 [RecommendationPage] 현재 상태:", {
+    isAuthenticated,
     hasToken: !!accessToken,
-    pathname: location.pathname 
+    pathname: location.pathname,
   });
 
   // 자동완성 관련 상태
@@ -70,8 +75,11 @@ const RecommendationPage = () => {
 
   useEffect(() => {
     console.log("🚀 [RecommendationPage] 컴포넌트 마운트");
-    console.log("🔐 [RecommendationPage] 인증 상태:", { isAuthenticated, hasToken: !!accessToken });
-    
+    console.log("🔐 [RecommendationPage] 인증 상태:", {
+      isAuthenticated,
+      hasToken: !!accessToken,
+    });
+
     // 로그인 체크
     if (!isAuthenticated || !accessToken) {
       console.log("❌ [RecommendationPage] 로그인 필요 - 로그인 페이지로 이동");
@@ -81,10 +89,13 @@ const RecommendationPage = () => {
     }
 
     console.log("📍 [RecommendationPage] location.state:", location.state);
-    
+
     // location.state에서 위치 정보 가져오기
     if (location.state && location.state.userLocation) {
-      console.log("✅ [RecommendationPage] location.state에서 위치 정보 사용:", location.state.userLocation);
+      console.log(
+        "✅ [RecommendationPage] location.state에서 위치 정보 사용:",
+        location.state.userLocation
+      );
       setUserLocation(location.state.userLocation);
     } else {
       console.log("📡 [RecommendationPage] API에서 위치 정보 가져오기 시작");
@@ -104,7 +115,10 @@ const RecommendationPage = () => {
         dashboardResponse.data?.location
       ) {
         const { latitude, longitude } = dashboardResponse.data.location;
-        console.log("✅ [fetchUserLocation] 위치 정보 설정:", { latitude, longitude });
+        console.log("✅ [fetchUserLocation] 위치 정보 설정:", {
+          latitude,
+          longitude,
+        });
         setUserLocation({ latitude, longitude });
       } else {
         console.log("⚠️ [fetchUserLocation] 위치 정보 없음 - 기본 위치 사용");
@@ -131,9 +145,9 @@ const RecommendationPage = () => {
       sortBy,
       distance,
       isOpenOnly,
-      excludeDislikes
+      excludeDislikes,
     });
-    
+
     if (userLocation) {
       console.log("🔍 [RecommendationPage] searchStores 호출");
       searchStores();
@@ -162,7 +176,7 @@ const RecommendationPage = () => {
 
   const searchStores = async () => {
     console.log("🔍 [searchStores] 시작");
-    
+
     if (!userLocation) {
       console.log("⚠️ [searchStores] 위치 정보 없음 - 중단");
       return;
@@ -197,29 +211,48 @@ const RecommendationPage = () => {
       console.log("🔍 [RecommendationPage] API 응답 전체:", response);
       console.log("🔍 [RecommendationPage] API 응답 result:", response.result);
       console.log("🔍 [RecommendationPage] API 응답 data:", response.data);
-      console.log("🔍 [RecommendationPage] API 응답 data 타입:", typeof response.data, Array.isArray(response.data));
+      console.log(
+        "🔍 [RecommendationPage] API 응답 data 타입:",
+        typeof response.data,
+        Array.isArray(response.data)
+      );
 
       if (response.result === "SUCCESS" && response.data) {
         // API 응답: { result: "SUCCESS", data: RecommendedStore[] }
         const storeList = Array.isArray(response.data) ? response.data : [];
-        console.log("🔍 [RecommendationPage] 파싱된 storeList 길이:", storeList.length);
+        console.log(
+          "🔍 [RecommendationPage] 파싱된 storeList 길이:",
+          storeList.length
+        );
         console.log("🔍 [RecommendationPage] 파싱된 storeList:", storeList);
-        console.log("🔍 [RecommendationPage] 첫 번째 가게 데이터:", storeList[0]);
-        console.log("🔍 [RecommendationPage] 첫 번째 가게의 isFavorite:", storeList[0]?.isFavorite);
-        console.log("🔍 [RecommendationPage] 첫 번째 가게의 favoriteId:", storeList[0]?.favoriteId);
+        console.log(
+          "🔍 [RecommendationPage] 첫 번째 가게 데이터:",
+          storeList[0]
+        );
+        console.log(
+          "🔍 [RecommendationPage] 첫 번째 가게의 isFavorite:",
+          storeList[0]?.isFavorite
+        );
+        console.log(
+          "🔍 [RecommendationPage] 첫 번째 가게의 favoriteId:",
+          storeList[0]?.favoriteId
+        );
         setStores(storeList);
-        
+
         // API 응답의 isFavorite와 favoriteId를 활용하여 상태 초기화
         const favorites = new Set<number>();
         const idMap = new Map<number, number>();
-        
+
         storeList.forEach((store, index) => {
-          console.log(`🔍 [RecommendationPage] 가게 #${index} (${store.storeName}):`, {
-            storeId: store.storeId,
-            isFavorite: store.isFavorite,
-            favoriteId: store.favoriteId
-          });
-          
+          console.log(
+            `🔍 [RecommendationPage] 가게 #${index} (${store.storeName}):`,
+            {
+              storeId: store.storeId,
+              isFavorite: store.isFavorite,
+              favoriteId: store.favoriteId,
+            }
+          );
+
           if (store.isFavorite) {
             favorites.add(store.storeId);
             // API 응답에 favoriteId가 있다면 매핑에 추가
@@ -228,11 +261,21 @@ const RecommendationPage = () => {
             }
           }
         });
-        
-        console.log("⭐ [RecommendationPage] 즐겨찾기 상태 로드:", favorites.size, "개");
-        console.log("⭐ [RecommendationPage] favoriteStores Set:", Array.from(favorites));
-        console.log("⭐ [RecommendationPage] favoriteIdMap:", Array.from(idMap.entries()));
-        
+
+        console.log(
+          "⭐ [RecommendationPage] 즐겨찾기 상태 로드:",
+          favorites.size,
+          "개"
+        );
+        console.log(
+          "⭐ [RecommendationPage] favoriteStores Set:",
+          Array.from(favorites)
+        );
+        console.log(
+          "⭐ [RecommendationPage] favoriteIdMap:",
+          Array.from(idMap.entries())
+        );
+
         setFavoriteStores(favorites);
         setFavoriteIdMap(idMap);
       } else {
@@ -316,62 +359,70 @@ const RecommendationPage = () => {
 
   const handleFavoriteToggle = async (storeId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     const isFavorite = favoriteStores.has(storeId);
-    
+
     try {
       if (isFavorite) {
         // 즐겨찾기 제거
         const favoriteId = favoriteIdMap.get(storeId);
         if (!favoriteId) {
-          console.error("⚠️ [RecommendationPage] favoriteId를 찾을 수 없습니다:", storeId);
+          console.error(
+            "⚠️ [RecommendationPage] favoriteId를 찾을 수 없습니다:",
+            storeId
+          );
           // 상태 불일치 해결을 위해 전체 목록 다시 로드
           await searchStores();
           return;
         }
-        
+
         await favoriteService.deleteFavorite(favoriteId);
-        
+
         // UI 즉시 업데이트
-        setFavoriteStores(prev => {
+        setFavoriteStores((prev) => {
           const newSet = new Set(prev);
           newSet.delete(storeId);
           return newSet;
         });
-        
-        setFavoriteIdMap(prev => {
+
+        setFavoriteIdMap((prev) => {
           const newMap = new Map(prev);
           newMap.delete(storeId);
           return newMap;
         });
-        
+
         console.log("⭐ [RecommendationPage] 즐겨찾기 제거 완료:", storeId);
       } else {
         // 즐겨찾기 추가
         const response = await favoriteService.addFavorite(storeId);
-        
+
         if (response.result === "SUCCESS" && response.data) {
           // UI 즉시 업데이트
-          setFavoriteStores(prev => {
+          setFavoriteStores((prev) => {
             const newSet = new Set(prev);
             newSet.add(storeId);
             return newSet;
           });
-          
-          setFavoriteIdMap(prev => {
+
+          setFavoriteIdMap((prev) => {
             const newMap = new Map(prev);
             if (response.data) {
               newMap.set(storeId, response.data.favoriteId);
             }
             return newMap;
           });
-          
-          console.log("⭐ [RecommendationPage] 즐겨찾기 추가 완료:", storeId, "favoriteId:", response.data.favoriteId);
+
+          console.log(
+            "⭐ [RecommendationPage] 즐겨찾기 추가 완료:",
+            storeId,
+            "favoriteId:",
+            response.data.favoriteId
+          );
         }
       }
     } catch (err: any) {
       console.error("⭐ [RecommendationPage] 즐겨찾기 토글 실패:", err);
-      
+
       // 409 에러 (이미 즐겨찾기에 있음)
       if (err.response?.status === 409) {
         // UI 상태 동기화를 위해 전체 목록 다시 로드
@@ -382,7 +433,7 @@ const RecommendationPage = () => {
         await searchStores();
         alert("즐겨찾기 정보를 찾을 수 없습니다. 다시 시도해주세요.");
       } else {
-        alert(`즐겨찾기 ${isFavorite ? '제거' : '추가'}에 실패했습니다.`);
+        alert(`즐겨찾기 ${isFavorite ? "제거" : "추가"}에 실패했습니다.`);
       }
     }
   };
@@ -942,7 +993,8 @@ const FavoriteButton = styled.button<{ $isFavorite?: boolean }>`
   position: absolute;
   top: 16px;
   right: 16px;
-  background: ${props => props.$isFavorite ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.3)'};
+  background: ${(props) =>
+    props.$isFavorite ? "rgba(255, 255, 255, 0.95)" : "rgba(0, 0, 0, 0.3)"};
   border: none;
   border-radius: 50%;
   width: 48px;

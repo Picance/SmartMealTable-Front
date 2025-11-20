@@ -52,7 +52,12 @@ export interface UpdateFavoriteOrderResponse {
   updatedCount: number;
 }
 
-export type SortBy = "priority" | "name" | "reviewCount" | "distance" | "createdAt";
+export type SortBy =
+  | "priority"
+  | "name"
+  | "reviewCount"
+  | "distance"
+  | "createdAt";
 
 export interface GetFavoritesParams {
   sortBy?: SortBy;
