@@ -296,7 +296,7 @@ const MealSection = styled.div`
 const MealRow = styled.div`
   display: flex;
   align-items: center;
-  gap: ${theme.spacing.md};
+  gap: ${theme.spacing.sm};
   padding: ${theme.spacing.md} 0;
 
   &:not(:last-child) {
@@ -305,8 +305,9 @@ const MealRow = styled.div`
 `;
 
 const MealIcon = styled.span`
-  font-size: ${theme.typography.fontSize["2xl"]};
-  width: 40px;
+  font-size: ${theme.typography.fontSize.xl};
+  width: 32px;
+  flex-shrink: 0;
   text-align: center;
 `;
 
@@ -314,11 +315,13 @@ const MealLabel = styled.span`
   font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.semibold};
   color: #212121;
-  min-width: 60px;
+  width: 50px;
+  flex-shrink: 0;
 `;
 
 const BudgetInputWrapper = styled.div`
   flex: 1;
+  min-width: 0;
   background-color: #f5f5f5;
   border-radius: ${theme.borderRadius.md};
   padding: ${theme.spacing.sm} ${theme.spacing.md};
@@ -335,10 +338,12 @@ const CurrencySymbol = styled.span`
 
 const BudgetInput = styled.input`
   flex: 1;
+  min-width: 0;
+  width: 100%;
   border: none;
   outline: none;
   background: transparent;
-  font-size: ${theme.typography.fontSize.lg};
+  font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.bold};
   color: #212121;
   text-align: right;
@@ -413,9 +418,11 @@ const MonthlyInputWrapper = styled.div`
 
 const MonthlyInput = styled.input`
   flex: 1;
+  min-width: 0;
+  width: 100%;
   border: none;
   outline: none;
-  font-size: ${theme.typography.fontSize["2xl"]};
+  font-size: ${theme.typography.fontSize.xl};
   font-weight: ${theme.typography.fontWeight.bold};
   color: #212121;
   text-align: right;
