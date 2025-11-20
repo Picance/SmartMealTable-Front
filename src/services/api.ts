@@ -2,7 +2,13 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import type { ApiResponse } from "../types/api";
 
 // API Base URL (환경변수로 관리)
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const BASE_URL =
+  rawBaseUrl !== undefined
+    ? rawBaseUrl.replace(/\/$/, "")
+    : import.meta.env.DEV
+    ? "http://localhost:8080"
+    : "";
 
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({
