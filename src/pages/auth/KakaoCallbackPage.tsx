@@ -30,16 +30,12 @@ const KakaoCallbackPage = () => {
           throw new Error("인증 코드를 찾을 수 없습니다.");
         }
 
-        console.log("카카오 인증 코드:", authorizationCode);
-
         // 카카오 로그인 API 호출
         const redirectUri = import.meta.env.VITE_KAKAO_REDIRECT_URI;
         const response = await authService.kakaoLogin({
           authorizationCode,
           redirectUri,
         });
-
-        console.log("카카오 로그인 응답:", response);
 
         if (response.result === "SUCCESS" && response.data) {
           const {
@@ -50,8 +46,6 @@ const KakaoCallbackPage = () => {
             refreshToken,
             onboardingComplete,
           } = response.data;
-
-          console.log("카카오 로그인 성공 - 온보딩 상태:", onboardingComplete);
 
           // 토큰 및 회원 정보 저장
           setAuth(

@@ -54,9 +54,7 @@ const EmailLoginPage = () => {
     // API Call
     setLoading(true);
     try {
-      console.log("로그인 시도:", formData);
       const response = await authService.login(formData);
-      console.log("로그인 응답:", response);
 
       if (response.result === "SUCCESS" && response.data) {
         const {
@@ -67,8 +65,6 @@ const EmailLoginPage = () => {
           refreshToken,
           onboardingComplete,
         } = response.data;
-
-        console.log("이메일 로그인 성공 - 온보딩 상태:", onboardingComplete);
 
         // 토큰 및 회원 정보 저장
         setAuth(

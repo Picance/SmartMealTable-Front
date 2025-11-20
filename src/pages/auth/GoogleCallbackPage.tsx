@@ -48,8 +48,6 @@ const GoogleCallbackPage = () => {
             onboardingComplete,
           } = response.data;
 
-          console.log("구글 로그인 성공 - 온보딩 상태:", onboardingComplete);
-
           // 토큰 및 회원 정보 저장
           const { setAuth } = useAuthStore.getState();
           setAuth(
