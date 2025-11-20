@@ -39,44 +39,28 @@ const GoogleCallbackPage = () => {
         });
 
         if (response.result === "SUCCESS" && response.data) {
-          const { memberId, email, name, accessToken, refreshToken } =
+          const { memberId, email, name, accessToken, refreshToken, onboardingComplete } =
             response.data;
 
-          // 먼저 토큰 저장
+          console.log("구글 로그인 성공 - 온보딩 상태:", onboardingComplete);
+
+          // 토큰 및 회원 정보 저장
           const { setAuth } = useAuthStore.getState();
           setAuth(
             {
               memberId,
               email,
               name,
-              isOnboardingComplete: false, // 초기값
+              isOnboardingComplete: onboardingComplete,
             },
             accessToken,
             refreshToken
           );
 
-          // 서버에서 실제 온보딩 상태 조회
-          try {
-            const statusResponse = await authService.getOnboardingStatus();
-            if (statusResponse.result === "SUCCESS" && statusResponse.data) {
-              const { isOnboardingComplete } = statusResponse.data;
-
-              // 온보딩 상태 업데이트
-              const { updateMember } = useAuthStore.getState();
-              updateMember({ isOnboardingComplete });
-
-              console.log("온보딩 상태 조회 완료:", isOnboardingComplete);
-
-              // 온보딩 상태에 따라 이동
-              if (isOnboardingComplete) {
-                navigate("/home", { replace: true });
-              } else {
-                navigate("/onboarding/profile", { replace: true });
-              }
-            }
-          } catch (statusError) {
-            console.error("온보딩 상태 조회 실패:", statusError);
-            // 온보딩 상태 조회 실패 시 기본적으로 온보딩 페이지로 이동
+          // 온보딩 상태에 따라 이동
+          if (onboardingComplete) {
+            navigate("/home", { replace: true });
+          } else {
             navigate("/onboarding/profile", { replace: true });
           }
         } else {
