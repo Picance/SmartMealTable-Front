@@ -1,38 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { categoryService } from "../../services/category.service";
 import type { Category } from "../../types/api";
 
-type DragZone = "liked" | "disliked" | "available";
-
 const OnboardingPreferencePage = () => {
   const navigate = useNavigate();
 
-  // 카테고리 관련 상태
   const [likedCategories, setLikedCategories] = useState<Category[]>([]);
   const [dislikedCategories, setDislikedCategories] = useState<Category[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<Category[]>(
-    []
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [likedSearchQuery, setLikedSearchQuery] = useState("");
+  const [dislikedSearchQuery, setDislikedSearchQuery] = useState("");
+  const [showLikedDropdown, setShowLikedDropdown] = useState(false);
+  const [showDislikedDropdown, setShowDislikedDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // 드래그 앤 드롭 관련 상태
-  const [draggedCategory, setDraggedCategory] = useState<Category | null>(null);
-  const [dragSourceZone, setDragSourceZone] = useState<DragZone | null>(null);
-  const [dragOverZone, setDragOverZone] = useState<DragZone | null>(null);
+  const likedSearchRef = useRef<HTMLDivElement>(null);
+  const dislikedSearchRef = useRef<HTMLDivElement>(null);
 
-  // 카테고리 목록 조회 (한 번만 모두 가져오기)
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
         const response = await categoryService.getCategories();
         if (response.result === "SUCCESS" && response.data) {
-          const categories = response.data.categories;
-          setAvailableCategories(categories);
+          setAllCategories(response.data.categories);
         }
       } catch (error) {
         console.error("카테고리 조회 실패:", error);
@@ -44,105 +38,104 @@ const OnboardingPreferencePage = () => {
     fetchCategories();
   }, []);
 
-  // 검색 필터링된 카테고리
-  const filteredAvailableCategories = availableCategories.filter((category) =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        likedSearchRef.current &&
+        !likedSearchRef.current.contains(event.target as Node)
+      ) {
+        setShowLikedDropdown(false);
+      }
+      if (
+        dislikedSearchRef.current &&
+        !dislikedSearchRef.current.contains(event.target as Node)
+      ) {
+        setShowDislikedDropdown(false);
+      }
+    };
 
-  // 드래그 시작
-  const handleDragStart = (category: Category, zone: DragZone) => {
-    setDraggedCategory(category);
-    setDragSourceZone(zone);
-  };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  // 드래그 오버
-  const handleDragOver = (e: React.DragEvent, zone: DragZone) => {
-    e.preventDefault();
-    setDragOverZone(zone);
-  };
+  const getFilteredLikedCategories = () => {
+    const selectedIds = [
+      ...likedCategories.map((c) => c.categoryId),
+      ...dislikedCategories.map((c) => c.categoryId),
+    ];
 
-  // 드래그 떠남
-  const handleDragLeave = () => {
-    setDragOverZone(null);
-  };
-
-  // 드롭
-  const handleDrop = (e: React.DragEvent, targetZone: DragZone) => {
-    e.preventDefault();
-    if (!draggedCategory || !dragSourceZone) return;
-    if (dragSourceZone === targetZone) {
-      setDragOverZone(null);
-      setDraggedCategory(null);
-      setDragSourceZone(null);
-      return;
-    }
-
-    // 원래 영역에서 제거
-    if (dragSourceZone === "liked") {
-      setLikedCategories(
-        likedCategories.filter(
-          (c) => c.categoryId !== draggedCategory.categoryId
-        )
+    return allCategories
+      .filter((cat) => !selectedIds.includes(cat.categoryId))
+      .filter((cat) =>
+        cat.name.toLowerCase().includes(likedSearchQuery.toLowerCase())
       );
-    } else if (dragSourceZone === "disliked") {
-      setDislikedCategories(
-        dislikedCategories.filter(
-          (c) => c.categoryId !== draggedCategory.categoryId
-        )
-      );
-    } else if (dragSourceZone === "available") {
-      setAvailableCategories(
-        availableCategories.filter(
-          (c) => c.categoryId !== draggedCategory.categoryId
-        )
-      );
-    }
-
-    // 새 영역에 추가
-    if (targetZone === "liked") {
-      setLikedCategories([...likedCategories, draggedCategory]);
-    } else if (targetZone === "disliked") {
-      setDislikedCategories([...dislikedCategories, draggedCategory]);
-    } else if (targetZone === "available") {
-      setAvailableCategories([...availableCategories, draggedCategory]);
-    }
-
-    setDragOverZone(null);
-    setDraggedCategory(null);
-    setDragSourceZone(null);
   };
 
-  // 드래그 종료
-  const handleDragEnd = () => {
-    setDragOverZone(null);
-    setDraggedCategory(null);
-    setDragSourceZone(null);
-  };
+  const getFilteredDislikedCategories = () => {
+    const selectedIds = [
+      ...likedCategories.map((c) => c.categoryId),
+      ...dislikedCategories.map((c) => c.categoryId),
+    ];
 
-  // 카테고리 제거 (X 버튼)
-  const removeFromLiked = (categoryId: number) => {
-    const category = likedCategories.find((c) => c.categoryId === categoryId);
-    if (category) {
-      setLikedCategories(
-        likedCategories.filter((c) => c.categoryId !== categoryId)
+    return allCategories
+      .filter((cat) => !selectedIds.includes(cat.categoryId))
+      .filter((cat) =>
+        cat.name.toLowerCase().includes(dislikedSearchQuery.toLowerCase())
       );
-      setAvailableCategories([...availableCategories, category]);
-    }
   };
 
-  const removeFromDisliked = (categoryId: number) => {
-    const category = dislikedCategories.find(
-      (c) => c.categoryId === categoryId
+  const addLikedCategory = (category: Category) => {
+    setLikedCategories([...likedCategories, category]);
+    setLikedSearchQuery("");
+    setShowLikedDropdown(false);
+  };
+
+  const addDislikedCategory = (category: Category) => {
+    setDislikedCategories([...dislikedCategories, category]);
+    setDislikedSearchQuery("");
+    setShowDislikedDropdown(false);
+  };
+
+  const removeLikedCategory = (categoryId: number) => {
+    setLikedCategories(
+      likedCategories.filter((c) => c.categoryId !== categoryId)
     );
-    if (category) {
-      setDislikedCategories(
-        dislikedCategories.filter((c) => c.categoryId !== categoryId)
-      );
-      setAvailableCategories([...availableCategories, category]);
-    }
   };
 
-  // 저장하기
+  const removeDislikedCategory = (categoryId: number) => {
+    setDislikedCategories(
+      dislikedCategories.filter((c) => c.categoryId !== categoryId)
+    );
+  };
+
+  const moveLikedUp = (index: number) => {
+    if (index === 0) return;
+    const newList = [...likedCategories];
+    [newList[index - 1], newList[index]] = [newList[index], newList[index - 1]];
+    setLikedCategories(newList);
+  };
+
+  const moveDislikedUp = (index: number) => {
+    if (index === 0) return;
+    const newList = [...dislikedCategories];
+    [newList[index - 1], newList[index]] = [newList[index], newList[index - 1]];
+    setDislikedCategories(newList);
+  };
+
+  const moveLikedDown = (index: number) => {
+    if (index === likedCategories.length - 1) return;
+    const newList = [...likedCategories];
+    [newList[index], newList[index + 1]] = [newList[index + 1], newList[index]];
+    setLikedCategories(newList);
+  };
+
+  const moveDislikedDown = (index: number) => {
+    if (index === dislikedCategories.length - 1) return;
+    const newList = [...dislikedCategories];
+    [newList[index], newList[index + 1]] = [newList[index + 1], newList[index]];
+    setDislikedCategories(newList);
+  };
+
   const handleSubmit = async () => {
     if (likedCategories.length === 0 && dislikedCategories.length === 0) {
       alert(
@@ -194,120 +187,138 @@ const OnboardingPreferencePage = () => {
         </SectionDescription>
       </Section>
 
-      {/* 선호하는 카테고리 드롭 영역 */}
       <Section>
         <SubTitle>선호하는 음식 카테고리 (우선순위 순서)</SubTitle>
-        <DropZone
-          onDragOver={(e) => handleDragOver(e, "liked")}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, "liked")}
-          $isOver={dragOverZone === "liked"}
-          $isEmpty={likedCategories.length === 0}
-        >
+        <SearchContainer ref={likedSearchRef}>
+          <SearchInput
+            type="text"
+            placeholder="카테고리 검색..."
+            value={likedSearchQuery}
+            onChange={(e) => {
+              setLikedSearchQuery(e.target.value);
+              setShowLikedDropdown(true);
+            }}
+            onFocus={() => setShowLikedDropdown(true)}
+          />
+          {showLikedDropdown && likedSearchQuery && (
+            <SearchDropdown>
+              {getFilteredLikedCategories().length > 0 ? (
+                getFilteredLikedCategories().map((category) => (
+                  <DropdownItem
+                    key={category.categoryId}
+                    onClick={() => addLikedCategory(category)}
+                  >
+                    {category.name}
+                  </DropdownItem>
+                ))
+              ) : (
+                <EmptyDropdown>검색 결과가 없습니다</EmptyDropdown>
+              )}
+            </SearchDropdown>
+          )}
+        </SearchContainer>
+
+        <CategoryList>
           {likedCategories.length === 0 ? (
-            <EmptyMessage>아래에서 드래그하여 추가하세요</EmptyMessage>
+            <EmptyMessage>검색하여 카테고리를 추가해주세요</EmptyMessage>
           ) : (
-            <CategoryChipGroup>
-              {likedCategories.map((category) => (
-                <CategoryChip
-                  key={category.categoryId}
-                  draggable
-                  onDragStart={() => handleDragStart(category, "liked")}
-                  onDragEnd={handleDragEnd}
-                  $color="orange"
-                  $isDragging={
-                    draggedCategory?.categoryId === category.categoryId
-                  }
-                >
-                  {category.name}
-                  <RemoveButton
-                    onClick={() => removeFromLiked(category.categoryId)}
+            likedCategories.map((category, index) => (
+              <CategoryItem key={category.categoryId} $type="liked">
+                <CategoryInfo>
+                  <PriorityBadge>{index + 1}</PriorityBadge>
+                  <CategoryName>{category.name}</CategoryName>
+                </CategoryInfo>
+                <ActionButtons>
+                  <PriorityButton
+                    onClick={() => moveLikedUp(index)}
+                    disabled={index === 0}
                   >
-                    ×
-                  </RemoveButton>
-                </CategoryChip>
-              ))}
-            </CategoryChipGroup>
-          )}
-        </DropZone>
-      </Section>
-
-      {/* 불호하는 카테고리 드롭 영역 */}
-      <Section>
-        <SubTitle>불호하는 음식 카테고리 (우선순위 순서)</SubTitle>
-        <DropZone
-          onDragOver={(e) => handleDragOver(e, "disliked")}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, "disliked")}
-          $isOver={dragOverZone === "disliked"}
-          $isEmpty={dislikedCategories.length === 0}
-        >
-          {dislikedCategories.length === 0 ? (
-            <EmptyMessage>아래에서 드래그하여 추가하세요</EmptyMessage>
-          ) : (
-            <CategoryChipGroup>
-              {dislikedCategories.map((category) => (
-                <CategoryChip
-                  key={category.categoryId}
-                  draggable
-                  onDragStart={() => handleDragStart(category, "disliked")}
-                  onDragEnd={handleDragEnd}
-                  $color="yellow"
-                  $isDragging={
-                    draggedCategory?.categoryId === category.categoryId
-                  }
-                >
-                  {category.name}
-                  <RemoveButton
-                    onClick={() => removeFromDisliked(category.categoryId)}
+                    ▲
+                  </PriorityButton>
+                  <PriorityButton
+                    onClick={() => moveLikedDown(index)}
+                    disabled={index === likedCategories.length - 1}
                   >
-                    ×
+                    ▼
+                  </PriorityButton>
+                  <RemoveButton
+                    onClick={() => removeLikedCategory(category.categoryId)}
+                  >
+                    ✕
                   </RemoveButton>
-                </CategoryChip>
-              ))}
-            </CategoryChipGroup>
-          )}
-        </DropZone>
-      </Section>
-
-      {/* 전체 카테고리 목록 */}
-      <Section>
-        <SubTitle>드래그 앤 드롭으로 지정해주세요</SubTitle>
-        <SearchInput
-          type="text"
-          placeholder="🔍  카테고리 검색..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <CategoryGrid
-          onDragOver={(e) => handleDragOver(e, "available")}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, "available")}
-        >
-          {loading ? (
-            <LoadingMessage>카테고리를 불러오는 중...</LoadingMessage>
-          ) : filteredAvailableCategories.length === 0 ? (
-            <EmptyMessage>
-              {searchQuery
-                ? "검색 결과가 없습니다"
-                : "모든 카테고리를 선택했습니다"}
-            </EmptyMessage>
-          ) : (
-            filteredAvailableCategories.map((category) => (
-              <DraggableCategory
-                key={category.categoryId}
-                draggable
-                onDragStart={() => handleDragStart(category, "available")}
-                onDragEnd={handleDragEnd}
-                $isDragging={
-                  draggedCategory?.categoryId === category.categoryId
-                }
-              >
-                ≡ {category.name}
-              </DraggableCategory>
+                </ActionButtons>
+              </CategoryItem>
             ))
           )}
-        </CategoryGrid>
+        </CategoryList>
+      </Section>
+
+      <Section>
+        <SubTitle>불호하는 음식 카테고리 (우선순위 순서)</SubTitle>
+        <SearchContainer ref={dislikedSearchRef}>
+          <SearchInput
+            type="text"
+            placeholder="카테고리 검색..."
+            value={dislikedSearchQuery}
+            onChange={(e) => {
+              setDislikedSearchQuery(e.target.value);
+              setShowDislikedDropdown(true);
+            }}
+            onFocus={() => setShowDislikedDropdown(true)}
+          />
+          {showDislikedDropdown && dislikedSearchQuery && (
+            <SearchDropdown>
+              {getFilteredDislikedCategories().length > 0 ? (
+                getFilteredDislikedCategories().map((category) => (
+                  <DropdownItem
+                    key={category.categoryId}
+                    onClick={() => addDislikedCategory(category)}
+                  >
+                    {category.name}
+                  </DropdownItem>
+                ))
+              ) : (
+                <EmptyDropdown>검색 결과가 없습니다</EmptyDropdown>
+              )}
+            </SearchDropdown>
+          )}
+        </SearchContainer>
+
+        <CategoryList>
+          {dislikedCategories.length === 0 ? (
+            <EmptyMessage>검색하여 카테고리를 추가해주세요</EmptyMessage>
+          ) : (
+            dislikedCategories.map((category, index) => (
+              <CategoryItem key={category.categoryId} $type="disliked">
+                <CategoryInfo>
+                  <PriorityBadge>{index + 1}</PriorityBadge>
+                  <CategoryName>{category.name}</CategoryName>
+                </CategoryInfo>
+                <ActionButtons>
+                  <PriorityButton
+                    onClick={() => moveDislikedUp(index)}
+                    disabled={index === 0}
+                  >
+                    ▲
+                  </PriorityButton>
+                  <PriorityButton
+                    onClick={() => moveDislikedDown(index)}
+                    disabled={index === dislikedCategories.length - 1}
+                  >
+                    ▼
+                  </PriorityButton>
+                  <RemoveButton
+                    onClick={() =>
+                      removeDislikedCategory(category.categoryId)
+                    }
+                  >
+                    ✕
+                  </RemoveButton>
+                </ActionButtons>
+              </CategoryItem>
+            ))
+          )}
+        </CategoryList>
       </Section>
 
       <ButtonGroup>
@@ -325,220 +336,239 @@ const OnboardingPreferencePage = () => {
   );
 };
 
-// Styled Components
-const Container = styled.div`
+const Container = styled.div\`
   min-height: 100vh;
   background-color: #fafafa;
-  padding-bottom: ${theme.spacing.xl};
-`;
+  padding-bottom: \${theme.spacing.xl};
+\`;
 
-const Header = styled.header`
+const Header = styled.header\`
   background-color: white;
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  padding: \${theme.spacing.md} \${theme.spacing.lg};
   border-bottom: 1px solid #e0e0e0;
-`;
+\`;
 
-const Title = styled.h1`
-  font-size: ${theme.typography.fontSize.lg};
-  font-weight: ${theme.typography.fontWeight.bold};
+const Title = styled.h1\`
+  font-size: \${theme.typography.fontSize.lg};
+  font-weight: \${theme.typography.fontWeight.bold};
   color: #212121;
   margin: 0;
   text-align: center;
-`;
+\`;
 
-const Section = styled.section`
-  padding: ${theme.spacing.lg};
-`;
+const Section = styled.section\`
+  padding: \${theme.spacing.lg};
+\`;
 
-const SectionTitle = styled.h2`
-  font-size: ${theme.typography.fontSize.lg};
-  font-weight: ${theme.typography.fontWeight.bold};
+const SectionTitle = styled.h2\`
+  font-size: \${theme.typography.fontSize.lg};
+  font-weight: \${theme.typography.fontWeight.bold};
   color: #212121;
-  margin: 0 0 ${theme.spacing.sm} 0;
-`;
+  margin: 0 0 \${theme.spacing.sm} 0;
+\`;
 
-const SectionDescription = styled.p`
-  font-size: ${theme.typography.fontSize.sm};
+const SectionDescription = styled.p\`
+  font-size: \${theme.typography.fontSize.sm};
   color: #757575;
   margin: 0;
   line-height: 1.5;
-`;
+\`;
 
-const SubTitle = styled.h3`
-  font-size: ${theme.typography.fontSize.base};
-  font-weight: ${theme.typography.fontWeight.semibold};
+const SubTitle = styled.h3\`
+  font-size: \${theme.typography.fontSize.base};
+  font-weight: \${theme.typography.fontWeight.semibold};
   color: #212121;
-  margin: 0 0 ${theme.spacing.md} 0;
-`;
+  margin: 0 0 \${theme.spacing.md} 0;
+\`;
 
-// 드롭 영역
-const DropZone = styled.div<{ $isOver?: boolean; $isEmpty?: boolean }>`
-  min-height: 100px;
-  padding: ${theme.spacing.lg};
-  border: 2px dashed
-    ${(props) =>
-      props.$isOver
-        ? theme.colors.primary
-        : props.$isEmpty
-        ? "#e0e0e0"
-        : "#bdbdbd"};
-  border-radius: ${theme.borderRadius.lg};
-  background-color: ${(props) =>
-    props.$isOver ? "#f0f7ff" : props.$isEmpty ? "#fafafa" : "white"};
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
+const SearchContainer = styled.div\`
+  position: relative;
+  margin-bottom: \${theme.spacing.md};
+\`;
 
-const EmptyMessage = styled.p`
-  color: #9e9e9e;
-  font-size: ${theme.typography.fontSize.sm};
-  text-align: center;
-  margin: 0;
-`;
-
-const LoadingMessage = styled.p`
-  color: #757575;
-  font-size: ${theme.typography.fontSize.sm};
-  text-align: center;
-  margin: 0;
-  grid-column: 1 / -1;
-`;
-
-const CategoryChipGroup = styled.div`
-  display: flex;
-  gap: ${theme.spacing.sm};
-  flex-wrap: wrap;
+const SearchInput = styled.input\`
   width: 100%;
-`;
-
-const CategoryChip = styled.div<{
-  $color?: "orange" | "yellow";
-  $isDragging?: boolean;
-}>`
-  display: inline-flex;
-  align-items: center;
-  gap: ${theme.spacing.xs};
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  border-radius: ${theme.borderRadius.full};
-  background-color: ${(props) =>
-    props.$color === "orange" ? theme.colors.accent : theme.colors.secondary};
-  color: white;
-  font-size: ${theme.typography.fontSize.sm};
-  font-weight: ${theme.typography.fontWeight.medium};
-  cursor: move;
-  opacity: ${(props) => (props.$isDragging ? 0.5 : 1)};
-  transition: all 0.2s;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  }
-
-  &:active {
-    cursor: grabbing;
-  }
-`;
-
-const RemoveButton = styled.button`
-  width: 20px;
-  height: 20px;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.3);
-  color: white;
-  border-radius: 50%;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-  }
-`;
-
-const SearchInput = styled.input`
-  width: 100%;
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  padding: \${theme.spacing.md} \${theme.spacing.lg};
   border: 1px solid #e0e0e0;
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.base};
+  border-radius: \${theme.borderRadius.md};
+  font-size: \${theme.typography.fontSize.base};
   background-color: white;
-  margin-top: ${theme.spacing.md};
 
   &:focus {
     outline: none;
-    border-color: ${theme.colors.primary};
+    border-color: \${theme.colors.accent};
   }
 
   &::placeholder {
     color: #9e9e9e;
   }
-`;
+\`;
 
-const CategoryGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: ${theme.spacing.sm};
-  margin-top: ${theme.spacing.md};
-  min-height: 200px;
-`;
-
-const DraggableCategory = styled.button<{ $isDragging?: boolean }>`
-  padding: ${theme.spacing.md};
-  background-color: ${(props) => (props.$isDragging ? "#f0f0f0" : "white")};
+const SearchDropdown = styled.div\`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
   border: 1px solid #e0e0e0;
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.sm};
-  color: #424242;
-  cursor: move;
-  transition: all 0.2s;
-  text-align: left;
-  opacity: ${(props) => (props.$isDragging ? 0.5 : 1)};
+  border-top: none;
+  border-radius: 0 0 \${theme.borderRadius.md} \${theme.borderRadius.md};
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+\`;
+
+const DropdownItem = styled.div\`
+  padding: \${theme.spacing.md} \${theme.spacing.lg};
+  cursor: pointer;
+  transition: background-color 0.2s;
 
   &:hover {
     background-color: #f5f5f5;
-    border-color: #bdbdbd;
-    transform: translateY(-1px);
   }
 
   &:active {
-    cursor: grabbing;
+    background-color: #e0e0e0;
   }
-`;
+\`;
 
-const ButtonGroup = styled.div`
-  padding: 0 ${theme.spacing.lg};
+const EmptyDropdown = styled.div\`
+  padding: \${theme.spacing.md} \${theme.spacing.lg};
+  color: #9e9e9e;
+  font-size: \${theme.typography.fontSize.sm};
+  text-align: center;
+\`;
+
+const CategoryList = styled.div\`
   display: flex;
   flex-direction: column;
-  gap: ${theme.spacing.md};
-  margin-top: ${theme.spacing.xl};
-`;
+  gap: \${theme.spacing.sm};
+\`;
 
-const SubmitButton = styled.button<{ disabled?: boolean }>`
-  width: 100%;
-  padding: ${theme.spacing.md};
-  background-color: ${(props) =>
-    props.disabled ? "#e0e0e0" : theme.colors.accent};
+const EmptyMessage = styled.p\`
+  color: #9e9e9e;
+  font-size: \${theme.typography.fontSize.sm};
+  text-align: center;
+  padding: \${theme.spacing.xl} 0;
+  margin: 0;
+\`;
+
+const CategoryItem = styled.div<{ \$type: "liked" | "disliked" }>\`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: \${theme.spacing.md};
+  background-color: \${(props) =>
+    props.\$type === "liked" ? "#fff5f0" : "#fffef0"};
+  border: 1px solid
+    \${(props) => (props.\$type === "liked" ? "#ffccbc" : "#fff9c4")};
+  border-radius: \${theme.borderRadius.md};
+\`;
+
+const CategoryInfo = styled.div\`
+  display: flex;
+  align-items: center;
+  gap: \${theme.spacing.md};
+  flex: 1;
+\`;
+
+const PriorityBadge = styled.div\`
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: \${theme.colors.accent};
   color: white;
-  border: none;
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.lg};
-  font-weight: ${theme.typography.fontWeight.semibold};
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  border-radius: 50%;
+  font-size: \${theme.typography.fontSize.sm};
+  font-weight: \${theme.typography.fontWeight.bold};
+\`;
+
+const CategoryName = styled.span\`
+  font-size: \${theme.typography.fontSize.base};
+  font-weight: \${theme.typography.fontWeight.medium};
+  color: #212121;
+\`;
+
+const ActionButtons = styled.div\`
+  display: flex;
+  gap: \${theme.spacing.xs};
+\`;
+
+const PriorityButton = styled.button\`
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: \${theme.borderRadius.sm};
+  font-size: \${theme.typography.fontSize.xs};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: #f5f5f5;
+    border-color: \${theme.colors.accent};
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+\`;
+
+const RemoveButton = styled.button\`
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid #ff5252;
+  border-radius: \${theme.borderRadius.sm};
+  color: #ff5252;
+  font-size: \${theme.typography.fontSize.base};
+  cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${(props) => (props.disabled ? "#e0e0e0" : "#e55a2b")};
+    background-color: #ff5252;
+    color: white;
+  }
+\`;
+
+const ButtonGroup = styled.div\`
+  padding: 0 \${theme.spacing.lg};
+  display: flex;
+  flex-direction: column;
+  gap: \${theme.spacing.md};
+  margin-top: \${theme.spacing.xl};
+\`;
+
+const SubmitButton = styled.button<{ disabled?: boolean }>\`
+  width: 100%;
+  padding: \${theme.spacing.md};
+  background-color: \${(props) =>
+    props.disabled ? "#e0e0e0" : theme.colors.accent};
+  color: white;
+  border: none;
+  border-radius: \${theme.borderRadius.md};
+  font-size: \${theme.typography.fontSize.lg};
+  font-weight: \${theme.typography.fontWeight.semibold};
+  cursor: \${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: \${(props) => (props.disabled ? "#e0e0e0" : "#e55a2b")};
   }
 
   &:active {
-    transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
+    transform: \${(props) => (props.disabled ? "none" : "scale(0.98)")};
   }
-`;
+\`;
 
 export default OnboardingPreferencePage;
