@@ -1,2 +1,2 @@
-/api/*  http://ec2-54-180-54-91.ap-northeast-2.compute.amazonaws.com:8080/:splat  200
+/api/*  http://ec2-54-180-54-91.ap-northeast-2.compute.amazonaws.com:8080/api/:splat  200
 /* /index.html 200
