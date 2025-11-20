@@ -288,10 +288,10 @@ const StoreDetailPage = () => {
 
       {/* 가게 정보 */}
       <Content>
-        {/* 추천 메뉴 */}
-        <MenuSection>
-          <SectionTitle>추천 메뉴</SectionTitle>
-          {recommendedMenus.length > 0 ? (
+        {/* 추천 메뉴 - 데이터가 있을 때만 표시 */}
+        {recommendedMenus.length > 0 && (
+          <MenuSection>
+            <SectionTitle>추천 메뉴</SectionTitle>
             <RecommendedMenuGrid>
               {recommendedMenus.map((menu) => (
                 <RecommendedMenuCard
@@ -320,18 +320,8 @@ const StoreDetailPage = () => {
                 </RecommendedMenuCard>
               ))}
             </RecommendedMenuGrid>
-          ) : (
-            <NoRecommendedContainer>
-              <NoRecommendedIcon>🔍</NoRecommendedIcon>
-              <NoRecommendedText>추천 메뉴가 없습니다</NoRecommendedText>
-              <NoRecommendedDescription>
-                현재 예산에 맞는 추천 메뉴가 없습니다.
-                <br />
-                전체 메뉴를 확인해보세요.
-              </NoRecommendedDescription>
-            </NoRecommendedContainer>
-          )}
-        </MenuSection>
+          </MenuSection>
+        )}
 
         {/* 전체 메뉴 */}
         <MenuSection>
@@ -886,38 +876,6 @@ const MenuDescription = styled.p`
 
 const AllMenuList = styled.div`
   padding: 0 16px;
-`;
-
-const NoRecommendedContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-  background-color: #fafafa;
-  border-radius: 12px;
-  margin: 0 16px;
-`;
-
-const NoRecommendedIcon = styled.div`
-  font-size: 48px;
-  margin-bottom: 12px;
-  opacity: 0.6;
-`;
-
-const NoRecommendedText = styled.p`
-  font-size: 16px;
-  font-weight: 600;
-  color: #666;
-  margin: 0 0 8px 0;
-`;
-
-const NoRecommendedDescription = styled.p`
-  font-size: 13px;
-  color: #999;
-  line-height: 1.5;
-  margin: 0;
 `;
 
 const NoMenuContainer = styled.div`
