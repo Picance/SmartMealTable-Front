@@ -308,9 +308,7 @@ const OnboardingPreferencePage = () => {
                     ▼
                   </PriorityButton>
                   <RemoveButton
-                    onClick={() =>
-                      removeDislikedCategory(category.categoryId)
-                    }
+                    onClick={() => removeDislikedCategory(category.categoryId)}
                   >
                     ✕
                   </RemoveButton>
@@ -336,75 +334,75 @@ const OnboardingPreferencePage = () => {
   );
 };
 
-const Container = styled.div\`
+const Container = styled.div`
   min-height: 100vh;
   background-color: #fafafa;
-  padding-bottom: \${theme.spacing.xl};
-\`;
+  padding-bottom: ${theme.spacing.xl};
+`;
 
-const Header = styled.header\`
+const Header = styled.header`
   background-color: white;
-  padding: \${theme.spacing.md} \${theme.spacing.lg};
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
   border-bottom: 1px solid #e0e0e0;
-\`;
+`;
 
-const Title = styled.h1\`
-  font-size: \${theme.typography.fontSize.lg};
-  font-weight: \${theme.typography.fontWeight.bold};
+const Title = styled.h1`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
   color: #212121;
   margin: 0;
   text-align: center;
-\`;
+`;
 
-const Section = styled.section\`
-  padding: \${theme.spacing.lg};
-\`;
+const Section = styled.section`
+  padding: ${theme.spacing.lg};
+`;
 
-const SectionTitle = styled.h2\`
-  font-size: \${theme.typography.fontSize.lg};
-  font-weight: \${theme.typography.fontWeight.bold};
+const SectionTitle = styled.h2`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
   color: #212121;
-  margin: 0 0 \${theme.spacing.sm} 0;
-\`;
+  margin: 0 0 ${theme.spacing.sm} 0;
+`;
 
-const SectionDescription = styled.p\`
-  font-size: \${theme.typography.fontSize.sm};
+const SectionDescription = styled.p`
+  font-size: ${theme.typography.fontSize.sm};
   color: #757575;
   margin: 0;
   line-height: 1.5;
-\`;
+`;
 
-const SubTitle = styled.h3\`
-  font-size: \${theme.typography.fontSize.base};
-  font-weight: \${theme.typography.fontWeight.semibold};
+const SubTitle = styled.h3`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
   color: #212121;
-  margin: 0 0 \${theme.spacing.md} 0;
-\`;
+  margin: 0 0 ${theme.spacing.md} 0;
+`;
 
-const SearchContainer = styled.div\`
+const SearchContainer = styled.div`
   position: relative;
-  margin-bottom: \${theme.spacing.md};
-\`;
+  margin-bottom: ${theme.spacing.md};
+`;
 
-const SearchInput = styled.input\`
+const SearchInput = styled.input`
   width: 100%;
-  padding: \${theme.spacing.md} \${theme.spacing.lg};
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
   border: 1px solid #e0e0e0;
-  border-radius: \${theme.borderRadius.md};
-  font-size: \${theme.typography.fontSize.base};
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.base};
   background-color: white;
 
   &:focus {
     outline: none;
-    border-color: \${theme.colors.accent};
+    border-color: ${theme.colors.accent};
   }
 
   &::placeholder {
     color: #9e9e9e;
   }
-\`;
+`;
 
-const SearchDropdown = styled.div\`
+const SearchDropdown = styled.div`
   position: absolute;
   top: 100%;
   left: 0;
@@ -414,13 +412,13 @@ const SearchDropdown = styled.div\`
   background-color: white;
   border: 1px solid #e0e0e0;
   border-top: none;
-  border-radius: 0 0 \${theme.borderRadius.md} \${theme.borderRadius.md};
+  border-radius: 0 0 ${theme.borderRadius.md} ${theme.borderRadius.md};
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   z-index: 10;
-\`;
+`;
 
-const DropdownItem = styled.div\`
-  padding: \${theme.spacing.md} \${theme.spacing.lg};
+const DropdownItem = styled.div`
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
   cursor: pointer;
   transition: background-color 0.2s;
 
@@ -431,73 +429,73 @@ const DropdownItem = styled.div\`
   &:active {
     background-color: #e0e0e0;
   }
-\`;
+`;
 
-const EmptyDropdown = styled.div\`
-  padding: \${theme.spacing.md} \${theme.spacing.lg};
+const EmptyDropdown = styled.div`
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
   color: #9e9e9e;
-  font-size: \${theme.typography.fontSize.sm};
+  font-size: ${theme.typography.fontSize.sm};
   text-align: center;
-\`;
+`;
 
-const CategoryList = styled.div\`
+const CategoryList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: \${theme.spacing.sm};
-\`;
+  gap: ${theme.spacing.sm};
+`;
 
-const EmptyMessage = styled.p\`
+const EmptyMessage = styled.p`
   color: #9e9e9e;
-  font-size: \${theme.typography.fontSize.sm};
+  font-size: ${theme.typography.fontSize.sm};
   text-align: center;
-  padding: \${theme.spacing.xl} 0;
+  padding: ${theme.spacing.xl} 0;
   margin: 0;
-\`;
+`;
 
-const CategoryItem = styled.div<{ \$type: "liked" | "disliked" }>\`
+const CategoryItem = styled("div")<{ $type: "liked" | "disliked" }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: \${theme.spacing.md};
-  background-color: \${(props) =>
-    props.\$type === "liked" ? "#fff5f0" : "#fffef0"};
+  padding: ${theme.spacing.md};
+  background-color: ${(props) =>
+    props.$type === "liked" ? "#fff5f0" : "#fffef0"};
   border: 1px solid
-    \${(props) => (props.\$type === "liked" ? "#ffccbc" : "#fff9c4")};
-  border-radius: \${theme.borderRadius.md};
-\`;
+    ${(props) => (props.$type === "liked" ? "#ffccbc" : "#fff9c4")};
+  border-radius: ${theme.borderRadius.md};
+`;
 
-const CategoryInfo = styled.div\`
+const CategoryInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: \${theme.spacing.md};
+  gap: ${theme.spacing.md};
   flex: 1;
-\`;
+`;
 
-const PriorityBadge = styled.div\`
+const PriorityBadge = styled.div`
   width: 28px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: \${theme.colors.accent};
+  background-color: ${theme.colors.accent};
   color: white;
   border-radius: 50%;
-  font-size: \${theme.typography.fontSize.sm};
-  font-weight: \${theme.typography.fontWeight.bold};
-\`;
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.bold};
+`;
 
-const CategoryName = styled.span\`
-  font-size: \${theme.typography.fontSize.base};
-  font-weight: \${theme.typography.fontWeight.medium};
+const CategoryName = styled.span`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
   color: #212121;
-\`;
+`;
 
-const ActionButtons = styled.div\`
+const ActionButtons = styled.div`
   display: flex;
-  gap: \${theme.spacing.xs};
-\`;
+  gap: ${theme.spacing.xs};
+`;
 
-const PriorityButton = styled.button\`
+const PriorityButton = styled.button`
   width: 32px;
   height: 32px;
   display: flex;
@@ -505,23 +503,23 @@ const PriorityButton = styled.button\`
   justify-content: center;
   background-color: white;
   border: 1px solid #e0e0e0;
-  border-radius: \${theme.borderRadius.sm};
-  font-size: \${theme.typography.fontSize.xs};
+  border-radius: ${theme.borderRadius.sm};
+  font-size: ${theme.typography.fontSize.xs};
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover:not(:disabled) {
     background-color: #f5f5f5;
-    border-color: \${theme.colors.accent};
+    border-color: ${theme.colors.accent};
   }
 
   &:disabled {
     opacity: 0.3;
     cursor: not-allowed;
   }
-\`;
+`;
 
-const RemoveButton = styled.button\`
+const RemoveButton = styled.button`
   width: 32px;
   height: 32px;
   display: flex;
@@ -529,9 +527,9 @@ const RemoveButton = styled.button\`
   justify-content: center;
   background-color: white;
   border: 1px solid #ff5252;
-  border-radius: \${theme.borderRadius.sm};
+  border-radius: ${theme.borderRadius.sm};
   color: #ff5252;
-  font-size: \${theme.typography.fontSize.base};
+  font-size: ${theme.typography.fontSize.base};
   cursor: pointer;
   transition: all 0.2s;
 
@@ -539,36 +537,36 @@ const RemoveButton = styled.button\`
     background-color: #ff5252;
     color: white;
   }
-\`;
+`;
 
-const ButtonGroup = styled.div\`
-  padding: 0 \${theme.spacing.lg};
+const ButtonGroup = styled.div`
+  padding: 0 ${theme.spacing.lg};
   display: flex;
   flex-direction: column;
-  gap: \${theme.spacing.md};
-  margin-top: \${theme.spacing.xl};
-\`;
+  gap: ${theme.spacing.md};
+  margin-top: ${theme.spacing.xl};
+`;
 
-const SubmitButton = styled.button<{ disabled?: boolean }>\`
+const SubmitButton = styled("button")<{ disabled?: boolean }>`
   width: 100%;
-  padding: \${theme.spacing.md};
-  background-color: \${(props) =>
+  padding: ${theme.spacing.md};
+  background-color: ${(props) =>
     props.disabled ? "#e0e0e0" : theme.colors.accent};
   color: white;
   border: none;
-  border-radius: \${theme.borderRadius.md};
-  font-size: \${theme.typography.fontSize.lg};
-  font-weight: \${theme.typography.fontWeight.semibold};
-  cursor: \${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s;
 
   &:hover {
-    background-color: \${(props) => (props.disabled ? "#e0e0e0" : "#e55a2b")};
+    background-color: ${(props) => (props.disabled ? "#e0e0e0" : "#e55a2b")};
   }
 
   &:active {
-    transform: \${(props) => (props.disabled ? "none" : "scale(0.98)")};
+    transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
   }
-\`;
+`;
 
 export default OnboardingPreferencePage;
