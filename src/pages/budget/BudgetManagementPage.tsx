@@ -26,6 +26,11 @@ const BudgetManagementPage = () => {
   // 일별 예산 데이터
   const [dailyData, setDailyData] = useState<DailyBudgetResponse | null>(null);
 
+  // 월간 모든 날짜의 예산 데이터 (달력 표시용)
+  const [monthlyDailyBudgets, setMonthlyDailyBudgets] = useState<
+    Record<number, { budget: number; spent: number; diff: number }>
+  >({});
+
   // 식사 예산
   const [breakfastBudget, setBreakfastBudget] = useState("");
   const [lunchBudget, setLunchBudget] = useState("");
@@ -65,6 +70,9 @@ const BudgetManagementPage = () => {
       if (response.result === "SUCCESS" && response.data) {
         setMonthlyData(response.data);
       }
+
+      // 해당 월의 모든 날짜별 예산 데이터 조회
+      await loadMonthlyDailyBudgets();
     } catch (err: any) {
       console.error("월별 예산 조회 실패:", err);
       setError(
@@ -72,6 +80,51 @@ const BudgetManagementPage = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 월간 모든 날짜의 예산 데이터 조회
+  const loadMonthlyDailyBudgets = async () => {
+    try {
+      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+      const budgetMap: Record<
+        number,
+        { budget: number; spent: number; diff: number }
+      > = {};
+
+      // 각 날짜별로 예산 데이터 조회
+      const promises = Array.from({ length: daysInMonth }, async (_, i) => {
+        const day = i + 1;
+        const dateStr = `${currentYear}-${String(currentMonth).padStart(
+          2,
+          "0"
+        )}-${String(day).padStart(2, "0")}`;
+
+        try {
+          const response = await budgetService.getDailyBudget(dateStr);
+          if (response.result === "SUCCESS" && response.data) {
+            const data = response.data;
+            const totalBudget = data.mealBudgets.reduce(
+              (sum, meal) => sum + meal.budget,
+              0
+            );
+            const diff = data.totalSpent - totalBudget;
+            budgetMap[day] = {
+              budget: totalBudget,
+              spent: data.totalSpent,
+              diff: diff,
+            };
+          }
+        } catch (err) {
+          // 예산이 없는 날짜는 무시
+          return null;
+        }
+      });
+
+      await Promise.all(promises);
+      setMonthlyDailyBudgets(budgetMap);
+    } catch (err) {
+      console.error("월간 일별 예산 조회 실패:", err);
     }
   };
 
@@ -419,6 +472,7 @@ const BudgetManagementPage = () => {
               const isSelected = day === selectedDate;
               const isSunday = (firstDay + i) % 7 === 0;
               const isSaturday = (firstDay + i) % 7 === 6;
+              const budgetInfo = monthlyDailyBudgets[day];
 
               return (
                 <DayCell
@@ -433,6 +487,16 @@ const BudgetManagementPage = () => {
                   >
                     {day}
                   </DayNumber>
+                  {budgetInfo && budgetInfo.diff !== 0 && (
+                    <DayDiff $isOver={budgetInfo.diff > 0}>
+                      {budgetInfo.diff > 0 ? "+" : ""}
+                      {(budgetInfo.diff / 1000).toFixed(
+                        budgetInfo.diff >= 1000 || budgetInfo.diff <= -1000
+                          ? 0
+                          : 1
+                      )}
+                    </DayDiff>
+                  )}
                 </DayCell>
               );
             })}
@@ -446,10 +510,12 @@ const BudgetManagementPage = () => {
           {/* 현재 일별 예산 정보 */}
           <CurrentBudgetInfo>
             <InfoRow>
-              <InfoLabel>목표 일일 예산:</InfoLabel>
+              <InfoLabel>설정된 예산:</InfoLabel>
               <InfoValue>
-                {monthlyData
-                  ? Math.floor(monthlyData.totalBudget / days).toLocaleString()
+                {dailyData
+                  ? dailyData.mealBudgets
+                      .reduce((sum, meal) => sum + meal.budget, 0)
+                      .toLocaleString()
                   : "0"}
                 원
               </InfoValue>
@@ -810,6 +876,13 @@ const DayNumber = styled.div<{
     return "#212121";
   }};
   margin-bottom: 2px;
+`;
+
+const DayDiff = styled.div<{ $isOver: boolean }>`
+  font-size: 10px;
+  font-weight: ${theme.typography.fontWeight.medium};
+  color: ${(props) => (props.$isOver ? "#d32f2f" : "#4caf50")};
+  line-height: 1;
 `;
 
 const DailyBudgetCard = styled.div`
