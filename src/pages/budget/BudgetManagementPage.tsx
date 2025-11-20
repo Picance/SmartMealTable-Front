@@ -490,11 +490,7 @@ const BudgetManagementPage = () => {
                   {budgetInfo && budgetInfo.diff !== 0 && (
                     <DayDiff $isOver={budgetInfo.diff > 0}>
                       {budgetInfo.diff > 0 ? "+" : ""}
-                      {(budgetInfo.diff / 1000).toFixed(
-                        budgetInfo.diff >= 1000 || budgetInfo.diff <= -1000
-                          ? 0
-                          : 1
-                      )}
+                      {(budgetInfo.diff / 1000).toFixed(1)}k
                     </DayDiff>
                   )}
                 </DayCell>
