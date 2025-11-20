@@ -87,111 +87,129 @@ const OnboardingBudgetPage = () => {
   };
 
   return (
-    <Container>
-      <Header>
-        <Title>신규 회원 목표 예산 등록</Title>
-        <ProfileSection>
-          <NotificationIcon>🔔</NotificationIcon>
-          <ProfileAvatar />
-        </ProfileSection>
-      </Header>
+    <Wrapper>
+      <Container>
+        <Header>
+          <Title>신규 회원 목표 예산 등록</Title>
+          <ProfileSection>
+            <NotificationIcon>🔔</NotificationIcon>
+            <ProfileAvatar />
+          </ProfileSection>
+        </Header>
 
-      <SectionTitle>일일 식비 예산 요약</SectionTitle>
+        <SectionTitle>일일 식비 예산 요약</SectionTitle>
 
-      <MealSection>
-        <MealRow>
-          <MealIcon>☕</MealIcon>
-          <MealLabel>아침</MealLabel>
-          <BudgetInputWrapper>
+        <MealSection>
+          <MealRow>
+            <MealIcon>☕</MealIcon>
+            <MealLabel>아침</MealLabel>
+            <BudgetInputWrapper>
+              <CurrencySymbol>₩</CurrencySymbol>
+              <BudgetInput
+                type="text"
+                value={breakfastBudget}
+                onChange={(e) =>
+                  setBreakfastBudget(handleNumberInput(e.target.value))
+                }
+                placeholder="0"
+              />
+            </BudgetInputWrapper>
+          </MealRow>
+
+          <MealRow>
+            <MealIcon>☀️</MealIcon>
+            <MealLabel>점심</MealLabel>
+            <BudgetInputWrapper>
+              <CurrencySymbol>₩</CurrencySymbol>
+              <BudgetInput
+                type="text"
+                value={lunchBudget}
+                onChange={(e) =>
+                  setLunchBudget(handleNumberInput(e.target.value))
+                }
+                placeholder="0"
+              />
+            </BudgetInputWrapper>
+          </MealRow>
+
+          <MealRow>
+            <MealIcon>🌙</MealIcon>
+            <MealLabel>저녁</MealLabel>
+            <BudgetInputWrapper>
+              <CurrencySymbol>₩</CurrencySymbol>
+              <BudgetInput
+                type="text"
+                value={dinnerBudget}
+                onChange={(e) =>
+                  setDinnerBudget(handleNumberInput(e.target.value))
+                }
+                placeholder="0"
+              />
+            </BudgetInputWrapper>
+          </MealRow>
+
+          <MealRow>
+            <MealIcon>🍽️</MealIcon>
+            <MealLabel>기타</MealLabel>
+            <BudgetInputWrapper>
+              <CurrencySymbol>₩</CurrencySymbol>
+              <BudgetInput
+                type="text"
+                value={otherBudget}
+                onChange={(e) =>
+                  setOtherBudget(handleNumberInput(e.target.value))
+                }
+                placeholder="0"
+              />
+            </BudgetInputWrapper>
+          </MealRow>
+        </MealSection>
+
+        <TotalSection>
+          <TotalLabel>일일 총 예산</TotalLabel>
+          <TotalValue>₩ {getDailyTotal().toLocaleString()}</TotalValue>
+        </TotalSection>
+
+        <Divider />
+
+        <SectionTitle>목표하는 월 식비 예산을 알려주세요!</SectionTitle>
+
+        <MonthlySection>
+          <MonthlyLabel>💵 월간 예산</MonthlyLabel>
+          <MonthlyDescription>
+            매월 지출할 식비 한도를 설정하세요.
+          </MonthlyDescription>
+          <MonthlyInputWrapper>
             <CurrencySymbol>₩</CurrencySymbol>
-            <BudgetInput
+            <MonthlyInput
               type="text"
-              value={breakfastBudget}
+              value={monthlyBudget}
               onChange={(e) =>
-                setBreakfastBudget(handleNumberInput(e.target.value))
+                setMonthlyBudget(handleNumberInput(e.target.value))
               }
-              placeholder="0"
+              placeholder="500,000"
             />
-          </BudgetInputWrapper>
-        </MealRow>
+          </MonthlyInputWrapper>
+        </MonthlySection>
 
-        <MealRow>
-          <MealIcon>☀️</MealIcon>
-          <MealLabel>점심</MealLabel>
-          <BudgetInputWrapper>
-            <CurrencySymbol>₩</CurrencySymbol>
-            <BudgetInput
-              type="text"
-              value={lunchBudget}
-              onChange={(e) =>
-                setLunchBudget(handleNumberInput(e.target.value))
-              }
-              placeholder="0"
-            />
-          </BudgetInputWrapper>
-        </MealRow>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
 
-        <MealRow>
-          <MealIcon>🌙</MealIcon>
-          <MealLabel>저녁</MealLabel>
-          <BudgetInputWrapper>
-            <CurrencySymbol>₩</CurrencySymbol>
-            <BudgetInput
-              type="text"
-              value={dinnerBudget}
-              onChange={(e) =>
-                setDinnerBudget(handleNumberInput(e.target.value))
-              }
-              placeholder="0"
-            />
-          </BudgetInputWrapper>
-        </MealRow>
-
-        <MealRow>
-          <MealIcon>🍽️</MealIcon>
-          <MealLabel>기타</MealLabel>
-          <BudgetInputWrapper>
-            <CurrencySymbol>₩</CurrencySymbol>
-            <BudgetInput
-              type="text"
-              value={otherBudget}
-              onChange={(e) =>
-                setOtherBudget(handleNumberInput(e.target.value))
-              }
-              placeholder="0"
-            />
-          </BudgetInputWrapper>
-        </MealRow>
-      </MealSection>
-
-      <TotalSection>
-        <TotalLabel>일일 총 예산</TotalLabel>
-        <TotalValue>₩ {getDailyTotal().toLocaleString()}</TotalValue>
-      </TotalSection>
-
-      <Divider />
-
-      <SectionTitle>목표하는 월 식비 예산을 알려주세요!</SectionTitle>
-
-      <MonthlySection>
-        <MonthlyLabel>💵 월간 예산</MonthlyLabel>
-        <MonthlyDescription>
-          매월 지출할 식비 한도를 설정하세요.
-        </MonthlyDescription>
-        <MonthlyInputWrapper>
-          <CurrencySymbol>₩</CurrencySymbol>
-          <MonthlyInput
-            type="text"
-            value={monthlyBudget}
-            onChange={(e) =>
-              setMonthlyBudget(handleNumberInput(e.target.value))
-            }
-            placeholder="500,000"
-          />
-        </MonthlyInputWrapper>
-      </MonthlySection>
-
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+        {showSuccessModal && (
+          <ModalOverlay onClick={() => setShowSuccessModal(false)}>
+            <ModalContent onClick={(e) => e.stopPropagation()}>
+              <ModalIcon>💰</ModalIcon>
+              <ModalTitle>예산 저장 완료!</ModalTitle>
+              <ModalDescription>
+                입력하신 예산이 기본 예산으로 설정되었습니다.
+              </ModalDescription>
+              <ModalSubDescription>
+                프로필 탭에서 날짜별 예산 목표를 변경 설정할 수 있습니다.
+              </ModalSubDescription>
+              <ModalButton onClick={handleModalConfirm}>확인</ModalButton>
+            </ModalContent>
+          </ModalOverlay>
+        )}
+      </Container>
 
       <ButtonGroup>
         <SubmitButton
@@ -201,31 +219,22 @@ const OnboardingBudgetPage = () => {
           {isLoading ? "저장 중..." : "저장"}
         </SubmitButton>
       </ButtonGroup>
-
-      {showSuccessModal && (
-        <ModalOverlay onClick={() => setShowSuccessModal(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalIcon>💰</ModalIcon>
-            <ModalTitle>예산 저장 완료!</ModalTitle>
-            <ModalDescription>
-              입력하신 예산이 기본 예산으로 설정되었습니다.
-            </ModalDescription>
-            <ModalSubDescription>
-              프로필 탭에서 날짜별 예산 목표를 변경 설정할 수 있습니다.
-            </ModalSubDescription>
-            <ModalButton onClick={handleModalConfirm}>확인</ModalButton>
-          </ModalContent>
-        </ModalOverlay>
-      )}
-    </Container>
+    </Wrapper>
   );
 };
 
 // Styled Components
+const Wrapper = styled.div`
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: #fafafa;
+`;
+
 const Container = styled.div`
   min-height: 100vh;
   background-color: #fafafa;
-  padding-bottom: ${theme.spacing.xl};
+  padding-bottom: 130px;
 `;
 
 const Header = styled.header`
@@ -235,6 +244,9 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 `;
 
 const Title = styled.h1`
@@ -425,11 +437,20 @@ const ErrorMessage = styled.div`
 `;
 
 const ButtonGroup = styled.div`
+  position: fixed;
+  bottom: 0;
+  max-width: 480px;
+  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
   padding: 0 ${theme.spacing.lg};
-  margin-top: ${theme.spacing.xl};
+  padding-top: ${theme.spacing.md};
+  padding-bottom: ${theme.spacing.lg};
+  background-color: #fafafa;
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.md};
+  box-sizing: border-box;
 `;
 
 const SubmitButton = styled.button<{ disabled?: boolean }>`
