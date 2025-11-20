@@ -241,7 +241,7 @@ const CartPage = () => {
 
         {/* 가격 요약 */}
         <PriceSummary>
-          {budgetInfo && (
+          {budgetInfo ? (
             <>
               <SummaryRow>
                 <SummaryLabel>남은 일일 식비 예산</SummaryLabel>
@@ -256,16 +256,12 @@ const CartPage = () => {
                 </SummaryValue>
               </SummaryRow>
               <Divider />
-            </>
-          )}
-          <SummaryRow>
-            <SummaryLabel $bold>총 장바구니 금액</SummaryLabel>
-            <SummaryValue $bold>
-              {totalCartPrice.toLocaleString()}원
-            </SummaryValue>
-          </SummaryRow>
-          {budgetInfo && (
-            <>
+              <SummaryRow>
+                <SummaryLabel $bold>총 장바구니 금액</SummaryLabel>
+                <SummaryValue $bold>
+                  {totalCartPrice.toLocaleString()}원
+                </SummaryValue>
+              </SummaryRow>
               <Divider />
               <SummaryRow>
                 <SummaryLabel $highlight>구매 후 남은 일일 예산</SummaryLabel>
@@ -278,12 +274,24 @@ const CartPage = () => {
                   구매 후 남은 {getMealTypeLabel()} 식사 예산
                 </SummaryLabel>
                 <SummaryValue $negative={budgetInfo.isOverBudget}>
-                  {budgetInfo.monthlyBudgetAfter.toLocaleString()}원
+                  {(budgetInfo.mealBudget - totalCartPrice).toLocaleString()}원
                 </SummaryValue>
               </SummaryRow>
               {budgetInfo.isOverBudget && (
                 <WarningMessage>⚠️ 예산을 초과했습니다!</WarningMessage>
               )}
+            </>
+          ) : (
+            <>
+              <SummaryRow>
+                <SummaryLabel $bold>총 장바구니 금액</SummaryLabel>
+                <SummaryValue $bold>
+                  {totalCartPrice.toLocaleString()}원
+                </SummaryValue>
+              </SummaryRow>
+              <NoBudgetMessage>
+                예산 정보를 불러오는 중입니다...
+              </NoBudgetMessage>
             </>
           )}
         </PriceSummary>
@@ -600,6 +608,16 @@ const WarningMessage = styled.div`
   color: #ff6b35;
   font-size: 14px;
   font-weight: 600;
+  text-align: center;
+`;
+
+const NoBudgetMessage = styled.div`
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  color: #999;
+  font-size: 13px;
   text-align: center;
 `;
 

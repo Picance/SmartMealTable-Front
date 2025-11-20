@@ -86,6 +86,20 @@ export const useCartStore = create<CartStore>()(
           console.log("- storeName:", cart.storeName);
           console.log("- totalAmount:", cart.totalAmount);
           console.log("- budgetInfo:", cart.budgetInfo);
+          
+          // budgetInfo 로깅 강화
+          if (cart.budgetInfo) {
+            console.log("===== budgetInfo 상세 =====");
+            console.log("- currentMealType:", cart.budgetInfo.currentMealType);
+            console.log("- mealBudget:", cart.budgetInfo.mealBudget);
+            console.log("- dailyBudgetBefore:", cart.budgetInfo.dailyBudgetBefore);
+            console.log("- dailyBudgetAfter:", cart.budgetInfo.dailyBudgetAfter);
+            console.log("- monthlyBudgetBefore:", cart.budgetInfo.monthlyBudgetBefore);
+            console.log("- monthlyBudgetAfter:", cart.budgetInfo.monthlyBudgetAfter);
+            console.log("- isOverBudget:", cart.budgetInfo.isOverBudget);
+          } else {
+            console.warn("⚠️ budgetInfo가 응답에 없습니다!");
+          }
 
           set({
             items: cart.items || [],
