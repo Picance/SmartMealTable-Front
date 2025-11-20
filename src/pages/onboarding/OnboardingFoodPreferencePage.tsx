@@ -187,9 +187,6 @@ const OnboardingFoodPreferencePage = () => {
         <SubmitButton onClick={handleSubmit} disabled={loading}>
           {loading ? "저장 중..." : "저장하기"}
         </SubmitButton>
-        <SkipButton onClick={() => navigate("/onboarding/policy")}>
-          건너뛰기
-        </SkipButton>
       </ButtonGroup>
     </Wrapper>
   );
@@ -412,27 +409,6 @@ const SubmitButton = styled.button<{ disabled?: boolean }>`
 
   &:active {
     transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
-  }
-`;
-
-const SkipButton = styled.button`
-  width: 100%;
-  padding: ${theme.spacing.md};
-  background-color: transparent;
-  color: #757575;
-  border: 1px solid #e0e0e0;
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.base};
-  font-weight: ${theme.typography.fontWeight.medium};
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-
-  &:active {
-    transform: scale(0.98);
   }
 `;
 

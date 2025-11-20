@@ -353,13 +353,6 @@ const OnboardingAddressPage = () => {
     navigate("/onboarding/budget");
   };
 
-  // 건너뛰기
-  const handleSkip = () => {
-    // 로컬 스토리지 정리
-    localStorage.removeItem("onboarding_addresses");
-    navigate("/onboarding/budget");
-  };
-
   return (
     <PageContainer>
       <ContentContainer>
@@ -507,7 +500,6 @@ const OnboardingAddressPage = () => {
 
         <FinalButtonGroup>
           <ContinueButton onClick={handleContinue}>계속</ContinueButton>
-          <SkipButton onClick={handleSkip}>건너뛰기</SkipButton>
         </FinalButtonGroup>
       </ContentContainer>
 
@@ -921,27 +913,6 @@ const ContinueButton = styled.button`
 
   &:hover {
     background-color: #ff5722;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-`;
-
-const SkipButton = styled.button`
-  width: 100%;
-  height: 56px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  background-color: #ffffff;
-  color: #000000;
-  border: 1px solid #e0e0e0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #f5f5f5;
   }
 
   &:active {
