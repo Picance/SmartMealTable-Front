@@ -1,22 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiChevronRight } from "react-icons/fi";
 import BottomNavigation from "../../components/layout/BottomNav";
+import { getMyProfile, updateNickname } from "../../services/profile.service";
+import type { ProfileResponse } from "../../services/profile.service";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
 
-  // 임시 사용자 데이터
-  const [user, setUser] = useState({
-    name: "김민준",
-    email: "minjun.kim@example.com",
-    nickname: "김민준",
-    avatar: "👤",
-    affiliation: "스마트멀티이동 배달",
-    address: "서울시 강남구 테헤란로 123",
-  });
+  // 사용자 프로필 데이터
+  const [user, setUser] = useState<ProfileResponse["data"] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 모달 상태
   const [showNicknameModal, setShowNicknameModal] = useState(false);
@@ -33,14 +29,45 @@ const ProfilePage = () => {
 
   // 음식 추천 유형
   const [recommendationType, setRecommendationType] = useState<
-    "절약형" | "모험형" | "균형형"
-  >("절약형");
+    "SAVING" | "ADVENTURE" | "BALANCED"
+  >("BALANCED");
 
-  const handleNicknameUpdate = () => {
-    if (newNickname.trim()) {
-      setUser({ ...user, nickname: newNickname });
+  // 프로필 조회
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getMyProfile();
+        setUser(response.data);
+        setRecommendationType(response.data.recommendationType);
+      } catch (error) {
+        console.error("프로필 조회 실패:", error);
+        alert("프로필을 불러오는데 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleNicknameUpdate = async () => {
+    if (!newNickname.trim()) {
+      alert("닉네임을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const response = await updateNickname(newNickname);
+      if (user) {
+        setUser({ ...user, nickname: response.data.nickname });
+      }
       setShowNicknameModal(false);
       setNewNickname("");
+      alert("닉네임이 변경되었습니다.");
+    } catch (error) {
+      console.error("닉네임 변경 실패:", error);
+      alert("닉네임 변경에 실패했습니다.");
     }
   };
 
@@ -73,20 +100,51 @@ const ProfilePage = () => {
     }
   };
 
+  // 로딩 중이거나 데이터가 없으면 로딩 표시
+  if (isLoading || !user) {
+    return (
+      <Container>
+        <Header>
+          <Title>프로필</Title>
+        </Header>
+        <Content>
+          <div style={{ textAlign: "center", padding: "40px 0" }}>
+            로딩 중...
+          </div>
+        </Content>
+        <BottomNavigation activeTab="profile" />
+      </Container>
+    );
+  }
+
+  // 추천 타입 한글 변환
+  const getRecommendationTypeKorean = (type: string) => {
+    switch (type) {
+      case "SAVING":
+        return "절약형";
+      case "ADVENTURE":
+        return "모험형";
+      case "BALANCED":
+        return "균형형";
+      default:
+        return "균형형";
+    }
+  };
+
   return (
     <Container>
       <Header>
         <Title>프로필</Title>
         <HeaderIcons>
           <NotificationIcon>🔔</NotificationIcon>
-          <ProfileAvatar small />
+          <ProfileAvatar $small />
         </HeaderIcons>
       </Header>
 
       <Content>
         {/* 프로필 헤더 */}
         <ProfileHeader>
-          <ProfileAvatar large>
+          <ProfileAvatar $large>
             <AvatarImage>👤</AvatarImage>
           </ProfileAvatar>
           <ProfileInfo>
@@ -103,10 +161,10 @@ const ProfilePage = () => {
             <InfoValue>{user.email}</InfoValue>
           </InfoBox>
           <ButtonRow>
-            <ActionButton outline onClick={() => setShowNicknameModal(true)}>
+            <ActionButton $outline onClick={() => setShowNicknameModal(true)}>
               닉네임 업데이트
             </ActionButton>
-            <ActionButton outline onClick={() => setShowPasswordModal(true)}>
+            <ActionButton $outline onClick={() => setShowPasswordModal(true)}>
               비밀번호 변경
             </ActionButton>
           </ButtonRow>
@@ -115,22 +173,20 @@ const ProfilePage = () => {
         {/* 소셜 로그인 관리 */}
         <Section>
           <SectionTitle>소셜 로그인 관리</SectionTitle>
-          <SocialCard>
-            <SocialInfo>
-              <SocialIcon>🔆</SocialIcon>
-              <SocialName>카카오</SocialName>
-              <ConnectedBadge>연결됨</ConnectedBadge>
-            </SocialInfo>
-            <UnlinkButton>해제</UnlinkButton>
-          </SocialCard>
-          <SocialCard>
-            <SocialInfo>
-              <SocialIcon>🌐</SocialIcon>
-              <SocialName>구글</SocialName>
-              <ConnectedBadge>연결됨</ConnectedBadge>
-            </SocialInfo>
-            <UnlinkButton>해제</UnlinkButton>
-          </SocialCard>
+          {user.socialAccounts.map((account) => (
+            <SocialCard key={account.provider}>
+              <SocialInfo>
+                <SocialIcon>
+                  {account.provider === "KAKAO" ? "🔆" : "🌐"}
+                </SocialIcon>
+                <SocialName>
+                  {account.provider === "KAKAO" ? "카카오" : "구글"}
+                </SocialName>
+                <ConnectedBadge>연결됨</ConnectedBadge>
+              </SocialInfo>
+              <UnlinkButton>해제</UnlinkButton>
+            </SocialCard>
+          ))}
         </Section>
 
         {/* 사용자 정보 */}
@@ -141,14 +197,15 @@ const ProfilePage = () => {
               <MenuItemIcon>📄</MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>소속</MenuItemLabel>
-                <MenuItemDescription>{user.affiliation}</MenuItemDescription>
+                <MenuItemDescription>{user.group.name}</MenuItemDescription>
               </MenuItemContent>
               <MenuItemArrow>
                 <FiChevronRight />
               </MenuItemArrow>
             </MenuItem>
 
-            <MenuItem onClick={() => navigate("/address/management")}>
+            {/* 주소는 별도 API가 필요하므로 임시 주석 처리 */}
+            {/* <MenuItem onClick={() => navigate("/address/management")}>
               <MenuItemIcon>🏠</MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>대표 주소</MenuItemLabel>
@@ -157,7 +214,7 @@ const ProfilePage = () => {
               <MenuItemArrow>
                 <FiChevronRight />
               </MenuItemArrow>
-            </MenuItem>
+            </MenuItem> */}
 
             <MenuItem onClick={() => navigate("/profile/preference")}>
               <MenuItemIcon>≡</MenuItemIcon>
@@ -339,8 +396,8 @@ const ProfilePage = () => {
               {/* 옵션들 */}
               <OptionsList>
                 <OptionCard
-                  $selected={recommendationType === "절약형"}
-                  onClick={() => setRecommendationType("절약형")}
+                  $selected={recommendationType === "SAVING"}
+                  onClick={() => setRecommendationType("SAVING")}
                 >
                   <OptionIcon>🐷</OptionIcon>
                   <OptionContent>
@@ -352,8 +409,8 @@ const ProfilePage = () => {
                 </OptionCard>
 
                 <OptionCard
-                  $selected={recommendationType === "모험형"}
-                  onClick={() => setRecommendationType("모험형")}
+                  $selected={recommendationType === "ADVENTURE"}
+                  onClick={() => setRecommendationType("ADVENTURE")}
                 >
                   <OptionIcon>🧭</OptionIcon>
                   <OptionContent>
@@ -365,8 +422,8 @@ const ProfilePage = () => {
                 </OptionCard>
 
                 <OptionCard
-                  $selected={recommendationType === "균형형"}
-                  onClick={() => setRecommendationType("균형형")}
+                  $selected={recommendationType === "BALANCED"}
+                  onClick={() => setRecommendationType("BALANCED")}
                 >
                   <OptionIcon>⚖️</OptionIcon>
                   <OptionContent>
@@ -380,9 +437,13 @@ const ProfilePage = () => {
 
               <SaveRecommendationButton
                 onClick={() => {
-                  // TODO: API 호출
+                  // TODO: 추천 타입 변경 API 추가 필요
                   setShowRecommendationModal(false);
-                  alert(`${recommendationType} 유형이 저장되었습니다.`);
+                  alert(
+                    `${getRecommendationTypeKorean(
+                      recommendationType
+                    )} 유형이 저장되었습니다.`
+                  );
                 }}
               >
                 저장하기
@@ -432,9 +493,10 @@ const NotificationIcon = styled.div`
   cursor: pointer;
 `;
 
-const ProfileAvatar = styled.div<{ large?: boolean; small?: boolean }>`
-  width: ${(props) => (props.large ? "60px" : props.small ? "40px" : "40px")};
-  height: ${(props) => (props.large ? "60px" : props.small ? "40px" : "40px")};
+const ProfileAvatar = styled.div<{ $large?: boolean; $small?: boolean }>`
+  width: ${(props) => (props.$large ? "60px" : props.$small ? "40px" : "40px")};
+  height: ${(props) =>
+    props.$large ? "60px" : props.$small ? "40px" : "40px"};
   border-radius: 50%;
   background: linear-gradient(
     135deg,
@@ -520,13 +582,13 @@ const ButtonRow = styled.div`
   gap: ${theme.spacing.md};
 `;
 
-const ActionButton = styled.button<{ outline?: boolean }>`
+const ActionButton = styled.button<{ $outline?: boolean }>`
   padding: ${theme.spacing.md};
   background-color: ${(props) =>
-    props.outline ? "white" : theme.colors.accent};
-  color: ${(props) => (props.outline ? theme.colors.secondary : "white")};
+    props.$outline ? "white" : theme.colors.accent};
+  color: ${(props) => (props.$outline ? theme.colors.secondary : "white")};
   border: ${(props) =>
-    props.outline ? `1px solid ${theme.colors.secondary}` : "none"};
+    props.$outline ? `1px solid ${theme.colors.secondary}` : "none"};
   border-radius: ${theme.borderRadius.md};
   font-size: ${theme.typography.fontSize.sm};
   font-weight: ${theme.typography.fontWeight.medium};
@@ -534,7 +596,7 @@ const ActionButton = styled.button<{ outline?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${(props) => (props.outline ? "#fff8f0" : "#e55a2b")};
+    background-color: ${(props) => (props.$outline ? "#fff8f0" : "#e55a2b")};
   }
 
   &:active {
