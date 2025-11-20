@@ -1,128 +1,106 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { onboardingService } from "../../services/onboarding.service";
 import type { Food } from "../../types/api";
 
-interface RankedCategory {
-  rank: number;
-  category: Food | null;
-}
-
 const OnboardingFoodPreferencePage = () => {
   const navigate = useNavigate();
 
-  // 음식 카테고리 목록
-  const [categories, setCategories] = useState<Food[]>([]);
+  // 음식 관련 상태
+  const [foods, setFoods] = useState<Food[]>([]);
+  const [selectedFoods, setSelectedFoods] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-  // 선호/불호 검색어
-  const [preferredSearchTerm, setPreferredSearchTerm] = useState("");
-  const [dislikedSearchTerm, setDislikedSearchTerm] = useState("");
+  // 무한 스크롤을 위한 ref
+  const observerTarget = useRef<HTMLDivElement>(null);
 
-  // 선호/불호 우선순위 (1-3순위)
-  const [preferredRankings, setPreferredRankings] = useState<RankedCategory[]>([
-    { rank: 1, category: null },
-    { rank: 2, category: null },
-    { rank: 3, category: null },
-  ]);
-  const [dislikedRankings, setDislikedRankings] = useState<RankedCategory[]>([
-    { rank: 1, category: null },
-    { rank: 2, category: null },
-    { rank: 3, category: null },
-  ]);
+  // 음식 목록 조회
+  const fetchFoods = useCallback(
+    async (pageNumber: number) => {
+      if (loading || !hasMore) return;
 
-  // 검색 결과 표시 여부
-  const [showPreferredResults, setShowPreferredResults] = useState(false);
-  const [showDislikedResults, setShowDislikedResults] = useState(false);
+      try {
+        setLoading(true);
+        const response = await onboardingService.getFoods(
+          undefined,
+          pageNumber,
+          20
+        );
 
-  // 음식 카테고리 목록 조회
-  const fetchCategories = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await onboardingService.getFoods(undefined, 0, 100);
+        if (response.result === "SUCCESS" && response.data) {
+          const newFoods = response.data.content;
 
-      if (response.result === "SUCCESS" && response.data) {
-        setCategories(response.data.content);
+          setFoods((prev) =>
+            pageNumber === 0 ? newFoods : [...prev, ...newFoods]
+          );
+
+          setHasMore(!response.data.last);
+        }
+      } catch (error) {
+        console.error("음식 목록 조회 실패:", error);
+        alert("음식 목록을 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("카테고리 목록 조회 실패:", error);
-      alert("카테고리 목록을 불러오는데 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [loading, hasMore]
+  );
 
   // 초기 로드
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    fetchFoods(0);
+  }, []);
 
-  // 검색 필터링
-  const getFilteredCategories = (searchTerm: string) => {
-    if (!searchTerm.trim()) return [];
-
-    const usedCategoryIds = [
-      ...preferredRankings
-        .filter((r) => r.category)
-        .map((r) => r.category!.foodId),
-      ...dislikedRankings
-        .filter((r) => r.category)
-        .map((r) => r.category!.foodId),
-    ];
-
-    return categories.filter(
-      (cat) =>
-        !usedCategoryIds.includes(cat.foodId) &&
-        (cat.foodName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          cat.categoryName.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Intersection Observer 설정
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
     );
-  };
 
-  // 선호 카테고리 선택
-  const selectPreferredCategory = (rank: number, category: Food) => {
-    setPreferredRankings((prev) =>
-      prev.map((r) => (r.rank === rank ? { ...r, category } : r))
-    );
-    setPreferredSearchTerm("");
-    setShowPreferredResults(false);
-  };
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
 
-  // 불호 카테고리 선택
-  const selectDislikedCategory = (rank: number, category: Food) => {
-    setDislikedRankings((prev) =>
-      prev.map((r) => (r.rank === rank ? { ...r, category } : r))
-    );
-    setDislikedSearchTerm("");
-    setShowDislikedResults(false);
-  };
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loading]);
 
-  // 선호 카테고리 제거
-  const removePreferredCategory = (rank: number) => {
-    setPreferredRankings((prev) =>
-      prev.map((r) => (r.rank === rank ? { ...r, category: null } : r))
-    );
-  };
+  // 페이지 변경 시 데이터 로드
+  useEffect(() => {
+    if (page > 0) {
+      fetchFoods(page);
+    }
+  }, [page]);
 
-  // 불호 카테고리 제거
-  const removeDislikedCategory = (rank: number) => {
-    setDislikedRankings((prev) =>
-      prev.map((r) => (r.rank === rank ? { ...r, category: null } : r))
-    );
+  // 음식 선택 토글
+  const toggleFoodSelection = (foodId: number) => {
+    if (selectedFoods.includes(foodId)) {
+      setSelectedFoods(selectedFoods.filter((id) => id !== foodId));
+    } else {
+      setSelectedFoods([...selectedFoods, foodId]);
+    }
   };
 
   // 저장하기
   const handleSubmit = async () => {
+    // 선택 없이도 저장 가능 (최소 0개)
     try {
       setLoading(true);
-
-      const preferredFoodIds = preferredRankings
-        .filter((r) => r.category !== null)
-        .map((r) => r.category!.foodId);
-
       const response = await onboardingService.saveFoodPreferences({
-        preferredFoodIds,
+        preferredFoodIds: selectedFoods,
       });
 
       if (response.result === "SUCCESS" && response.data) {
@@ -145,214 +123,63 @@ const OnboardingFoodPreferencePage = () => {
     <Wrapper>
       <Container>
         <Header>
-          <Title>음식 카테고리 설정</Title>
+          <Title>음식 취향 선택</Title>
         </Header>
 
-        {/* 선호하는 음식 카테고리 섹션 */}
         <Section>
-          <SectionTitle>선호하는 음식 카테고리 (우선순위 순서)</SectionTitle>
+          <SectionTitle>선호하는 음식을 선택해주세요</SectionTitle>
           <SectionDescription>
-            완벽한 서비스 제공을 위해 음식 취향을 설정해주세요.
+            취향에 맞는 음식 추천을 위해 선택해주세요.
           </SectionDescription>
-
-          {preferredRankings.map((ranking) => (
-            <RankingContainer key={`preferred-${ranking.rank}`}>
-              <RankLabel>{ranking.rank}순위</RankLabel>
-              {ranking.category ? (
-                <SelectedCategoryCard>
-                  <CategoryImage
-                    src={ranking.category.imageUrl}
-                    alt={ranking.category.foodName}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' font-size='24' text-anchor='middle' dy='.3em'%3E🍽️%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                  <CategoryInfo>
-                    <CategoryName>{ranking.category.foodName}</CategoryName>
-                    <CategorySubInfo>
-                      {ranking.category.categoryName} ·{" "}
-                      {ranking.category.averagePrice.toLocaleString()}원
-                    </CategorySubInfo>
-                  </CategoryInfo>
-                  <RemoveButton
-                    onClick={() => removePreferredCategory(ranking.rank)}
-                  >
-                    ✕
-                  </RemoveButton>
-                </SelectedCategoryCard>
-              ) : (
-                <SearchContainer>
-                  <SearchInput
-                    type="text"
-                    placeholder="카테고리 검색..."
-                    value={
-                      showPreferredResults &&
-                      ranking.rank ===
-                        preferredRankings.findIndex((r) => !r.category) + 1
-                        ? preferredSearchTerm
-                        : ""
-                    }
-                    onChange={(e) => {
-                      setPreferredSearchTerm(e.target.value);
-                      setShowPreferredResults(true);
-                    }}
-                    onFocus={() => setShowPreferredResults(true)}
-                  />
-                  {showPreferredResults &&
-                    preferredSearchTerm &&
-                    ranking.rank ===
-                      preferredRankings.findIndex((r) => !r.category) + 1 && (
-                      <SearchResults>
-                        {getFilteredCategories(preferredSearchTerm).length >
-                        0 ? (
-                          getFilteredCategories(preferredSearchTerm)
-                            .slice(0, 5)
-                            .map((category) => (
-                              <SearchResultItem
-                                key={category.foodId}
-                                onClick={() =>
-                                  selectPreferredCategory(
-                                    ranking.rank,
-                                    category
-                                  )
-                                }
-                              >
-                                <CategoryImage
-                                  src={category.imageUrl}
-                                  alt={category.foodName}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' font-size='24' text-anchor='middle' dy='.3em'%3E🍽️%3C/text%3E%3C/svg%3E";
-                                  }}
-                                />
-                                <CategoryInfo>
-                                  <CategoryName>
-                                    {category.foodName}
-                                  </CategoryName>
-                                  <CategorySubInfo>
-                                    {category.categoryName} ·{" "}
-                                    {category.averagePrice.toLocaleString()}원
-                                  </CategorySubInfo>
-                                </CategoryInfo>
-                              </SearchResultItem>
-                            ))
-                        ) : (
-                          <EmptySearchResult>
-                            검색 결과가 없습니다.
-                          </EmptySearchResult>
-                        )}
-                      </SearchResults>
-                    )}
-                </SearchContainer>
-              )}
-            </RankingContainer>
-          ))}
+          {selectedFoods.length > 0 && (
+            <SelectedCount>{selectedFoods.length}개 선택됨</SelectedCount>
+          )}
         </Section>
 
-        {/* 불호하는 음식 카테고리 섹션 */}
-        <Section>
-          <SectionTitle>불호하는 음식 카테고리 (우선순위 순서)</SectionTitle>
-          <SectionDescription>
-            완벽한 서비스 제공을 위해 음식 취향을 설정해주세요.
-          </SectionDescription>
-
-          {dislikedRankings.map((ranking) => (
-            <RankingContainer key={`disliked-${ranking.rank}`}>
-              <RankLabel>{ranking.rank}순위</RankLabel>
-              {ranking.category ? (
-                <SelectedCategoryCard>
-                  <CategoryImage
-                    src={ranking.category.imageUrl}
-                    alt={ranking.category.foodName}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' font-size='24' text-anchor='middle' dy='.3em'%3E🍽️%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                  <CategoryInfo>
-                    <CategoryName>{ranking.category.foodName}</CategoryName>
-                    <CategorySubInfo>
-                      {ranking.category.categoryName} ·{" "}
-                      {ranking.category.averagePrice.toLocaleString()}원
-                    </CategorySubInfo>
-                  </CategoryInfo>
-                  <RemoveButton
-                    onClick={() => removeDislikedCategory(ranking.rank)}
-                  >
-                    ✕
-                  </RemoveButton>
-                </SelectedCategoryCard>
-              ) : (
-                <SearchContainer>
-                  <SearchInput
-                    type="text"
-                    placeholder="카테고리 검색..."
-                    value={
-                      showDislikedResults &&
-                      ranking.rank ===
-                        dislikedRankings.findIndex((r) => !r.category) + 1
-                        ? dislikedSearchTerm
-                        : ""
-                    }
-                    onChange={(e) => {
-                      setDislikedSearchTerm(e.target.value);
-                      setShowDislikedResults(true);
-                    }}
-                    onFocus={() => setShowDislikedResults(true)}
-                  />
-                  {showDislikedResults &&
-                    dislikedSearchTerm &&
-                    ranking.rank ===
-                      dislikedRankings.findIndex((r) => !r.category) + 1 && (
-                      <SearchResults>
-                        {getFilteredCategories(dislikedSearchTerm).length >
-                        0 ? (
-                          getFilteredCategories(dislikedSearchTerm)
-                            .slice(0, 5)
-                            .map((category) => (
-                              <SearchResultItem
-                                key={category.foodId}
-                                onClick={() =>
-                                  selectDislikedCategory(ranking.rank, category)
-                                }
-                              >
-                                <CategoryImage
-                                  src={category.imageUrl}
-                                  alt={category.foodName}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' font-size='24' text-anchor='middle' dy='.3em'%3E🍽️%3C/text%3E%3C/svg%3E";
-                                  }}
-                                />
-                                <CategoryInfo>
-                                  <CategoryName>
-                                    {category.foodName}
-                                  </CategoryName>
-                                  <CategorySubInfo>
-                                    {category.categoryName} ·{" "}
-                                    {category.averagePrice.toLocaleString()}원
-                                  </CategorySubInfo>
-                                </CategoryInfo>
-                              </SearchResultItem>
-                            ))
-                        ) : (
-                          <EmptySearchResult>
-                            검색 결과가 없습니다.
-                          </EmptySearchResult>
-                        )}
-                      </SearchResults>
-                    )}
-                </SearchContainer>
-              )}
-            </RankingContainer>
+        <FoodGrid>
+          {foods.map((food) => (
+            <FoodCard
+              key={food.foodId}
+              $selected={selectedFoods.includes(food.foodId)}
+              onClick={() => toggleFoodSelection(food.foodId)}
+            >
+              <FoodImage
+                src={food.imageUrl}
+                alt={food.foodName}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' font-size='40' text-anchor='middle' dy='.3em'%3E🍽️%3C/text%3E%3C/svg%3E";
+                }}
+              />
+              <FoodInfo>
+                <FoodName>{food.foodName}</FoodName>
+                <FoodCategory>{food.categoryName}</FoodCategory>
+                <FoodPrice>{food.averagePrice.toLocaleString()}원</FoodPrice>
+              </FoodInfo>
+              <Checkbox $checked={selectedFoods.includes(food.foodId)}>
+                {selectedFoods.includes(food.foodId) && "✓"}
+              </Checkbox>
+            </FoodCard>
           ))}
-        </Section>
+        </FoodGrid>
+
+        {/* 무한 스크롤 관찰 대상 */}
+        <ObserverTarget ref={observerTarget} />
 
         {loading && (
           <LoadingContainer>
-            <LoadingMessage>카테고리를 불러오는 중...</LoadingMessage>
+            <LoadingMessage>음식 목록을 불러오는 중...</LoadingMessage>
           </LoadingContainer>
+        )}
+
+        {!loading && !hasMore && foods.length > 0 && (
+          <EndMessage>모든 음식을 불러왔습니다.</EndMessage>
+        )}
+
+        {foods.length === 0 && !loading && (
+          <EmptyContainer>
+            <EmptyMessage>음식 목록이 없습니다.</EmptyMessage>
+          </EmptyContainer>
         )}
       </Container>
 
@@ -376,7 +203,7 @@ const Wrapper = styled.div`
 const Container = styled.div`
   min-height: 100vh;
   background-color: #fafafa;
-  padding-bottom: 100px;
+  padding-bottom: 130px;
 `;
 
 const Header = styled.header`
@@ -398,8 +225,6 @@ const Title = styled.h1`
 
 const Section = styled.section`
   padding: ${theme.spacing.lg};
-  background-color: white;
-  margin-bottom: ${theme.spacing.md};
 `;
 
 const SectionTitle = styled.h2`
@@ -412,154 +237,110 @@ const SectionTitle = styled.h2`
 const SectionDescription = styled.p`
   font-size: ${theme.typography.fontSize.sm};
   color: #757575;
-  margin: 0 0 ${theme.spacing.lg} 0;
+  margin: 0;
   line-height: 1.5;
 `;
 
-const RankingContainer = styled.div`
-  margin-bottom: ${theme.spacing.md};
-`;
-
-const RankLabel = styled.div`
+const SelectedCount = styled.p`
   font-size: ${theme.typography.fontSize.sm};
-  font-weight: ${theme.typography.fontWeight.semibold};
   color: ${theme.colors.accent};
-  margin-bottom: ${theme.spacing.xs};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  margin: ${theme.spacing.sm} 0 0 0;
 `;
 
-const SearchContainer = styled.div`
-  position: relative;
+const FoodGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: ${theme.spacing.md};
+  padding: 0 ${theme.spacing.lg} ${theme.spacing.lg};
 `;
 
-const SearchInput = styled.input`
-  width: 100%;
-  padding: ${theme.spacing.md};
-  border: 2px solid #e0e0e0;
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.base};
-  color: #212121;
-  outline: none;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-
-  &:focus {
-    border-color: ${theme.colors.accent};
-  }
-
-  &::placeholder {
-    color: #bdbdbd;
-  }
-`;
-
-const SearchResults = styled.div`
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+const FoodCard = styled.div<{ $selected?: boolean }>`
   background-color: white;
-  border: 1px solid #e0e0e0;
-  border-radius: ${theme.borderRadius.md};
-  margin-top: ${theme.spacing.xs};
-  max-height: 300px;
-  overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-`;
-
-const SearchResultItem = styled.div`
-  display: flex;
-  align-items: center;
-  padding: ${theme.spacing.md};
-  cursor: pointer;
-  transition: background-color 0.2s;
-  gap: ${theme.spacing.md};
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-
-  &:not(:last-child) {
-    border-bottom: 1px solid #f0f0f0;
-  }
-`;
-
-const SelectedCategoryCard = styled.div`
-  display: flex;
-  align-items: center;
-  padding: ${theme.spacing.md};
-  background-color: #f5f5f5;
-  border: 2px solid ${theme.colors.accent};
-  border-radius: ${theme.borderRadius.md};
-  gap: ${theme.spacing.md};
-  position: relative;
-`;
-
-const CategoryImage = styled.img`
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: ${theme.borderRadius.sm};
-  background-color: #e0e0e0;
-  flex-shrink: 0;
-`;
-
-const CategoryInfo = styled.div`
-  flex: 1;
+  border-radius: ${theme.borderRadius.lg};
   display: flex;
   flex-direction: column;
-  gap: ${theme.spacing.xs};
-  min-width: 0;
-`;
-
-const CategoryName = styled.p`
-  font-size: ${theme.typography.fontSize.base};
-  font-weight: ${theme.typography.fontWeight.semibold};
-  color: #212121;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const CategorySubInfo = styled.p`
-  font-size: ${theme.typography.fontSize.sm};
-  color: #757575;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const RemoveButton = styled.button`
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background-color: #ff5252;
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background-color 0.2s;
+  border: 2px solid
+    ${(props) => (props.$selected ? theme.colors.accent : "transparent")};
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
-    background-color: #ff1744;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
   }
 
   &:active {
-    transform: scale(0.95);
+    transform: translateY(0);
   }
 `;
 
-const EmptySearchResult = styled.div`
-  padding: ${theme.spacing.lg};
-  text-align: center;
-  color: #9e9e9e;
+const FoodImage = styled.img`
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  background-color: #f5f5f5;
+`;
+
+const FoodInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.xs};
+  padding: ${theme.spacing.md};
+  flex: 1;
+`;
+
+const FoodName = styled.p`
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: #212121;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+`;
+
+const FoodCategory = styled.p`
   font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
+  margin: 0;
+`;
+
+const FoodPrice = styled.p`
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.medium};
+  color: ${theme.colors.accent};
+  margin: 0;
+`;
+
+const Checkbox = styled.div<{ $checked?: boolean }>`
+  position: absolute;
+  top: ${theme.spacing.sm};
+  right: ${theme.spacing.sm};
+  width: 24px;
+  height: 24px;
+  border: 2px solid
+    ${(props) => (props.$checked ? theme.colors.accent : "#e0e0e0")};
+  border-radius: ${theme.borderRadius.sm};
+  background-color: ${(props) =>
+    props.$checked ? theme.colors.accent : "white"};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.bold};
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const ObserverTarget = styled.div`
+  height: 20px;
+  margin: ${theme.spacing.md} 0;
 `;
 
 const LoadingContainer = styled.div`
@@ -573,6 +354,25 @@ const LoadingMessage = styled.p`
   margin: 0;
 `;
 
+const EndMessage = styled.p`
+  color: #9e9e9e;
+  font-size: ${theme.typography.fontSize.sm};
+  text-align: center;
+  padding: ${theme.spacing.lg};
+  margin: 0;
+`;
+
+const EmptyContainer = styled.div`
+  padding: ${theme.spacing.xl};
+  text-align: center;
+`;
+
+const EmptyMessage = styled.p`
+  color: #9e9e9e;
+  font-size: ${theme.typography.fontSize.base};
+  margin: 0;
+`;
+
 const ButtonGroup = styled.div`
   position: fixed;
   bottom: 0;
@@ -580,9 +380,13 @@ const ButtonGroup = styled.div`
   width: 100%;
   left: 50%;
   transform: translateX(-50%);
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
-  background-color: white;
-  border-top: 1px solid #e0e0e0;
+  padding: 0 ${theme.spacing.lg};
+  padding-top: ${theme.spacing.md};
+  padding-bottom: ${theme.spacing.lg};
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.md};
   box-sizing: border-box;
 `;
 
