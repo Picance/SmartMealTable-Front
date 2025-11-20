@@ -17,7 +17,6 @@ import type {
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, accessToken } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<"popular" | "healthy">("popular");
   const [dashboardData, setDashboardData] =
     useState<HomeDashboardResponse | null>(null);
   const [onboardingStatus, setOnboardingStatus] =
@@ -216,20 +215,6 @@ const HomePage = () => {
         {/* 추천 메뉴 */}
         <RecommendSection>
           <SectionTitle>추천 메뉴</SectionTitle>
-          <TabContainer>
-            <Tab
-              $active={activeTab === "popular"}
-              onClick={() => setActiveTab("popular")}
-            >
-              인기 메뉴
-            </Tab>
-            <Tab
-              $active={activeTab === "healthy"}
-              onClick={() => setActiveTab("healthy")}
-            >
-              건강한 선택
-            </Tab>
-          </TabContainer>
           <MenuGrid>
             {recommendedMenus && recommendedMenus.length > 0 ? (
               recommendedMenus.map((menu) => (
@@ -522,34 +507,6 @@ const BudgetSubtext = styled.div`
 
 const RecommendSection = styled.section`
   margin-bottom: ${theme.spacing.xl};
-`;
-
-const TabContainer = styled.div`
-  display: flex;
-  gap: ${theme.spacing.sm};
-  margin-bottom: ${theme.spacing.md};
-  margin-top: ${theme.spacing.md};
-`;
-
-const Tab = styled.button<{ $active: boolean }>`
-  flex: 1;
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  background-color: ${(props) => (props.$active ? "white" : "#f5f5f5")};
-  border: 1px solid
-    ${(props) => (props.$active ? theme.colors.accent : "#e0e0e0")};
-  border-radius: 8px;
-  font-size: ${theme.typography.fontSize.base};
-  font-weight: ${(props) =>
-    props.$active
-      ? theme.typography.fontWeight.semibold
-      : theme.typography.fontWeight.medium};
-  color: ${(props) => (props.$active ? theme.colors.accent : "#666")};
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: ${theme.colors.accent};
-  }
 `;
 
 const MenuGrid = styled.div`
