@@ -39,8 +39,14 @@ const GoogleCallbackPage = () => {
         });
 
         if (response.result === "SUCCESS" && response.data) {
-          const { memberId, email, name, accessToken, refreshToken, onboardingComplete } =
-            response.data;
+          const {
+            memberId,
+            email,
+            name,
+            accessToken,
+            refreshToken,
+            onboardingComplete,
+          } = response.data;
 
           console.log("구글 로그인 성공 - 온보딩 상태:", onboardingComplete);
 

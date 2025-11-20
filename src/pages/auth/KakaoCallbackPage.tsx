@@ -42,8 +42,14 @@ const KakaoCallbackPage = () => {
         console.log("카카오 로그인 응답:", response);
 
         if (response.result === "SUCCESS" && response.data) {
-          const { memberId, email, name, accessToken, refreshToken, onboardingComplete } =
-            response.data;
+          const {
+            memberId,
+            email,
+            name,
+            accessToken,
+            refreshToken,
+            onboardingComplete,
+          } = response.data;
 
           console.log("카카오 로그인 성공 - 온보딩 상태:", onboardingComplete);
 
