@@ -220,7 +220,14 @@ const HomePage = () => {
               recommendedMenus.map((menu) => (
                 <MenuCard
                   key={menu.foodId}
-                  onClick={() => navigate(`/menu/${menu.foodId}`)}
+                  onClick={() => {
+                    // storeId가 있으면 가게 상세 페이지로, 없으면 메뉴 상세 페이지로 이동
+                    if (menu.storeId) {
+                      navigate(`/store/${menu.storeId}`);
+                    } else {
+                      navigate(`/menu/${menu.foodId}`);
+                    }
+                  }}
                 >
                   <MenuImage>
                     {menu.imageUrl ? (
