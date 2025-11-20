@@ -1,7 +1,13 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import { NavermapsProvider } from "react-naver-maps";
-// import { useAuthStore } from "./store/authStore";
+import { useAuthStore } from "./store/authStore";
 import { theme } from "./styles/theme";
 import { GlobalStyle } from "./styles/GlobalStyle";
 
@@ -52,17 +58,30 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  // requireOnboarding = true,
+  requireOnboarding = true,
 }) => {
-  // const { isAuthenticated, member } = useAuthStore();
+  const location = useLocation();
+  const { isAuthenticated, member } = useAuthStore();
 
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login-options" replace />;
-  // }
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/login-options"
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
+  }
 
-  // if (requireOnboarding && member && !member.isOnboardingComplete) {
-  //   return <Navigate to="/onboarding/profile" replace />;
-  // }
+  if (requireOnboarding && member && !member.isOnboardingComplete) {
+    return (
+      <Navigate
+        to="/onboarding/profile"
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
+  }
 
   return <>{children}</>;
 };
