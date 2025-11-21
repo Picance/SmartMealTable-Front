@@ -175,7 +175,7 @@ const RecommendationPage = () => {
     }
   };
 
-  const searchStores = async () => {
+  const searchStores = async (keywordOverride?: string) => {
     console.log("🔍 [searchStores] 시작");
 
     if (!userLocation) {
@@ -202,8 +202,9 @@ const RecommendationPage = () => {
         params.sortBy = sortBy;
       }
 
-      if (searchKeyword.trim()) {
-        params.keyword = searchKeyword.trim();
+      const keywordToUse = keywordOverride ?? searchKeyword.trim();
+      if (keywordToUse) {
+        params.keyword = keywordToUse;
       }
 
       console.log("📤 [searchStores] API 호출 파라미터:", params);
@@ -366,56 +367,12 @@ const RecommendationPage = () => {
 
   // 자동완성 키워드 선택
   const handleSuggestionClick = (suggestion: string) => {
-    setSearchKeyword(suggestion);
+    const trimmedSuggestion = suggestion.trim();
+    setSearchKeyword(trimmedSuggestion);
     setShowAutocomplete(false);
-    // 검색 실행 - 키워드로 검색
+
     if (userLocation) {
-      // 직접 searchStores 호출하되, keyword를 파라미터로 전달
-      const params: RecommendationParams = {
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        radius: distance,
-        includeDisliked: !excludeDislikes,
-        openNow: isOpenOnly,
-        page: 0,
-        size: 20,
-        keyword: suggestion.trim(),
-      };
-
-      if (sortBy !== "SCORE") {
-        params.sortBy = sortBy;
-      }
-
-      setIsLoading(true);
-      recommendationService
-        .getRecommendations(params)
-        .then((response) => {
-          if (response.result === "SUCCESS" && response.data) {
-            const storeList = Array.isArray(response.data) ? response.data : [];
-            setStores(storeList);
-
-            const favorites = new Set<number>();
-            const idMap = new Map<number, number>();
-
-            storeList.forEach((store) => {
-              if (store.isFavorite) {
-                favorites.add(store.storeId);
-                if (store.favoriteId) {
-                  idMap.set(store.storeId, store.favoriteId);
-                }
-              }
-            });
-
-            setFavoriteStores(favorites);
-            setFavoriteIdMap(idMap);
-          }
-        })
-        .catch((err) => {
-          console.error("검색 실패:", err);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      searchStores(trimmedSuggestion);
     }
   };
 
