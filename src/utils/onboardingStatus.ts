@@ -4,6 +4,10 @@ import { useAuthStore } from "../store/authStore";
 /**
  * Fetches the latest onboarding completion flag from the server,
  * syncs it to the auth store, and returns the resolved value.
+ *
+ * Call this helper after login only when the backend already reports the
+ * account as fully onboarded so new users stay on the onboarding flow even if
+ * the status endpoint behaves unexpectedly.
  */
 export const syncOnboardingStatus = async (
   fallbackStatus: boolean

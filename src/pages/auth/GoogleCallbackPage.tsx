@@ -62,9 +62,11 @@ const GoogleCallbackPage = () => {
             refreshToken
           );
 
-          const resolvedOnboarding = await syncOnboardingStatus(
-            onboardingComplete
-          );
+          let resolvedOnboarding = onboardingComplete;
+
+          if (onboardingComplete) {
+            resolvedOnboarding = await syncOnboardingStatus(onboardingComplete);
+          }
 
           if (resolvedOnboarding) {
             navigate("/home", { replace: true });
