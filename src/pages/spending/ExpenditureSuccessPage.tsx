@@ -138,7 +138,6 @@ const ExpenditureSuccessPage = () => {
               <InfoLabel>결제 날짜</InfoLabel>
               <InfoValue>
                 {expenditureData.expendedDate} {expenditureData.expendedTime}
-                <TimeTag>수정</TimeTag>
               </InfoValue>
             </InfoRow>
           </InfoCard>
@@ -323,12 +322,6 @@ const InfoValue = styled.span`
   display: flex;
   align-items: center;
   gap: 8px;
-`;
-
-const TimeTag = styled.span`
-  font-size: 12px;
-  color: #999;
-  font-weight: 400;
 `;
 
 const Divider = styled.div`
