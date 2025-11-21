@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { authService } from "../../services/auth.service.ts";
 import { useAuthStore } from "../../store/authStore";
+import { syncOnboardingStatus } from "../../utils/onboardingStatus";
 
 const EmailLoginPage = () => {
   const navigate = useNavigate();
@@ -78,8 +79,11 @@ const EmailLoginPage = () => {
           refreshToken
         );
 
-        // 온보딩 상태에 따라 이동
-        if (onboardingComplete) {
+        const resolvedOnboarding = await syncOnboardingStatus(
+          onboardingComplete
+        );
+
+        if (resolvedOnboarding) {
           navigate("/home", { replace: true });
         } else {
           navigate("/onboarding/profile", { replace: true });

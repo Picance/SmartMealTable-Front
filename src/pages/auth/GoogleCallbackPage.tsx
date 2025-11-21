@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { authService } from "../../services/auth.service";
 import { useAuthStore } from "../../store/authStore";
+import { syncOnboardingStatus } from "../../utils/onboardingStatus";
 
 /**
  * 구글 OAuth 콜백 페이지
@@ -61,8 +62,11 @@ const GoogleCallbackPage = () => {
             refreshToken
           );
 
-          // 온보딩 상태에 따라 이동
-          if (onboardingComplete) {
+          const resolvedOnboarding = await syncOnboardingStatus(
+            onboardingComplete
+          );
+
+          if (resolvedOnboarding) {
             navigate("/home", { replace: true });
           } else {
             navigate("/onboarding/profile", { replace: true });
