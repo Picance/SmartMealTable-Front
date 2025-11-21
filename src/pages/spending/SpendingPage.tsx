@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import {
   PiBowlFoodFill,
-  PiBentoBoxFill,
+  PiCookingPotFill,
   PiFishSimpleFill,
   PiPizzaFill,
   PiCoffeeFill,
@@ -283,7 +283,7 @@ const SpendingPage = () => {
   const getCategoryIcon = (category?: string) => {
     const iconMap: Record<string, IconType> = {
       KOREAN: PiBowlFoodFill,
-      CHINESE: PiBentoBoxFill,
+      CHINESE: PiCookingPotFill,
       JAPANESE: PiFishSimpleFill,
       WESTERN: PiPizzaFill,
       CAFE: PiCoffeeFill,
