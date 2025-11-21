@@ -115,25 +115,18 @@ export interface UpdateRecommendationTypeResponse {
   updatedAt: string;
 }
 
-// 자동완성 아이템
-export interface AutocompleteItem {
-  type: "STORE" | "FOOD" | "CATEGORY";
-  id: number;
+// 자동완성 가게 바로가기
+export interface StoreShortcut {
+  storeId: number;
   name: string;
-  categoryName?: string;
-  storeId?: number;
-  storeName?: string;
-  imageUrl?: string;
+  imageUrl: string | null;
+  isOpen: boolean;
 }
 
 // 자동완성 응답
 export interface AutocompleteResponse {
-  suggestions: AutocompleteItem[];
-  storeShortcuts?: Array<{
-    storeId: number;
-    storeName: string;
-    categoryName: string;
-  }>;
+  suggestions: string[]; // 음식명/가게명/그룹명이 섞인 키워드 목록
+  storeShortcuts: StoreShortcut[]; // 추천 가게 바로가기
 }
 
 export const recommendationService = {

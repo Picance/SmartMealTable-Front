@@ -12,7 +12,7 @@ import {
   recommendationService,
   RecommendationParams,
   RecommendedStore,
-  AutocompleteItem,
+  StoreShortcut,
 } from "../../services/recommendation.service";
 import { favoriteService } from "../../services/favorite.service";
 import { getHomeDashboard } from "../../services/home.service";
@@ -55,8 +55,11 @@ const RecommendationPage = () => {
   });
 
   // 자동완성 관련 상태
-  const [autocompleteResults, setAutocompleteResults] = useState<
-    AutocompleteItem[]
+  const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<
+    string[]
+  >([]);
+  const [autocompleteShortcuts, setAutocompleteShortcuts] = useState<
+    StoreShortcut[]
   >([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -319,7 +322,8 @@ const RecommendationPage = () => {
   // 자동완성 검색
   const handleAutocompleteSearch = async (keyword: string) => {
     if (keyword.trim().length < 2) {
-      setAutocompleteResults([]);
+      setAutocompleteSuggestions([]);
+      setAutocompleteShortcuts([]);
       setShowAutocomplete(false);
       return;
     }
@@ -331,15 +335,25 @@ const RecommendationPage = () => {
         storeShortcutsLimit: 5,
       });
 
+      console.log("🔍 [자동완성] API 응답:", response);
+
       if (response.result === "SUCCESS" && response.data) {
-        setAutocompleteResults(response.data.suggestions || []);
+        setAutocompleteSuggestions(response.data.suggestions || []);
+        setAutocompleteShortcuts(response.data.storeShortcuts || []);
         setShowAutocomplete(true);
+        console.log("✅ [자동완성] 성공:", {
+          suggestions: response.data.suggestions?.length || 0,
+          shortcuts: response.data.storeShortcuts?.length || 0,
+        });
       } else {
-        setAutocompleteResults([]);
+        setAutocompleteSuggestions([]);
+        setAutocompleteShortcuts([]);
         setShowAutocomplete(false);
       }
     } catch (err) {
-      setAutocompleteResults([]);
+      console.error("❌ [자동완성] 에러:", err);
+      setAutocompleteSuggestions([]);
+      setAutocompleteShortcuts([]);
       setShowAutocomplete(false);
     }
   };
@@ -350,17 +364,64 @@ const RecommendationPage = () => {
     handleAutocompleteSearch(value);
   };
 
-  // 자동완성 아이템 선택
-  const handleAutocompleteItemClick = (item: AutocompleteItem) => {
-    if (item.type === "STORE") {
-      navigate(`/store/${item.id}`);
-    } else if (item.type === "FOOD") {
-      navigate(`/menu/${item.id}`);
-    } else if (item.type === "CATEGORY") {
-      setSearchKeyword(item.name);
-      setShowAutocomplete(false);
-      searchStores();
+  // 자동완성 키워드 선택
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchKeyword(suggestion);
+    setShowAutocomplete(false);
+    // 검색 실행 - 키워드로 검색
+    if (userLocation) {
+      // 직접 searchStores 호출하되, keyword를 파라미터로 전달
+      const params: RecommendationParams = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        radius: distance,
+        includeDisliked: !excludeDislikes,
+        openNow: isOpenOnly,
+        page: 0,
+        size: 20,
+        keyword: suggestion.trim(),
+      };
+
+      if (sortBy !== "SCORE") {
+        params.sortBy = sortBy;
+      }
+
+      setIsLoading(true);
+      recommendationService
+        .getRecommendations(params)
+        .then((response) => {
+          if (response.result === "SUCCESS" && response.data) {
+            const storeList = Array.isArray(response.data) ? response.data : [];
+            setStores(storeList);
+
+            const favorites = new Set<number>();
+            const idMap = new Map<number, number>();
+
+            storeList.forEach((store) => {
+              if (store.isFavorite) {
+                favorites.add(store.storeId);
+                if (store.favoriteId) {
+                  idMap.set(store.storeId, store.favoriteId);
+                }
+              }
+            });
+
+            setFavoriteStores(favorites);
+            setFavoriteIdMap(idMap);
+          }
+        })
+        .catch((err) => {
+          console.error("검색 실패:", err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
+  };
+
+  // 가게 바로가기 선택
+  const handleShortcutClick = (storeId: number) => {
+    navigate(`/store/${storeId}`);
   };
 
   const handleStoreClick = (storeId: number) => {
@@ -539,37 +600,62 @@ const RecommendationPage = () => {
           </SearchBox>
 
           {/* 자동완성 드롭다운 */}
-          {showAutocomplete && autocompleteResults.length > 0 && (
-            <AutocompleteDropdown
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            >
-              {autocompleteResults.map((item, index) => (
-                <AutocompleteItemStyled
-                  key={`${item.type}-${item.id}-${index}`}
-                  onClick={() => handleAutocompleteItemClick(item)}
-                >
-                  <AutocompleteIcon>
-                    {item.type === "STORE"
-                      ? "🏪"
-                      : item.type === "FOOD"
-                      ? "🍽️"
-                      : "📂"}
-                  </AutocompleteIcon>
-                  <AutocompleteContent>
-                    <AutocompleteName>{item.name}</AutocompleteName>
-                    {item.categoryName && (
-                      <AutocompleteCategory>
-                        {item.categoryName}
-                      </AutocompleteCategory>
-                    )}
-                    {item.storeName && (
-                      <AutocompleteStore>{item.storeName}</AutocompleteStore>
-                    )}
-                  </AutocompleteContent>
-                </AutocompleteItemStyled>
-              ))}
-            </AutocompleteDropdown>
-          )}
+          {showAutocomplete &&
+            (autocompleteSuggestions.length > 0 ||
+              autocompleteShortcuts.length > 0) && (
+              <AutocompleteDropdown
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              >
+                {/* 키워드 제안 */}
+                {autocompleteSuggestions.length > 0 && (
+                  <>
+                    <AutocompleteSection>키워드</AutocompleteSection>
+                    {autocompleteSuggestions.map((suggestion, index) => (
+                      <AutocompleteItemStyled
+                        key={`suggestion-${index}`}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        <AutocompleteIcon>🔍</AutocompleteIcon>
+                        <AutocompleteContent>
+                          <AutocompleteName>{suggestion}</AutocompleteName>
+                        </AutocompleteContent>
+                      </AutocompleteItemStyled>
+                    ))}
+                  </>
+                )}
+
+                {/* 가게 바로가기 */}
+                {autocompleteShortcuts.length > 0 && (
+                  <>
+                    <AutocompleteSection>가게 바로가기</AutocompleteSection>
+                    {autocompleteShortcuts.map((shortcut) => (
+                      <StoreShortcutCard
+                        key={`shortcut-${shortcut.storeId}`}
+                        onClick={() => handleShortcutClick(shortcut.storeId)}
+                      >
+                        <ShortcutImage
+                          src={
+                            shortcut.imageUrl ||
+                            "https://via.placeholder.com/60x60?text=No+Image"
+                          }
+                          alt={shortcut.name}
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://via.placeholder.com/60x60?text=No+Image";
+                          }}
+                        />
+                        <ShortcutInfo>
+                          <ShortcutName>{shortcut.name}</ShortcutName>
+                          <ShortcutStatus $isOpen={shortcut.isOpen}>
+                            {shortcut.isOpen ? "영업중" : "영업종료"}
+                          </ShortcutStatus>
+                        </ShortcutInfo>
+                      </StoreShortcutCard>
+                    ))}
+                  </>
+                )}
+              </AutocompleteDropdown>
+            )}
         </SearchBoxContainer>
         <FilterIconButton>
           <FiSliders size={20} />
@@ -850,9 +936,24 @@ const AutocompleteDropdown = styled.div`
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
   z-index: 1000;
+`;
+
+const AutocompleteSection = styled.div`
+  padding: 12px 16px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #f8f8f8;
+  border-top: 1px solid #f0f0f0;
+
+  &:first-child {
+    border-top: none;
+  }
 `;
 
 const AutocompleteItemStyled = styled.div`
@@ -891,14 +992,49 @@ const AutocompleteName = styled.div`
   color: #333;
 `;
 
-const AutocompleteCategory = styled.div`
-  font-size: 12px;
-  color: #999;
+const StoreShortcutCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f8f8f8;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
-const AutocompleteStore = styled.div`
+const ShortcutImage = styled.img`
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+`;
+
+const ShortcutInfo = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const ShortcutName = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+`;
+
+const ShortcutStatus = styled.div<{ $isOpen: boolean }>`
   font-size: 12px;
-  color: #666;
+  font-weight: 500;
+  color: ${(props) => (props.$isOpen ? "#4caf50" : "#999")};
 `;
 
 const FilterIconButton = styled.button`
