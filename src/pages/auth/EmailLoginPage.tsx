@@ -79,11 +79,9 @@ const EmailLoginPage = () => {
           refreshToken
         );
 
-        let resolvedOnboarding = onboardingComplete;
-
-        if (onboardingComplete) {
-          resolvedOnboarding = await syncOnboardingStatus(onboardingComplete);
-        }
+        const resolvedOnboarding = await syncOnboardingStatus(
+          onboardingComplete ?? false
+        );
 
         if (resolvedOnboarding) {
           navigate("/home", { replace: true });
