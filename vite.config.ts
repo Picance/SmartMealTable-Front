@@ -15,7 +15,7 @@ export default defineConfig({
         description: "스마트한 식사 관리 애플리케이션",
         theme_color: "#ffffff",
         background_color: "#ffffff",
-        display: "standalone",
+        display: "fullscreen",
         scope: "/",
         start_url: "/",
         orientation: "portrait",

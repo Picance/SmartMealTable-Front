@@ -23,10 +23,14 @@ import {
 } from "react-icons/pi";
 import BottomNavigation from "../../components/layout/BottomNav";
 import { getMyProfile, updateNickname } from "../../services/profile.service";
+import { authService } from "../../services/auth.service";
+import { useAuthStore } from "../../store/authStore";
+import { useCartStore } from "../../store/cartStore";
 import type { ProfileResponse } from "../../services/profile.service";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   // 사용자 프로필 데이터
   const [user, setUser] = useState<ProfileResponse["data"] | null>(null);
@@ -104,9 +108,33 @@ const ProfilePage = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm("로그아웃 하시겠습니까?")) {
-      navigate("/login-options");
+  const clearLocalUserData = () => {
+    clearAuth();
+    useCartStore.setState({
+      items: [],
+      storeId: null,
+      storeName: null,
+      budgetInfo: null,
+      isLoading: false,
+      error: null,
+    });
+    localStorage.removeItem("auth-storage");
+    localStorage.removeItem("cart-storage");
+    localStorage.removeItem("onboarding_addresses");
+  };
+
+  const handleLogout = async () => {
+    if (!window.confirm("로그아웃 하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error("로그아웃 처리 실패:", error);
+    } finally {
+      clearLocalUserData();
+      navigate("/login-options", { replace: true });
     }
   };
 
