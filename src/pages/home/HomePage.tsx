@@ -42,7 +42,9 @@ const HomePage = () => {
     });
 
     if (!isAuthenticated || !accessToken) {
-      console.warn("[HomePage] 로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+      console.warn(
+        "[HomePage] 로그인이 필요합니다. 로그인 페이지로 이동합니다."
+      );
       navigate("/login");
       return;
     }
@@ -56,20 +58,24 @@ const HomePage = () => {
   }, [isAuthenticated, accessToken]);
 
   const loadHomeData = async () => {
-    svg {
-      width: 32px;
-      height: 32px;
-    }
+    try {
+      setLoading(true);
+      setError(null);
+
+      const dashboardResponse = await getHomeDashboard();
+
+      if (dashboardResponse.result === "SUCCESS" && dashboardResponse.data) {
         console.log("[HomePage] Dashboard Data:", dashboardResponse.data);
         setDashboardData(dashboardResponse.data);
       } else if (dashboardResponse.error?.code === "ADDRESS_002") {
-        // 주소가 없는 경우
         setError("등록된 주소가 없습니다. 주소를 먼저 등록해주세요.");
-        // 주소 등록 화면으로 이동
         navigate("/onboarding/address");
         return;
       } else {
-        console.error("[HomePage] Dashboard Response Error:", dashboardResponse.error);
+        console.error(
+          "[HomePage] Dashboard Response Error:",
+          dashboardResponse.error
+        );
         setError(
           dashboardResponse.error?.message ||
             "대시보드 데이터를 불러올 수 없습니다."
@@ -77,17 +83,12 @@ const HomePage = () => {
         return;
       }
 
-      // 온보딩 상태 확인
       const statusResponse = await getOnboardingStatus();
       console.log("[HomePage] Onboarding Status Response:", statusResponse);
 
       if (statusResponse.result === "SUCCESS" && statusResponse.data) {
         setOnboardingStatus(statusResponse.data);
-
-        // 월별 예산 모달 표시 여부 확인
-        if (statusResponse.data.showMonthlyBudgetModal) {
-          setShowBudgetModal(true);
-        }
+        setShowBudgetModal(Boolean(statusResponse.data.showMonthlyBudgetModal));
       }
     } catch (err: any) {
       console.error("[HomePage] 홈 데이터 로드 실패:", err);
@@ -153,7 +154,10 @@ const HomePage = () => {
 
   // 데이터 유효성 검증
   if (!location || !budget) {
-    console.error("[HomePage] Invalid dashboard data structure:", dashboardData);
+    console.error(
+      "[HomePage] Invalid dashboard data structure:",
+      dashboardData
+    );
     return (
       <Container>
         <ErrorContainer>
@@ -517,11 +521,6 @@ const ProgressFill = styled.div<{ $percentage: number }>`
   height: 100%;
   background-color: ${(props) =>
     props.$percentage > 100
-  
-  svg {
-    width: 32px;
-    height: 32px;
-  }
       ? "#e53935"
       : props.$percentage > 80
       ? "#ffa726"
