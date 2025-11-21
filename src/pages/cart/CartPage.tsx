@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -11,6 +11,8 @@ import {
 } from "react-icons/fi";
 import { useCartStore } from "../../store/cartStore";
 import BottomNav from "../../components/layout/BottomNav";
+import { budgetService } from "../../services/budget.service";
+import type { DailyBudgetResponse } from "../../types/api";
 
 type MealType = "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK" | "OTHER";
 
@@ -18,7 +20,6 @@ const CartPage = () => {
   const navigate = useNavigate();
   const {
     items,
-    budgetInfo,
     fetchCart,
     updateQuantity,
     removeItem,
@@ -31,6 +32,11 @@ const CartPage = () => {
     useState<MealType>("BREAKFAST");
   const [showMealTypeDropdown, setShowMealTypeDropdown] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [dailyBudget, setDailyBudget] = useState<DailyBudgetResponse | null>(
+    null
+  );
+  const [isDailyBudgetLoading, setIsDailyBudgetLoading] = useState(false);
+  const [dailyBudgetError, setDailyBudgetError] = useState<string | null>(null);
 
   // 결제 날짜 및 시간 상태
   const [expendedDate, setExpendedDate] = useState(
@@ -40,10 +46,41 @@ const CartPage = () => {
     new Date().toTimeString().split(" ")[0].substring(0, 5)
   );
 
+  const fetchDailyBudgetByDate = useCallback(async (targetDate: string) => {
+    if (!targetDate) return;
+
+    setIsDailyBudgetLoading(true);
+    setDailyBudgetError(null);
+
+    try {
+      const response = await budgetService.getDailyBudget(targetDate);
+
+      if (response.result === "SUCCESS") {
+        setDailyBudget(response.data);
+
+        if (!response.data) {
+          setDailyBudgetError("선택한 날짜의 예산 정보가 없습니다.");
+        }
+      } else {
+        throw new Error(response.error?.message);
+      }
+    } catch (error: any) {
+      console.error("💰 [CartPage] 일별 예산 조회 실패:", error);
+      setDailyBudget(null);
+      setDailyBudgetError(error?.message || "예산 정보를 불러올 수 없습니다.");
+    } finally {
+      setIsDailyBudgetLoading(false);
+    }
+  }, []);
+
   // 컴포넌트 마운트 시 장바구니 조회
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
+
+  useEffect(() => {
+    fetchDailyBudgetByDate(expendedDate);
+  }, [expendedDate, fetchDailyBudgetByDate]);
 
   // 백엔드에서 제공하는 예산 정보 사용
   const totalCartPrice = getTotalPrice();
@@ -133,6 +170,44 @@ const CartPage = () => {
       mealTypeOptions.find((opt) => opt.value === selectedMealType)?.label ||
       "아침"
     );
+  };
+
+  const normalizeMealType = (mealType: MealType) => {
+    // 백엔드가 SNACK 대신 OTHER만 내려주기 때문에 SNACK을 OTHER로 매핑
+    if (mealType === "SNACK") {
+      return "OTHER";
+    }
+    return mealType;
+  };
+
+  const selectedMealBudget = dailyBudget
+    ? dailyBudget.mealBudgets.find(
+        (meal) => meal.mealType === normalizeMealType(selectedMealType)
+      )
+    : null;
+
+  const remainingDailyBudget = dailyBudget?.remainingBudget ?? null;
+  const remainingMealBudget = selectedMealBudget?.remaining ?? null;
+
+  const remainingDailyBudgetAfterPurchase =
+    remainingDailyBudget !== null
+      ? remainingDailyBudget - totalCartPrice
+      : null;
+
+  const remainingMealBudgetAfterPurchase =
+    remainingMealBudget !== null ? remainingMealBudget - totalCartPrice : null;
+
+  const isDailyBudgetOver =
+    typeof remainingDailyBudgetAfterPurchase === "number" &&
+    remainingDailyBudgetAfterPurchase < 0;
+  const isMealBudgetOver =
+    typeof remainingMealBudgetAfterPurchase === "number" &&
+    remainingMealBudgetAfterPurchase < 0;
+  const isOverBudget = isDailyBudgetOver || isMealBudgetOver;
+
+  const formatBudgetValue = (value: number | null) => {
+    if (value === null) return "-";
+    return `${value.toLocaleString()}원`;
   };
 
   if (items.length === 0) {
@@ -284,18 +359,18 @@ const CartPage = () => {
 
         {/* 가격 요약 */}
         <PriceSummary>
-          {budgetInfo ? (
+          {dailyBudget && !isDailyBudgetLoading ? (
             <>
               <SummaryRow>
                 <SummaryLabel>남은 일일 식비 예산</SummaryLabel>
                 <SummaryValue>
-                  {budgetInfo.dailyBudgetBefore.toLocaleString()}원
+                  {formatBudgetValue(remainingDailyBudget)}
                 </SummaryValue>
               </SummaryRow>
               <SummaryRow>
                 <SummaryLabel>남은 {getMealTypeLabel()} 식사 예산</SummaryLabel>
                 <SummaryValue>
-                  {budgetInfo.mealBudget.toLocaleString()}원
+                  {formatBudgetValue(remainingMealBudget)}
                 </SummaryValue>
               </SummaryRow>
               <Divider />
@@ -307,20 +382,28 @@ const CartPage = () => {
               </SummaryRow>
               <Divider />
               <SummaryRow>
-                <SummaryLabel $highlight>구매 후 남은 일일 예산</SummaryLabel>
-                <SummaryValue $highlight>
-                  {budgetInfo.dailyBudgetAfter.toLocaleString()}원
+                <SummaryLabel
+                  $highlight={!isDailyBudgetOver}
+                  $negative={isDailyBudgetOver}
+                >
+                  구매 후 남은 일일 예산
+                </SummaryLabel>
+                <SummaryValue
+                  $highlight={!isDailyBudgetOver}
+                  $negative={isDailyBudgetOver}
+                >
+                  {formatBudgetValue(remainingDailyBudgetAfterPurchase)}
                 </SummaryValue>
               </SummaryRow>
               <SummaryRow>
-                <SummaryLabel $negative={budgetInfo.isOverBudget}>
+                <SummaryLabel $negative={isMealBudgetOver}>
                   구매 후 남은 {getMealTypeLabel()} 식사 예산
                 </SummaryLabel>
-                <SummaryValue $negative={budgetInfo.isOverBudget}>
-                  {(budgetInfo.mealBudget - totalCartPrice).toLocaleString()}원
+                <SummaryValue $negative={isMealBudgetOver}>
+                  {formatBudgetValue(remainingMealBudgetAfterPurchase)}
                 </SummaryValue>
               </SummaryRow>
-              {budgetInfo.isOverBudget && (
+              {isOverBudget && (
                 <WarningMessage>⚠️ 예산을 초과했습니다!</WarningMessage>
               )}
             </>
@@ -333,7 +416,9 @@ const CartPage = () => {
                 </SummaryValue>
               </SummaryRow>
               <NoBudgetMessage>
-                예산 정보를 불러오는 중입니다...
+                {isDailyBudgetLoading
+                  ? "예산 정보를 불러오는 중입니다..."
+                  : dailyBudgetError || "예산 정보를 불러올 수 없습니다."}
               </NoBudgetMessage>
             </>
           )}
