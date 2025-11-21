@@ -76,7 +76,7 @@ export interface CheckoutRequest {
   discount?: number;
   expendedDate: string; // YYYY-MM-DD
   expendedTime: string; // HH:mm:ss
-  memo?: string; // 선택적
+  memo?: string; // 선택적 (≤500자)
 }
 
 export interface ExpenditureItem {

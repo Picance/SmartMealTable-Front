@@ -32,6 +32,14 @@ const CartPage = () => {
   const [showMealTypeDropdown, setShowMealTypeDropdown] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
+  // 결제 날짜 및 시간 상태
+  const [expendedDate, setExpendedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [expendedTime, setExpendedTime] = useState(
+    new Date().toTimeString().split(" ")[0].substring(0, 5)
+  );
+
   // 컴포넌트 마운트 시 장바구니 조회
   useEffect(() => {
     fetchCart();
@@ -83,9 +91,20 @@ const CartPage = () => {
       return;
     }
 
+    // 날짜 및 시간 검증
+    if (!expendedDate || !expendedTime) {
+      alert("결제 날짜와 시간을 입력해주세요.");
+      return;
+    }
+
     setIsCheckingOut(true);
     try {
-      const response = await checkout(selectedMealType);
+      const response = await checkout(
+        selectedMealType,
+        0, // discount
+        expendedDate,
+        `${expendedTime}:00`
+      );
 
       // 체크아웃 성공 → 지출 등록 완료 페이지로 이동
       navigate("/spending/success", {
@@ -238,6 +257,30 @@ const CartPage = () => {
             </MealTypeDropdown>
           )}
         </MealTypeSection>
+
+        {/* 결제 일시 수정 */}
+        <PaymentDateSection>
+          <SectionTitle>결제 일시 수정</SectionTitle>
+          <DateTimeInputGroup>
+            <DateTimeInputWrapper>
+              <DateTimeLabel>날짜</DateTimeLabel>
+              <DateTimeInput
+                type="date"
+                value={expendedDate}
+                onChange={(e) => setExpendedDate(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
+              />
+            </DateTimeInputWrapper>
+            <DateTimeInputWrapper>
+              <DateTimeLabel>시간</DateTimeLabel>
+              <DateTimeInput
+                type="time"
+                value={expendedTime}
+                onChange={(e) => setExpendedTime(e.target.value)}
+              />
+            </DateTimeInputWrapper>
+          </DateTimeInputGroup>
+        </PaymentDateSection>
 
         {/* 가격 요약 */}
         <PriceSummary>
@@ -674,6 +717,57 @@ const EmptyButton = styled.button`
 
   &:hover {
     background-color: #ff5722;
+  }
+`;
+
+const PaymentDateSection = styled.div`
+  padding: 16px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+`;
+
+const SectionTitle = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 12px;
+`;
+
+const DateTimeInputGroup = styled.div`
+  display: flex;
+  gap: 12px;
+`;
+
+const DateTimeInputWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const DateTimeLabel = styled.label`
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+`;
+
+const DateTimeInput = styled.input`
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #000;
+  outline: none;
+  transition: all 0.2s;
+
+  &:focus {
+    border-color: #ff6b35;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  }
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
   }
 `;
 
