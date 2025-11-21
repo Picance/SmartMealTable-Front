@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
-import { FiChevronLeft, FiSearch } from "react-icons/fi";
+import { FiChevronLeft, FiSearch, FiMenu } from "react-icons/fi";
 
 const FoodPreferencePage = () => {
   const navigate = useNavigate();
@@ -163,7 +163,10 @@ const FoodPreferencePage = () => {
                   $selected={isLiked || isDisliked}
                   onClick={() => handleAvailableCategoryClick(category)}
                 >
-                  ☰ {category}
+                  <CategoryButtonIcon aria-hidden="true">
+                    <FiMenu />
+                  </CategoryButtonIcon>
+                  {category}
                 </CategoryButton>
               );
             })}
@@ -323,7 +326,10 @@ const CategoryButton = styled.button<{ $selected?: boolean }>`
   font-weight: ${theme.typography.fontWeight.medium};
   cursor: pointer;
   transition: all 0.2s;
-  text-align: center;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
 
   &:hover {
     background-color: #f5f5f5;
@@ -332,6 +338,18 @@ const CategoryButton = styled.button<{ $selected?: boolean }>`
 
   &:active {
     transform: scale(0.98);
+  }
+`;
+
+const CategoryButtonIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.colors.accent};
+
+  svg {
+    width: 16px;
+    height: 16px;
   }
 `;
 

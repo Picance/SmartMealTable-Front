@@ -233,27 +233,27 @@ export const updateCartItemQuantity = async (
   quantity: number
 ): Promise<UpdateCartItemResponse> => {
   console.log(
-    `🔄 [Cart API] 수량 변경 요청: cartItemId=${cartItemId}, quantity=${quantity}`
+    `[Cart API] 수량 변경 요청: cartItemId=${cartItemId}, quantity=${quantity}`
   );
-  console.log(`🔄 [Cart API] URL: /api/v1/cart/items/${cartItemId}`);
-  console.log(`🔄 [Cart API] Body:`, { quantity });
+  console.log(`[Cart API] URL: /api/v1/cart/items/${cartItemId}`);
+  console.log(`[Cart API] Body:`, { quantity });
 
   try {
     const response = await api.put<ApiResponse<UpdateCartItemResponse>>(
       `/api/v1/cart/items/${cartItemId}`,
       { quantity }
     );
-    console.log("🔄 [Cart API] HTTP Status:", response.status);
+    console.log("[Cart API] HTTP Status:", response.status);
     console.log(
-      "🔄 [Cart API] 수량 변경 응답 (전체):",
+      "[Cart API] 수량 변경 응답 (전체):",
       JSON.stringify(response.data, null, 2)
     );
-    console.log("🔄 [Cart API] response.data.result:", response.data.result);
-    console.log("🔄 [Cart API] response.data.data:", response.data.data);
+    console.log("[Cart API] response.data.result:", response.data.result);
+    console.log("[Cart API] response.data.data:", response.data.data);
 
     // 204 No Content 처리
     if (response.status === 204) {
-      console.log("🔄 [Cart API] 204 No Content - 성공으로 처리");
+      console.log("[Cart API] 204 No Content - 성공으로 처리");
       return {
         cartItemId,
         quantity,
@@ -269,7 +269,7 @@ export const updateCartItemQuantity = async (
       }
 
       // data가 없지만 SUCCESS인 경우 fallback
-      console.log("🔄 [Cart API] data가 없지만 SUCCESS - 빈 응답 처리");
+      console.log("[Cart API] data가 없지만 SUCCESS - 빈 응답 처리");
       return {
         cartItemId,
         quantity,
@@ -278,10 +278,10 @@ export const updateCartItemQuantity = async (
       };
     }
 
-    console.error("🔄 [Cart API] result가 SUCCESS가 아님:", response.data);
+    console.error("[Cart API] result가 SUCCESS가 아님:", response.data);
     throw new Error("수량 변경 실패");
   } catch (error: any) {
-    console.error("🔄 [Cart API] 수량 변경 에러:", {
+    console.error("[Cart API] 수량 변경 에러:", {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status,
@@ -296,9 +296,9 @@ export const updateCartItemQuantity = async (
  * DELETE /api/v1/cart/items/{cartItemId}
  */
 export const removeCartItem = async (cartItemId: number): Promise<void> => {
-  console.log(`🗑️ [Cart API] 상품 삭제 요청: cartItemId=${cartItemId}`);
+  console.log(`[Cart API] 상품 삭제 요청: cartItemId=${cartItemId}`);
   await api.delete(`/api/v1/cart/items/${cartItemId}`);
-  console.log("🗑️ [Cart API] 상품 삭제 완료");
+  console.log("[Cart API] 상품 삭제 완료");
 };
 
 /**
@@ -308,9 +308,9 @@ export const removeCartItem = async (cartItemId: number): Promise<void> => {
 export const removeCartItemsByStore = async (
   storeId: number
 ): Promise<void> => {
-  console.log(`🗑️ [Cart API] 가게별 상품 삭제 요청: storeId=${storeId}`);
+  console.log(`[Cart API] 가게별 상품 삭제 요청: storeId=${storeId}`);
   await api.delete(`/api/v1/cart/store/${storeId}`);
-  console.log("🗑️ [Cart API] 가게별 상품 삭제 완료");
+  console.log("[Cart API] 가게별 상품 삭제 완료");
 };
 
 /**
@@ -318,24 +318,24 @@ export const removeCartItemsByStore = async (
  * DELETE /api/v1/cart
  */
 export const clearCart = async (): Promise<void> => {
-  console.log("🧹 [Cart API] 장바구니 전체 비우기 요청");
+  console.log("[Cart API] 장바구니 전체 비우기 요청");
   await api.delete("/api/v1/cart");
-  console.log("🧹 [Cart API] 장바구니 전체 비우기 완료");
+  console.log("[Cart API] 장바구니 전체 비우기 완료");
 };
 
 /**
- * 장바구니 → 지출 등록 (체크아웃)
+ * 장바구니에서 지출 등록 (체크아웃)
  * POST /api/v1/cart/checkout
  */
 export const checkout = async (
   request: CheckoutRequest
 ): Promise<CheckoutResponse> => {
-  console.log("💳 [Cart API] 체크아웃 요청:", request);
+  console.log("[Cart API] 체크아웃 요청:", request);
   const response = await api.post<ApiResponse<CheckoutResponse>>(
     "/api/v1/cart/checkout",
     request
   );
-  console.log("💳 [Cart API] 체크아웃 응답:", response.data);
+  console.log("[Cart API] 체크아웃 응답:", response.data);
 
   if (response.data.result === "SUCCESS" && response.data.data) {
     return response.data.data;

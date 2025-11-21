@@ -34,7 +34,7 @@ export const createExpenditure = async (request: CreateExpenditureRequest) => {
 };
 
 /**
- * 장바구니 → 지출 내역 등록
+ * 장바구니에서 지출 내역 등록
  * POST /api/v1/expenditures/from-cart
  */
 export const createExpenditureFromCart = async (

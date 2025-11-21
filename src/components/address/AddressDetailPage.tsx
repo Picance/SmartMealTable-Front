@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
-import { FiChevronLeft } from "react-icons/fi";
+import { FiBell, FiChevronLeft } from "react-icons/fi";
 
 const AddressDetailPage = () => {
   const navigate = useNavigate();
@@ -41,7 +41,9 @@ const AddressDetailPage = () => {
         </BackButton>
         <Title>주소 검색</Title>
         <HeaderIcons>
-          <NotificationIcon>🔔</NotificationIcon>
+          <NotificationButton>
+            <FiBell />
+          </NotificationButton>
           <ProfileAvatar />
         </HeaderIcons>
       </Header>
@@ -168,9 +170,19 @@ const HeaderIcons = styled.div`
   gap: ${theme.spacing.md};
 `;
 
-const NotificationIcon = styled.div`
-  font-size: ${theme.typography.fontSize.xl};
+const NotificationButton = styled.button`
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
 `;
 
 const ProfileAvatar = styled.div`

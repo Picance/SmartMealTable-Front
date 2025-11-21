@@ -2,7 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
-import { FiChevronLeft, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+import {
+  FiBell,
+  FiBook,
+  FiBriefcase,
+  FiChevronLeft,
+  FiEdit2,
+  FiHome,
+  FiMapPin,
+  FiNavigation,
+  FiSearch,
+  FiStar,
+} from "react-icons/fi";
 
 interface Address {
   id: number;
@@ -73,13 +84,13 @@ const AddressManagementPage = () => {
   const getAddressIcon = (type: string) => {
     switch (type) {
       case "집":
-        return "🏠";
+        return <FiHome />;
       case "직장":
-        return "💼";
+        return <FiBriefcase />;
       case "학교":
-        return "🎓";
+        return <FiBook />;
       default:
-        return "📍";
+        return <FiMapPin />;
     }
   };
 
@@ -91,7 +102,9 @@ const AddressManagementPage = () => {
         </BackButton>
         <Title>주소 관리</Title>
         <HeaderIcons>
-          <NotificationIcon>🔔</NotificationIcon>
+          <NotificationIcon>
+            <FiBell />
+          </NotificationIcon>
           <ProfileAvatar />
         </HeaderIcons>
       </Header>
@@ -107,7 +120,7 @@ const AddressManagementPage = () => {
             주소 검색...
           </SearchButton>
           <LocationButton onClick={() => navigate("/address/map")}>
-            📍 현재 위치로 찾기
+            <FiNavigation /> 현재 위치로 찾기
           </LocationButton>
         </Section>
 
@@ -121,7 +134,11 @@ const AddressManagementPage = () => {
                   <AddressTypeRow>
                     <AddressIcon>{getAddressIcon(address.type)}</AddressIcon>
                     <AddressType>{address.type}</AddressType>
-                    {address.isDefault && <DefaultBadge>●</DefaultBadge>}
+                    {address.isDefault && (
+                      <DefaultBadge>
+                        <FiStar />
+                      </DefaultBadge>
+                    )}
                   </AddressTypeRow>
                   <RadioButton
                     checked={address.isDefault}
@@ -197,9 +214,20 @@ const HeaderIcons = styled.div`
   gap: ${theme.spacing.md};
 `;
 
-const NotificationIcon = styled.div`
+const NotificationIcon = styled.button`
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: ${theme.typography.fontSize.xl};
   cursor: pointer;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
 `;
 
 const ProfileAvatar = styled.div`
@@ -278,6 +306,11 @@ const LocationButton = styled.button`
   &:hover {
     background-color: #f5f5f5;
   }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const AddressList = styled.div`
@@ -308,6 +341,11 @@ const AddressTypeRow = styled.div`
 
 const AddressIcon = styled.div`
   font-size: ${theme.typography.fontSize.xl};
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
 `;
 
 const AddressType = styled.span`
@@ -317,9 +355,16 @@ const AddressType = styled.span`
 `;
 
 const DefaultBadge = styled.span`
+  display: flex;
+  align-items: center;
   color: ${theme.colors.accent};
   font-size: ${theme.typography.fontSize.xl};
   margin-left: ${theme.spacing.xs};
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 const RadioButton = styled.div<{ checked?: boolean }>`

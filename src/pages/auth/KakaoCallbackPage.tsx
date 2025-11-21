@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { FiAlertTriangle } from "react-icons/fi";
 import { authService } from "../../services/auth.service";
 import {
   extractAuthCodeFromUrl,
@@ -90,7 +91,9 @@ const KakaoCallbackPage = () => {
     return (
       <Container>
         <Content>
-          <ErrorIcon>❌</ErrorIcon>
+          <ErrorIcon>
+            <FiAlertTriangle />
+          </ErrorIcon>
           <Title>로그인 실패</Title>
           <Message>{error}</Message>
           <SubMessage>잠시 후 로그인 페이지로 이동합니다...</SubMessage>
@@ -148,6 +151,12 @@ const Spinner = styled.div`
 
 const ErrorIcon = styled.div`
   font-size: 3rem;
+
+  svg {
+    width: 48px;
+    height: 48px;
+    color: #c62828;
+  }
 `;
 
 const Title = styled.h1`

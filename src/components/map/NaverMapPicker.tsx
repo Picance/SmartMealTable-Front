@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Container as MapDiv, NaverMap, useNavermaps } from "react-naver-maps";
 import styled from "styled-components";
+import { FiCompass, FiMapPin } from "react-icons/fi";
 
 interface NaverMapPickerProps {
   onLocationSelect?: (location: {
@@ -174,7 +175,7 @@ function MapContent({
 
   // 드래그 시작 이벤트
   const handleDragStart = () => {
-    console.log("🚀 드래그 시작!");
+    console.log("[MapPicker] 드래그 시작");
   };
 
   // 드래그 종료 이벤트
@@ -184,24 +185,24 @@ function MapContent({
     const mapCenter = map.getCenter();
     const lat = mapCenter.lat();
     const lng = mapCenter.lng();
-    console.log("✅ 드래그 종료! 중심 좌표:", { lat, lng });
+    console.log("[MapPicker] 드래그 종료, 중심 좌표:", { lat, lng });
     reverseGeocode(lat, lng);
   };
 
   // 줌 변경 이벤트
   const handleZoomChanged = (zoom: number) => {
-    console.log("🔍 줌 변경:", zoom);
+    console.log("[MapPicker] 줌 변경:", zoom);
   };
 
   // 지도 클릭 이벤트
   const handleMapClick = (e: any) => {
-    console.log("👆 지도 클릭:", e);
+    console.log("[MapPicker] 지도 클릭:", e);
   };
 
   // 마우스 이동 이벤트 (테스트용)
   const handleMouseMove = () => {
     // 너무 많은 로그 방지 - 주석 처리
-    // console.log("🐭 마우스 이동");
+    // console.log("[MapPicker] 마우스 이동");
   };
 
   return (
@@ -239,11 +240,13 @@ function MapContent({
       {/* 오버레이 레이어 (상단, pointer-events 제어) */}
       <OverlayLayer>
         {/* 중앙 고정 마커 */}
-        <CenterMarker>📍</CenterMarker>
+        <CenterMarker>
+          <FiMapPin />
+        </CenterMarker>
 
         {/* 현재 위치 버튼 */}
         <CurrentLocationButton onClick={handleCurrentLocation}>
-          🧭
+          <FiCompass />
         </CurrentLocationButton>
 
         {/* 주소 정보 */}
@@ -332,6 +335,11 @@ const CenterMarker = styled.div`
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   animation: bounce 0.6s ease;
 
+  svg {
+    width: 48px;
+    height: 48px;
+  }
+
   @keyframes bounce {
     0%,
     100% {
@@ -360,6 +368,11 @@ const CurrentLocationButton = styled.button`
   justify-content: center;
   transition: all 0.2s;
   pointer-events: auto !important; /* 버튼은 클릭 가능 */
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
 
   &:hover {
     transform: scale(1.1);

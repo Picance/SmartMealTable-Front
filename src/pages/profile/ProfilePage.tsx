@@ -2,7 +2,25 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
-import { FiChevronRight } from "react-icons/fi";
+import {
+  FiBell,
+  FiChevronRight,
+  FiUser,
+  FiBriefcase,
+  FiSliders,
+  FiCalendar,
+  FiSettings,
+  FiX,
+  FiCompass,
+} from "react-icons/fi";
+import {
+  PiChatsCircleFill,
+  PiGlobeSimpleFill,
+  PiBowlFoodFill,
+  PiRobotFill,
+  PiPiggyBankFill,
+  PiScalesFill,
+} from "react-icons/pi";
 import BottomNavigation from "../../components/layout/BottomNav";
 import { getMyProfile, updateNickname } from "../../services/profile.service";
 import type { ProfileResponse } from "../../services/profile.service";
@@ -136,7 +154,9 @@ const ProfilePage = () => {
       <Header>
         <Title>프로필</Title>
         <HeaderIcons>
-          <NotificationIcon>🔔</NotificationIcon>
+          <NotificationIcon aria-label="알림">
+            <FiBell />
+          </NotificationIcon>
           <ProfileAvatar $small />
         </HeaderIcons>
       </Header>
@@ -145,7 +165,9 @@ const ProfilePage = () => {
         {/* 프로필 헤더 */}
         <ProfileHeader>
           <ProfileAvatar $large>
-            <AvatarImage>👤</AvatarImage>
+            <AvatarIcon aria-hidden="true">
+              <FiUser />
+            </AvatarIcon>
           </ProfileAvatar>
           <ProfileInfo>
             <ProfileName>{user.name}</ProfileName>
@@ -176,8 +198,12 @@ const ProfilePage = () => {
           {user.socialAccounts.map((account) => (
             <SocialCard key={account.provider}>
               <SocialInfo>
-                <SocialIcon>
-                  {account.provider === "KAKAO" ? "🔆" : "🌐"}
+                <SocialIcon aria-hidden="true">
+                  {account.provider === "KAKAO" ? (
+                    <PiChatsCircleFill />
+                  ) : (
+                    <PiGlobeSimpleFill />
+                  )}
                 </SocialIcon>
                 <SocialName>
                   {account.provider === "KAKAO" ? "카카오" : "구글"}
@@ -194,7 +220,9 @@ const ProfilePage = () => {
           <SectionTitle>사용자 정보</SectionTitle>
           <MenuList>
             <MenuItem onClick={() => navigate("/affiliation")}>
-              <MenuItemIcon>📄</MenuItemIcon>
+              <MenuItemIcon>
+                <FiBriefcase />
+              </MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>소속</MenuItemLabel>
                 <MenuItemDescription>{user.group.name}</MenuItemDescription>
@@ -206,7 +234,7 @@ const ProfilePage = () => {
 
             {/* 주소는 별도 API가 필요하므로 임시 주석 처리 */}
             {/* <MenuItem onClick={() => navigate("/address/management")}>
-              <MenuItemIcon>🏠</MenuItemIcon>
+              <MenuItemIcon>ADDRESS</MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>대표 주소</MenuItemLabel>
                 <MenuItemDescription>{user.address}</MenuItemDescription>
@@ -217,7 +245,9 @@ const ProfilePage = () => {
             </MenuItem> */}
 
             <MenuItem onClick={() => navigate("/profile/preference")}>
-              <MenuItemIcon>≡</MenuItemIcon>
+              <MenuItemIcon>
+                <FiSliders />
+              </MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>음식 선호/불호</MenuItemLabel>
               </MenuItemContent>
@@ -227,7 +257,9 @@ const ProfilePage = () => {
             </MenuItem>
 
             <MenuItem onClick={() => navigate("/profile/budget")}>
-              <MenuItemIcon>📅</MenuItemIcon>
+              <MenuItemIcon>
+                <FiCalendar />
+              </MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>예산 관리</MenuItemLabel>
                 <MenuItemDescription>
@@ -240,7 +272,9 @@ const ProfilePage = () => {
             </MenuItem>
 
             <MenuItem onClick={() => setShowRecommendationModal(true)}>
-              <MenuItemIcon>🍴</MenuItemIcon>
+              <MenuItemIcon>
+                <PiBowlFoodFill />
+              </MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>음식 추천 시스템 선택</MenuItemLabel>
               </MenuItemContent>
@@ -256,7 +290,9 @@ const ProfilePage = () => {
           <SectionTitle>앱 설정</SectionTitle>
           <MenuList>
             <MenuItem onClick={() => navigate("/settings")}>
-              <MenuItemIcon>👤</MenuItemIcon>
+              <MenuItemIcon>
+                <FiSettings />
+              </MenuItemIcon>
               <MenuItemContent>
                 <MenuItemLabel>앱 설정</MenuItemLabel>
               </MenuItemContent>
@@ -287,8 +323,11 @@ const ProfilePage = () => {
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>닉네임 관리</ModalTitle>
-              <CloseButton onClick={() => setShowNicknameModal(false)}>
-                ✕
+              <CloseButton
+                onClick={() => setShowNicknameModal(false)}
+                aria-label="닫기"
+              >
+                <FiX />
               </CloseButton>
             </ModalHeader>
             <ModalDescription>
@@ -323,8 +362,11 @@ const ProfilePage = () => {
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>비밀번호 변경</ModalTitle>
-              <CloseButton onClick={() => setShowPasswordModal(false)}>
-                ✕
+              <CloseButton
+                onClick={() => setShowPasswordModal(false)}
+                aria-label="닫기"
+              >
+                <FiX />
               </CloseButton>
             </ModalHeader>
             <ModalDescription>
@@ -381,7 +423,9 @@ const ProfilePage = () => {
             <TopSection>
               <TopTitle>오늘의 추천</TopTitle>
               <TopSubtitle>
-                <RobotIcon>🤖</RobotIcon>
+                <RobotIcon aria-hidden="true">
+                  <PiRobotFill />
+                </RobotIcon>
                 새로운 맛을 경험해보세요!
               </TopSubtitle>
             </TopSection>
@@ -399,7 +443,9 @@ const ProfilePage = () => {
                   $selected={recommendationType === "SAVING"}
                   onClick={() => setRecommendationType("SAVING")}
                 >
-                  <OptionIcon>🐷</OptionIcon>
+                  <OptionIcon>
+                    <PiPiggyBankFill />
+                  </OptionIcon>
                   <OptionContent>
                     <OptionTitle>절약형</OptionTitle>
                     <OptionDescription>
@@ -412,7 +458,9 @@ const ProfilePage = () => {
                   $selected={recommendationType === "ADVENTURE"}
                   onClick={() => setRecommendationType("ADVENTURE")}
                 >
-                  <OptionIcon>🧭</OptionIcon>
+                  <OptionIcon>
+                    <FiCompass />
+                  </OptionIcon>
                   <OptionContent>
                     <OptionTitle>모험형</OptionTitle>
                     <OptionDescription>
@@ -425,7 +473,9 @@ const ProfilePage = () => {
                   $selected={recommendationType === "BALANCED"}
                   onClick={() => setRecommendationType("BALANCED")}
                 >
-                  <OptionIcon>⚖️</OptionIcon>
+                  <OptionIcon>
+                    <PiScalesFill />
+                  </OptionIcon>
                   <OptionContent>
                     <OptionTitle>균형형</OptionTitle>
                     <OptionDescription>
@@ -489,8 +539,20 @@ const HeaderIcons = styled.div`
 `;
 
 const NotificationIcon = styled.div`
-  font-size: ${theme.typography.fontSize.xl};
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #212121;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const ProfileAvatar = styled.div<{ $large?: boolean; $small?: boolean }>`
@@ -509,8 +571,16 @@ const ProfileAvatar = styled.div<{ $large?: boolean; $small?: boolean }>`
   justify-content: center;
 `;
 
-const AvatarImage = styled.div`
-  font-size: 32px;
+const AvatarIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
 `;
 
 const Content = styled.div`
@@ -625,8 +695,16 @@ const SocialInfo = styled.div`
   gap: ${theme.spacing.md};
 `;
 
-const SocialIcon = styled.div`
-  font-size: ${theme.typography.fontSize["2xl"]};
+const SocialIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.colors.secondary};
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
 `;
 
 const SocialName = styled.span`
@@ -694,8 +772,19 @@ const MenuItem = styled.div`
 `;
 
 const MenuItemIcon = styled.div`
-  font-size: ${theme.typography.fontSize.xl};
-  color: ${theme.colors.secondary};
+  width: 40px;
+  height: 40px;
+  border-radius: ${theme.borderRadius.md};
+  background-color: #fff5f0;
+  color: ${theme.colors.accent};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const MenuItemContent = styled.div`
@@ -807,16 +896,23 @@ const ModalTitle = styled.h3`
 const CloseButton = styled.button`
   background: transparent;
   border: none;
-  font-size: ${theme.typography.fontSize.xl};
   color: #757575;
   cursor: pointer;
   padding: ${theme.spacing.xs};
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
 
   &:hover {
     color: #424242;
+    background-color: #f5f5f5;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 
@@ -958,7 +1054,14 @@ const TopSubtitle = styled.div`
 `;
 
 const RobotIcon = styled.span`
-  font-size: ${theme.typography.fontSize.xl};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
 `;
 
 const MainSection = styled.div`
@@ -1017,8 +1120,20 @@ const OptionCard = styled.div<{ $selected?: boolean }>`
 `;
 
 const OptionIcon = styled.div`
-  font-size: ${theme.typography.fontSize["3xl"]};
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #fff5f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.colors.accent};
   flex-shrink: 0;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
 `;
 
 const OptionContent = styled.div`

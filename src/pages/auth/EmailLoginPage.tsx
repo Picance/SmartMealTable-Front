@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { FiMapPin, FiSettings } from "react-icons/fi";
+import { PiBowlFoodFill, PiHamburgerFill } from "react-icons/pi";
 import { authService } from "../../services/auth.service.ts";
 import { useAuthStore } from "../../store/authStore";
 import { syncOnboardingStatus } from "../../utils/onboardingStatus";
@@ -153,7 +155,9 @@ const EmailLoginPage = () => {
 
           <FeatureCard>
             <FeatureCardHeader>
-              <FeatureCardIcon>⚙️</FeatureCardIcon>
+              <FeatureCardIcon>
+                <FiSettings />
+              </FeatureCardIcon>
               <FeatureCardTitle>식비 설정</FeatureCardTitle>
             </FeatureCardHeader>
             <FeatureCardSubtitle>목표한 금액을 설정하세요</FeatureCardSubtitle>
@@ -161,19 +165,27 @@ const EmailLoginPage = () => {
             <FeatureCardDescription>
               매달 목표한 금액을 설정하고 관리하여 절약 효과를 높여보세요
             </FeatureCardDescription>
-            <FeatureEmoji>🍔🍜</FeatureEmoji>
+            <FeatureEmoji>
+              <PiHamburgerFill />
+              <PiBowlFoodFill />
+            </FeatureEmoji>
           </FeatureCard>
 
           <FeatureCard>
             <FeatureCardHeader>
-              <FeatureCardIcon>📍</FeatureCardIcon>
+              <FeatureCardIcon>
+                <FiMapPin />
+              </FeatureCardIcon>
               <FeatureCardTitle>음식점 추천</FeatureCardTitle>
             </FeatureCardHeader>
             <FeatureCardSubtitle>맛집 추천</FeatureCardSubtitle>
             <FeatureCardDescription>
               가용 식비를 바탕으로 맞는 음식점을 추천해드립니다
             </FeatureCardDescription>
-            <FeatureEmoji>🍔🍜</FeatureEmoji>
+            <FeatureEmoji>
+              <PiHamburgerFill />
+              <PiBowlFoodFill />
+            </FeatureEmoji>
           </FeatureCard>
         </FeatureSection>
       </ContentContainer>
@@ -352,7 +364,14 @@ const FeatureCardHeader = styled.div`
 `;
 
 const FeatureCardIcon = styled.span`
+  display: flex;
+  align-items: center;
   font-size: 1.25rem;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const FeatureCardTitle = styled.h3`
@@ -377,8 +396,14 @@ const FeatureCardDescription = styled.p`
 `;
 
 const FeatureEmoji = styled.div`
-  font-size: 1.5rem;
+  display: flex;
+  gap: 0.25rem;
   margin-top: 0.5rem;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
 `;
 
 export default EmailLoginPage;

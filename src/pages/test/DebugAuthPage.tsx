@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { FiCheckCircle, FiInfo, FiLock, FiXCircle } from "react-icons/fi";
 import { useAuthStore } from "../../store/authStore";
 
 const DebugAuthPage = () => {
@@ -29,14 +30,25 @@ const DebugAuthPage = () => {
 
   return (
     <Container>
-      <Title>🔐 인증 디버그 페이지</Title>
+      <Title>
+        <FiLock aria-hidden="true" /> 인증 디버그 페이지
+      </Title>
 
       <Section>
         <SectionTitle>AuthStore 상태</SectionTitle>
         <InfoRow>
           <Label>인증 여부:</Label>
           <Value $isValid={authStore.isAuthenticated}>
-            {authStore.isAuthenticated ? "✅ 로그인됨" : "❌ 로그인 안됨"}
+            {authStore.isAuthenticated ? (
+              <StatusIcon aria-hidden="true">
+                <FiCheckCircle />
+              </StatusIcon>
+            ) : (
+              <StatusIcon aria-hidden="true">
+                <FiXCircle />
+              </StatusIcon>
+            )}
+            {authStore.isAuthenticated ? "로그인됨" : "로그인 안됨"}
           </Value>
         </InfoRow>
         <InfoRow>
@@ -86,7 +98,9 @@ const DebugAuthPage = () => {
       </ButtonGroup>
 
       <Notice>
-        💡 <strong>해결 방법:</strong>
+        <NoticeTitle>
+          <FiInfo aria-hidden="true" /> 해결 방법
+        </NoticeTitle>
         <ul>
           <li>
             로그인이 안 되어 있다면 "로그인 페이지로 이동" 버튼을 클릭하세요.
@@ -112,6 +126,15 @@ const Title = styled.h1`
   font-size: 24px;
   margin-bottom: 30px;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
 `;
 
 const Section = styled.div`
@@ -142,6 +165,9 @@ const Label = styled.div`
 const Value = styled.div<{ $isValid?: boolean }>`
   flex: 1;
   word-break: break-all;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: ${(props) =>
     props.$isValid !== undefined
       ? props.$isValid
@@ -197,17 +223,36 @@ const Notice = styled.div`
   padding: 15px;
   color: #856404;
 
-  strong {
-    display: block;
-    margin-bottom: 10px;
-  }
-
   ul {
     margin: 10px 0 0 20px;
   }
 
   li {
     margin-bottom: 5px;
+  }
+`;
+
+const StatusIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+const NoticeTitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  margin-bottom: 10px;
+
+  svg {
+    width: 18px;
+    height: 18px;
   }
 `;
 

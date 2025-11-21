@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { FiCheck, FiX } from "react-icons/fi";
 import { theme } from "../../styles/theme";
 import { getPolicies, getPolicyDetail } from "../../services/policy.service";
 import { onboardingService } from "../../services/onboarding.service";
@@ -263,7 +264,7 @@ const OnboardingPolicyPage = () => {
                 onClick={() => handleAgreeChange(policy.policyId, true)}
               >
                 <CheckIcon $active={agreements[policy.policyId] === true}>
-                  ✓
+                  <FiCheck />
                 </CheckIcon>
                 <AgreementLabel>동의함</AgreementLabel>
               </AgreementCard>
@@ -276,7 +277,7 @@ const OnboardingPolicyPage = () => {
                   $active={agreements[policy.policyId] === false}
                   $decline
                 >
-                  ✕
+                  <FiX />
                 </CheckIcon>
                 <AgreementLabel>동의안함</AgreementLabel>
               </AgreementCard>
@@ -305,7 +306,9 @@ const OnboardingPolicyPage = () => {
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>{selectedPolicy.title}</ModalTitle>
-              <CloseButton onClick={handleCloseModal}>✕</CloseButton>
+              <CloseButton onClick={handleCloseModal} aria-label="닫기">
+                <FiX />
+              </CloseButton>
             </ModalHeader>
             <ModalBody>
               <PolicyContent>{modalContent}</PolicyContent>
@@ -531,6 +534,11 @@ const CheckIcon = styled.div<{ $active?: boolean; $decline?: boolean }>`
     return theme.colors.accent;
   }};
   transition: all 0.2s;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const AgreementLabel = styled.span`
@@ -647,6 +655,11 @@ const CloseButton = styled.button`
   &:hover {
     background-color: #f5f5f5;
     color: #212121;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
   }
 `;
 

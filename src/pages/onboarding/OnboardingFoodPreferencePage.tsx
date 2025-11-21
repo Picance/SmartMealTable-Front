@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { FiCheck } from "react-icons/fi";
 import { theme } from "../../styles/theme";
 import { onboardingService } from "../../services/onboarding.service";
 import type { Food } from "../../types/api";
@@ -148,7 +149,7 @@ const OnboardingFoodPreferencePage = () => {
                 alt={food.foodName}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
-                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' font-size='40' text-anchor='middle' dy='.3em'%3E🍽️%3C/text%3E%3C/svg%3E";
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' font-size='32' text-anchor='middle' fill='%239e9e9e' dy='.3em'%3EFOOD%3C/text%3E%3C/svg%3E";
                 }}
               />
               <FoodInfo>
@@ -157,7 +158,7 @@ const OnboardingFoodPreferencePage = () => {
                 <FoodPrice>{food.averagePrice.toLocaleString()}원</FoodPrice>
               </FoodInfo>
               <Checkbox $checked={selectedFoods.includes(food.foodId)}>
-                {selectedFoods.includes(food.foodId) && "✓"}
+                {selectedFoods.includes(food.foodId) && <FiCheck />}
               </Checkbox>
             </FoodCard>
           ))}
@@ -336,6 +337,11 @@ const Checkbox = styled.div<{ $checked?: boolean }>`
   font-size: ${theme.typography.fontSize.sm};
   font-weight: ${theme.typography.fontWeight.bold};
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
 `;
 
 const ObserverTarget = styled.div`

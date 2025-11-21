@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
+import { FiCompass, FiFileText, FiHeart, FiHome, FiUser } from "react-icons/fi";
 import { theme } from "../../styles/theme";
 
 interface BottomNavProps {
@@ -38,35 +39,45 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
         onClick={() => navigate("/home")}
         $active={currentTab === "home"}
       >
-        <NavIcon>🏠</NavIcon>
+        <NavIcon>
+          <FiHome />
+        </NavIcon>
         <NavLabel $active={currentTab === "home"}>홈</NavLabel>
       </NavItem>
       <NavItem
         onClick={() => navigate("/spending")}
         $active={currentTab === "spending"}
       >
-        <NavIcon>📋</NavIcon>
+        <NavIcon>
+          <FiFileText />
+        </NavIcon>
         <NavLabel $active={currentTab === "spending"}>지출 내역</NavLabel>
       </NavItem>
       <NavItem
         onClick={() => navigate("/recommendation")}
         $active={currentTab === "recommendation"}
       >
-        <NavIcon>🍽️</NavIcon>
+        <NavIcon>
+          <FiCompass />
+        </NavIcon>
         <NavLabel $active={currentTab === "recommendation"}>음식 추천</NavLabel>
       </NavItem>
       <NavItem
         onClick={() => navigate("/favorites")}
         $active={currentTab === "favorites"}
       >
-        <NavIcon>❤️</NavIcon>
+        <NavIcon>
+          <FiHeart />
+        </NavIcon>
         <NavLabel $active={currentTab === "favorites"}>즐겨 찾는 가게</NavLabel>
       </NavItem>
       <NavItem
         onClick={() => navigate("/profile")}
         $active={currentTab === "profile"}
       >
-        <NavIcon>👤</NavIcon>
+        <NavIcon>
+          <FiUser />
+        </NavIcon>
         <NavLabel $active={currentTab === "profile"}>프로필</NavLabel>
       </NavItem>
     </Nav>
@@ -110,6 +121,11 @@ const NavItem = styled.div<{ $active?: boolean }>`
 
 const NavIcon = styled.div`
   font-size: ${theme.typography.fontSize.xl};
+
+  svg {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
 `;
 
 const NavLabel = styled.span<{ $active?: boolean }>`

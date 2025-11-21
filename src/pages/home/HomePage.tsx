@@ -2,7 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
-import { FiChevronDown, FiMapPin } from "react-icons/fi";
+import {
+  FiChevronDown,
+  FiCompass,
+  FiFileText,
+  FiHeart,
+  FiHome,
+  FiMapPin,
+  FiUser,
+} from "react-icons/fi";
+import { PiBowlFoodFill, PiStorefrontFill } from "react-icons/pi";
 import {
   getHomeDashboard,
   getOnboardingStatus,
@@ -27,13 +36,13 @@ const HomePage = () => {
 
   // 로그인 체크
   useEffect(() => {
-    console.log("🔐 홈 페이지 - 인증 상태:", {
+    console.log("[HomePage] 인증 상태:", {
       isAuthenticated,
       hasToken: !!accessToken,
     });
 
     if (!isAuthenticated || !accessToken) {
-      console.warn("⚠️ 로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+      console.warn("[HomePage] 로그인이 필요합니다. 로그인 페이지로 이동합니다.");
       navigate("/login");
       return;
     }
@@ -47,16 +56,11 @@ const HomePage = () => {
   }, [isAuthenticated, accessToken]);
 
   const loadHomeData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // 홈 대시보드 데이터 로드
-      const dashboardResponse = await getHomeDashboard();
-      console.log("📊 Dashboard Response:", dashboardResponse);
-
-      if (dashboardResponse.result === "SUCCESS" && dashboardResponse.data) {
-        console.log("✅ Dashboard Data:", dashboardResponse.data);
+    svg {
+      width: 32px;
+      height: 32px;
+    }
+        console.log("[HomePage] Dashboard Data:", dashboardResponse.data);
         setDashboardData(dashboardResponse.data);
       } else if (dashboardResponse.error?.code === "ADDRESS_002") {
         // 주소가 없는 경우
@@ -65,7 +69,7 @@ const HomePage = () => {
         navigate("/onboarding/address");
         return;
       } else {
-        console.error("❌ Dashboard Response Error:", dashboardResponse.error);
+        console.error("[HomePage] Dashboard Response Error:", dashboardResponse.error);
         setError(
           dashboardResponse.error?.message ||
             "대시보드 데이터를 불러올 수 없습니다."
@@ -75,7 +79,7 @@ const HomePage = () => {
 
       // 온보딩 상태 확인
       const statusResponse = await getOnboardingStatus();
-      console.log("📋 Onboarding Status Response:", statusResponse);
+      console.log("[HomePage] Onboarding Status Response:", statusResponse);
 
       if (statusResponse.result === "SUCCESS" && statusResponse.data) {
         setOnboardingStatus(statusResponse.data);
@@ -86,7 +90,7 @@ const HomePage = () => {
         }
       }
     } catch (err: any) {
-      console.error("❌ 홈 데이터 로드 실패:", err);
+      console.error("[HomePage] 홈 데이터 로드 실패:", err);
       console.error("Error details:", err.response?.data);
       setError(
         err.response?.data?.error?.message ||
@@ -149,7 +153,7 @@ const HomePage = () => {
 
   // 데이터 유효성 검증
   if (!location || !budget) {
-    console.error("❌ Invalid dashboard data structure:", dashboardData);
+    console.error("[HomePage] Invalid dashboard data structure:", dashboardData);
     return (
       <Container>
         <ErrorContainer>
@@ -233,7 +237,9 @@ const HomePage = () => {
                     {menu.imageUrl ? (
                       <img src={menu.imageUrl} alt={menu.foodName || "메뉴"} />
                     ) : (
-                      <ImagePlaceholder>🍽️</ImagePlaceholder>
+                      <ImagePlaceholder>
+                        <PiBowlFoodFill />
+                      </ImagePlaceholder>
                     )}
                   </MenuImage>
                   <MenuInfo>
@@ -276,7 +282,9 @@ const HomePage = () => {
                         alt={store.storeName || "식당"}
                       />
                     ) : (
-                      <ImagePlaceholder>🏪</ImagePlaceholder>
+                      <ImagePlaceholder>
+                        <PiStorefrontFill />
+                      </ImagePlaceholder>
                     )}
                   </RestaurantIcon>
                   <RestaurantInfo>
@@ -329,11 +337,15 @@ const HomePage = () => {
       {/* 위치 정보를 전달하는 커스텀 BottomNav */}
       <CustomBottomNav>
         <NavItem onClick={() => navigate("/home")} $active={true}>
-          <NavIcon>🏠</NavIcon>
+          <NavIcon>
+            <FiHome />
+          </NavIcon>
           <NavLabel $active={true}>홈</NavLabel>
         </NavItem>
         <NavItem onClick={() => navigate("/spending")} $active={false}>
-          <NavIcon>📋</NavIcon>
+          <NavIcon>
+            <FiFileText />
+          </NavIcon>
           <NavLabel $active={false}>지출 내역</NavLabel>
         </NavItem>
         <NavItem
@@ -351,15 +363,21 @@ const HomePage = () => {
           }
           $active={false}
         >
-          <NavIcon>🍽️</NavIcon>
+          <NavIcon>
+            <FiCompass />
+          </NavIcon>
           <NavLabel $active={false}>음식 추천</NavLabel>
         </NavItem>
         <NavItem onClick={() => navigate("/favorites")} $active={false}>
-          <NavIcon>❤️</NavIcon>
+          <NavIcon>
+            <FiHeart />
+          </NavIcon>
           <NavLabel $active={false}>즐겨 찾는 가게</NavLabel>
         </NavItem>
         <NavItem onClick={() => navigate("/profile")} $active={false}>
-          <NavIcon>👤</NavIcon>
+          <NavIcon>
+            <FiUser />
+          </NavIcon>
           <NavLabel $active={false}>프로필</NavLabel>
         </NavItem>
       </CustomBottomNav>
@@ -499,6 +517,11 @@ const ProgressFill = styled.div<{ $percentage: number }>`
   height: 100%;
   background-color: ${(props) =>
     props.$percentage > 100
+  
+  svg {
+    width: 32px;
+    height: 32px;
+  }
       ? "#e53935"
       : props.$percentage > 80
       ? "#ffa726"
@@ -810,6 +833,11 @@ const NavItem = styled.div<{ $active?: boolean }>`
 
 const NavIcon = styled.div`
   font-size: ${theme.typography.fontSize.xl};
+
+  svg {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
 `;
 
 const NavLabel = styled.span<{ $active?: boolean }>`

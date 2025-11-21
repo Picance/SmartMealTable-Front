@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { FiChevronUp, FiChevronDown, FiX } from "react-icons/fi";
 import { theme } from "../../styles/theme";
 import { categoryService } from "../../services/category.service";
 import type { Category } from "../../types/api";
@@ -232,19 +233,22 @@ const OnboardingPreferencePage = () => {
                   <PriorityButton
                     onClick={() => moveLikedUp(index)}
                     disabled={index === 0}
+                    aria-label="위로 이동"
                   >
-                    ▲
+                    <FiChevronUp />
                   </PriorityButton>
                   <PriorityButton
                     onClick={() => moveLikedDown(index)}
                     disabled={index === likedCategories.length - 1}
+                    aria-label="아래로 이동"
                   >
-                    ▼
+                    <FiChevronDown />
                   </PriorityButton>
                   <RemoveButton
                     onClick={() => removeLikedCategory(category.categoryId)}
+                    aria-label="삭제"
                   >
-                    ✕
+                    <FiX />
                   </RemoveButton>
                 </ActionButtons>
               </CategoryItem>
@@ -298,19 +302,22 @@ const OnboardingPreferencePage = () => {
                   <PriorityButton
                     onClick={() => moveDislikedUp(index)}
                     disabled={index === 0}
+                    aria-label="위로 이동"
                   >
-                    ▲
+                    <FiChevronUp />
                   </PriorityButton>
                   <PriorityButton
                     onClick={() => moveDislikedDown(index)}
                     disabled={index === dislikedCategories.length - 1}
+                    aria-label="아래로 이동"
                   >
-                    ▼
+                    <FiChevronDown />
                   </PriorityButton>
                   <RemoveButton
                     onClick={() => removeDislikedCategory(category.categoryId)}
+                    aria-label="삭제"
                   >
-                    ✕
+                    <FiX />
                   </RemoveButton>
                 </ActionButtons>
               </CategoryItem>
@@ -504,7 +511,6 @@ const PriorityButton = styled.button`
   background-color: white;
   border: 1px solid #e0e0e0;
   border-radius: ${theme.borderRadius.sm};
-  font-size: ${theme.typography.fontSize.xs};
   cursor: pointer;
   transition: all 0.2s;
 
@@ -516,6 +522,11 @@ const PriorityButton = styled.button`
   &:disabled {
     opacity: 0.3;
     cursor: not-allowed;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
   }
 `;
 
@@ -529,13 +540,17 @@ const RemoveButton = styled.button`
   border: 1px solid #ff5252;
   border-radius: ${theme.borderRadius.sm};
   color: #ff5252;
-  font-size: ${theme.typography.fontSize.base};
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
     background-color: #ff5252;
     color: white;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
   }
 `;
 

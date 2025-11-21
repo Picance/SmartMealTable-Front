@@ -2,7 +2,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
-import { FiChevronRight } from "react-icons/fi";
+import {
+  FiChevronRight,
+  FiBell,
+  FiEdit3,
+  FiList,
+  FiShield,
+  FiGlobe,
+  FiHelpCircle,
+  FiInfo,
+  FiUser,
+} from "react-icons/fi";
 import BottomNavigation from "../../components/layout/BottomNav";
 
 const SettingsPage = () => {
@@ -29,7 +39,9 @@ const SettingsPage = () => {
     <Container>
       <Header>
         <Title>앱 설정</Title>
-        <Avatar>👤</Avatar>
+        <Avatar aria-hidden="true">
+          <FiUser />
+        </Avatar>
       </Header>
 
       <Content>
@@ -38,7 +50,9 @@ const SettingsPage = () => {
           <SectionTitle>알림 설정</SectionTitle>
 
           <SettingItem>
-            <SettingIcon>🔔</SettingIcon>
+            <SettingIcon aria-hidden="true">
+              <FiBell />
+            </SettingIcon>
             <SettingContent>
               <SettingLabel>전체 푸시 알림</SettingLabel>
               <SettingDescription>
@@ -54,7 +68,9 @@ const SettingsPage = () => {
           </SettingItem>
 
           <SettingItem>
-            <SettingIcon>✏️</SettingIcon>
+            <SettingIcon aria-hidden="true">
+              <FiEdit3 />
+            </SettingIcon>
             <SettingContent>
               <SettingLabel>가게 공지 알림</SettingLabel>
               <SettingDescription>
@@ -70,7 +86,9 @@ const SettingsPage = () => {
           </SettingItem>
 
           <SettingItem>
-            <SettingIcon>📋</SettingIcon>
+            <SettingIcon aria-hidden="true">
+              <FiList />
+            </SettingIcon>
             <SettingContent>
               <SettingLabel>음식점 추천 알림</SettingLabel>
               <SettingDescription>
@@ -93,7 +111,9 @@ const SettingsPage = () => {
           <SectionTitle>개인정보 및 보안</SectionTitle>
 
           <SettingItem>
-            <SettingIcon>🛡️</SettingIcon>
+            <SettingIcon aria-hidden="true">
+              <FiShield />
+            </SettingIcon>
             <SettingContent>
               <SettingLabel>사용자 추적</SettingLabel>
               <SettingDescription>
@@ -114,7 +134,9 @@ const SettingsPage = () => {
           <SectionTitle>앱 정보</SectionTitle>
 
           <MenuItem onClick={() => navigate("/settings/language")}>
-            <MenuIcon>🌐</MenuIcon>
+            <MenuIcon aria-hidden="true">
+              <FiGlobe />
+            </MenuIcon>
             <MenuContent>
               <MenuLabel>언어 설정</MenuLabel>
               <MenuDescription>앱 언어 변경</MenuDescription>
@@ -125,7 +147,9 @@ const SettingsPage = () => {
           </MenuItem>
 
           <MenuItem onClick={() => navigate("/settings/help")}>
-            <MenuIcon>❓</MenuIcon>
+            <MenuIcon aria-hidden="true">
+              <FiHelpCircle />
+            </MenuIcon>
             <MenuContent>
               <MenuLabel>도움말 및 지원</MenuLabel>
               <MenuDescription>자주 묻는 질문, 문의하기</MenuDescription>
@@ -136,7 +160,9 @@ const SettingsPage = () => {
           </MenuItem>
 
           <MenuItem onClick={() => navigate("/settings/privacy")}>
-            <MenuIcon>ⓘ</MenuIcon>
+            <MenuIcon aria-hidden="true">
+              <FiInfo />
+            </MenuIcon>
             <MenuContent>
               <MenuLabel>개인정보처리방침</MenuLabel>
             </MenuContent>
@@ -146,7 +172,9 @@ const SettingsPage = () => {
           </MenuItem>
 
           <MenuItem onClick={() => navigate("/settings/terms")}>
-            <MenuIcon>ⓘ</MenuIcon>
+            <MenuIcon aria-hidden="true">
+              <FiInfo />
+            </MenuIcon>
             <MenuContent>
               <MenuLabel>이용 약관</MenuLabel>
             </MenuContent>
@@ -204,7 +232,12 @@ const Avatar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: ${theme.typography.fontSize.xl};
+  color: #212121;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const Content = styled.div`
@@ -238,9 +271,21 @@ const SettingItem = styled.div`
 `;
 
 const SettingIcon = styled.div`
-  font-size: ${theme.typography.fontSize.xl};
+  width: 40px;
+  height: 40px;
+  border-radius: ${theme.borderRadius.full};
+  background-color: #fff5f0;
+  color: ${theme.colors.accent};
   flex-shrink: 0;
   margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const SettingContent = styled.div`
@@ -311,8 +356,20 @@ const MenuItem = styled.div`
 `;
 
 const MenuIcon = styled.div`
-  font-size: ${theme.typography.fontSize.xl};
+  width: 40px;
+  height: 40px;
+  border-radius: ${theme.borderRadius.md};
+  background-color: #fff5f0;
+  color: ${theme.colors.accent};
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const MenuContent = styled.div`

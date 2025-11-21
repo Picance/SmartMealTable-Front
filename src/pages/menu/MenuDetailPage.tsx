@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import {
+  FiAlertTriangle,
   FiArrowLeft,
-  FiShare2,
-  FiShoppingCart,
+  FiCheckCircle,
   FiMinus,
   FiPlus,
+  FiShare2,
+  FiShoppingCart,
 } from "react-icons/fi";
 import { useCartStore } from "../../store/cartStore";
 import type { Menu } from "../../types/api";
@@ -55,7 +57,7 @@ const MenuDetailPage = () => {
 
     setIsAddingToCart(true);
     try {
-      console.log("🔵 [MenuDetailPage] 장바구니 추가 시작:", {
+      console.log("[MenuDetailPage] 장바구니 추가 시작:", {
         storeId,
         storeName,
         foodId: menu.foodId,
@@ -73,33 +75,33 @@ const MenuDetailPage = () => {
       );
 
       console.log(
-        "🔵 [MenuDetailPage] addItem 결과:",
+        "[MenuDetailPage] addItem 결과:",
         JSON.stringify(result, null, 2)
       );
-      console.log("🔵 [MenuDetailPage] result.success:", result.success);
-      console.log("🔵 [MenuDetailPage] result.conflict:", result.conflict);
+      console.log("[MenuDetailPage] result.success:", result.success);
+      console.log("[MenuDetailPage] result.conflict:", result.conflict);
 
       if (result.success) {
-        console.log("✅ [MenuDetailPage] 장바구니 추가 성공");
+        console.log("[MenuDetailPage] 장바구니 추가 성공");
         // 성공 메시지를 모달로 표시
         setConflictData({ success: true });
         setShowConflictModal(true);
       } else if (result.conflict) {
         // 409 Conflict: 다른 가게 상품이 있을 때
-        console.log("⚠️ [MenuDetailPage] Conflict 발생, 모달 표시");
+        console.log("[MenuDetailPage] Conflict 발생, 모달 표시");
         console.log(
-          "⚠️ [MenuDetailPage] Conflict 데이터:",
+          "[MenuDetailPage] Conflict 데이터:",
           JSON.stringify(result.conflict, null, 2)
         );
 
         setConflictData(result.conflict);
         setShowConflictModal(true);
       } else {
-        console.log("❌ [MenuDetailPage] 알 수 없는 실패");
+        console.log("[MenuDetailPage] 알 수 없는 실패");
         alert("장바구니 추가에 실패했습니다.");
       }
     } catch (error: any) {
-      console.error("🔴 [MenuDetailPage] handleAddToCart 에러:", error);
+      console.error("[MenuDetailPage] handleAddToCart 에러:", error);
       alert(error.message || "장바구니 추가 중 오류가 발생했습니다.");
     } finally {
       setIsAddingToCart(false);
@@ -113,7 +115,7 @@ const MenuDetailPage = () => {
     setIsAddingToCart(true);
 
     try {
-      console.log("🔵 [MenuDetailPage] replaceCart=true로 재시도");
+      console.log("[MenuDetailPage] replaceCart=true로 재시도");
       const retryResult = await addItem(
         storeId,
         menu.foodId,
@@ -125,20 +127,20 @@ const MenuDetailPage = () => {
       );
 
       console.log(
-        "🔵 [MenuDetailPage] 재시도 결과:",
+        "[MenuDetailPage] 재시도 결과:",
         JSON.stringify(retryResult, null, 2)
       );
 
       if (retryResult.success) {
-        console.log("✅ [MenuDetailPage] 재시도 성공");
+        console.log("[MenuDetailPage] 재시도 성공");
         setConflictData({ success: true });
         setShowConflictModal(true);
       } else {
-        console.log("❌ [MenuDetailPage] 재시도 실패");
+        console.log("[MenuDetailPage] 재시도 실패");
         alert("장바구니 추가에 실패했습니다.");
       }
     } catch (error: any) {
-      console.error("🔴 [MenuDetailPage] handleReplaceCart 에러:", error);
+      console.error("[MenuDetailPage] handleReplaceCart 에러:", error);
       alert(error.message || "장바구니 추가 중 오류가 발생했습니다.");
     } finally {
       setIsAddingToCart(false);
@@ -260,7 +262,9 @@ const MenuDetailPage = () => {
             {conflictData?.success ? (
               // 성공 모달
               <>
-                <ModalIcon>✅</ModalIcon>
+                <ModalIcon>
+                  <FiCheckCircle />
+                </ModalIcon>
                 <ModalTitle>장바구니에 추가되었습니다</ModalTitle>
                 <ModalMessage>
                   {menu.foodName} {quantity}개가 장바구니에 담겼습니다.
@@ -274,7 +278,9 @@ const MenuDetailPage = () => {
             ) : (
               // Conflict 모달
               <>
-                <ModalIcon>⚠️</ModalIcon>
+                <ModalIcon>
+                  <FiAlertTriangle />
+                </ModalIcon>
                 <ModalTitle>다른 가게의 상품이 있습니다</ModalTitle>
                 <ModalMessage>
                   {conflictData?.currentStoreName || "현재 장바구니"}의 상품이
@@ -635,6 +641,12 @@ const ModalIcon = styled.div`
   font-size: 48px;
   text-align: center;
   margin-bottom: 16px;
+
+  svg {
+    width: 48px;
+    height: 48px;
+    color: #ff6b35;
+  }
 `;
 
 const ModalTitle = styled.h2`

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
+import { FiAlertTriangle } from "react-icons/fi";
 import { authService } from "../../services/auth.service";
 import { useAuthStore } from "../../store/authStore";
 import { syncOnboardingStatus } from "../../utils/onboardingStatus";
@@ -90,7 +91,9 @@ const GoogleCallbackPage = () => {
       <Content>
         {error ? (
           <>
-            <ErrorIcon>❌</ErrorIcon>
+            <ErrorIcon>
+              <FiAlertTriangle />
+            </ErrorIcon>
             <ErrorMessage>{error}</ErrorMessage>
             <SubMessage>로그인 페이지로 돌아갑니다...</SubMessage>
           </>
@@ -149,6 +152,12 @@ const SubMessage = styled.p`
 const ErrorIcon = styled.div`
   font-size: 3rem;
   margin-bottom: 1rem;
+
+  svg {
+    width: 48px;
+    height: 48px;
+    color: #c62828;
+  }
 `;
 
 const ErrorMessage = styled.h2`

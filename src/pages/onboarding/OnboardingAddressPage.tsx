@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { FiSearch, FiMapPin, FiEdit2, FiTrash2 } from "react-icons/fi";
+import {
+  FiBook,
+  FiBriefcase,
+  FiEdit2,
+  FiHome,
+  FiMapPin,
+  FiSearch,
+  FiTrash2,
+} from "react-icons/fi";
 import AddressMapModal from "../../components/address/AddressMapModal";
 import { addressService } from "../../services/address.service";
 import type { AddressType, Address } from "../../services/address.service";
@@ -160,7 +168,7 @@ const OnboardingAddressPage = () => {
     setTempAddress(null);
     setSearchKeyword("");
 
-    console.log("✅ 주소 추가 완료:", newAddress);
+    console.log("[OnboardingAddress] Address added:", newAddress);
     console.log("=== 전체 주소 개수:", updatedAddresses.length);
   };
 
@@ -196,7 +204,7 @@ const OnboardingAddressPage = () => {
       setTempAddress(null);
     }
 
-    console.log("✅ 주소 삭제 완료");
+    console.log("[OnboardingAddress] Address deleted");
     console.log("=== 남은 주소 개수:", updatedAddresses.length);
   };
 
@@ -213,7 +221,7 @@ const OnboardingAddressPage = () => {
     setSavedAddresses(updatedAddresses);
     saveLocalAddresses(updatedAddresses);
 
-    console.log("✅ Primary 주소 설정 완료");
+    console.log("[OnboardingAddress] Primary address updated");
   };
 
   // 주소 수정
@@ -262,7 +270,7 @@ const OnboardingAddressPage = () => {
     setTempAddress(null);
     setEditingAddressId(null);
 
-    console.log("✅ 주소 수정 완료");
+    console.log("[OnboardingAddress] Address updated");
   };
 
   // 수정 취소
@@ -275,13 +283,13 @@ const OnboardingAddressPage = () => {
   const getAddressIcon = (type: string) => {
     switch (type) {
       case "HOME":
-        return "🏠";
+        return <FiHome />;
       case "WORK":
-        return "🏢";
+        return <FiBriefcase />;
       case "SCHOOL":
-        return "🎓";
+        return <FiBook />;
       default:
-        return "📍";
+        return <FiMapPin />;
     }
   };
 
@@ -342,10 +350,13 @@ const OnboardingAddressPage = () => {
 
           // 저장 완료 후 로컬 스토리지 정리
           localStorage.removeItem("onboarding_addresses");
-          console.log("✅ 모든 주소 백엔드 저장 완료");
+          console.log("[OnboardingAddress] All addresses saved to backend");
         }
       } catch (error) {
-        console.error("❌ 백엔드 저장 실패 (다음 단계로 진행):", error);
+        console.error(
+          "[OnboardingAddress] Failed to save addresses, continuing:",
+          error
+        );
         // 에러가 발생해도 다음 단계로 진행
       }
     }
@@ -746,7 +757,15 @@ const LocationButton = styled.button`
 `;
 
 const AddressIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.25rem;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 `;
 
 const AddButtonGroup = styled.div`

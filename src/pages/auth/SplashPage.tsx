@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
+import { PiBowlFoodFill } from "react-icons/pi";
 import { useAuthStore } from "../../store/authStore";
 import { theme } from "../../styles/theme";
 
@@ -44,14 +45,14 @@ const SplashPage = () => {
         console.log("최종 isOnboardingComplete:", isOnboardingComplete);
 
         if (isOnboardingComplete) {
-          console.log("→ 홈으로 이동");
+          console.log("[SplashPage] 홈으로 이동");
           navigate("/home", { replace: true });
         } else {
-          console.log("→ 온보딩으로 이동");
+          console.log("[SplashPage] 온보딩으로 이동");
           navigate("/onboarding/profile", { replace: true });
         }
       } else {
-        console.log("→ 로그인 페이지로 이동");
+        console.log("[SplashPage] 로그인 페이지로 이동");
         navigate("/login-options", { replace: true });
       }
     }, 2000);
@@ -63,7 +64,9 @@ const SplashPage = () => {
     <Container>
       <Content>
         <LogoSection>
-          <LogoIcon>🍽️</LogoIcon>
+          <LogoIcon>
+            <PiBowlFoodFill />
+          </LogoIcon>
           <LogoText>알뜰식탁</LogoText>
           <LogoSubtitle>SmartMealTable</LogoSubtitle>
         </LogoSection>
@@ -158,6 +161,12 @@ const LogoIcon = styled.div`
   font-size: 80px;
   animation: ${fadeIn} 1s ease-out 0.2s both;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+
+  svg {
+    width: 80px;
+    height: 80px;
+    color: white;
+  }
 `;
 
 const LogoText = styled.h1`

@@ -6,6 +6,10 @@ import {
   FiSearch,
   FiSliders,
   FiChevronDown,
+  FiMapPin,
+  FiMessageCircle,
+  FiDollarSign,
+  FiTrendingUp,
 } from "react-icons/fi";
 import { IoHeartOutline, IoHeart } from "react-icons/io5";
 import {
@@ -23,16 +27,16 @@ type SortBy = "SCORE" | "DISTANCE";
 type DistanceFilter = 0.5 | 1 | 2 | 5 | 10;
 
 const RecommendationPage = () => {
-  console.log("🎯🎯🎯 [RecommendationPage] 함수 컴포넌트 실행 시작!!! 🎯🎯🎯");
+  console.log("[RecommendationPage] 함수 컴포넌트 실행 시작!!! ");
 
   const navigate = useNavigate();
-  console.log("✅ useNavigate 성공");
+  console.log("useNavigate 성공");
 
   const location = useLocation();
-  console.log("✅ useLocation 성공");
+  console.log("useLocation 성공");
 
   const { isAuthenticated, accessToken } = useAuthStore();
-  console.log("✅ useAuthStore 성공:", {
+  console.log("useAuthStore 성공:", {
     isAuthenticated,
     hasToken: !!accessToken,
   });
@@ -48,7 +52,7 @@ const RecommendationPage = () => {
     new Map()
   ); // storeId -> favoriteId
 
-  console.log("🎯 [RecommendationPage] 현재 상태:", {
+  console.log("[RecommendationPage] 현재 상태:", {
     isAuthenticated,
     hasToken: !!accessToken,
     pathname: location.pathname,
@@ -75,54 +79,54 @@ const RecommendationPage = () => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   useEffect(() => {
-    console.log("🚀 [RecommendationPage] 컴포넌트 마운트");
-    console.log("🔐 [RecommendationPage] 인증 상태:", {
+    console.log("[RecommendationPage] 컴포넌트 마운트");
+    console.log("[RecommendationPage] 인증 상태:", {
       isAuthenticated,
       hasToken: !!accessToken,
     });
 
     // 로그인 체크
     if (!isAuthenticated || !accessToken) {
-      console.log("❌ [RecommendationPage] 로그인 필요 - 로그인 페이지로 이동");
+      console.log("[RecommendationPage] 로그인 필요 - 로그인 페이지로 이동");
       alert("로그인이 필요한 서비스입니다.");
       navigate("/login");
       return;
     }
 
-    console.log("📍 [RecommendationPage] location.state:", location.state);
+    console.log("[RecommendationPage] location.state:", location.state);
 
     // location.state에서 위치 정보 가져오기
     if (location.state && location.state.userLocation) {
       console.log(
-        "✅ [RecommendationPage] location.state에서 위치 정보 사용:",
+        " [RecommendationPage] location.state에서 위치 정보 사용:",
         location.state.userLocation
       );
       setUserLocation(location.state.userLocation);
     } else {
-      console.log("📡 [RecommendationPage] API에서 위치 정보 가져오기 시작");
+      console.log("[RecommendationPage] API에서 위치 정보 가져오기 시작");
       // API에서 사용자의 현재 주소 가져오기
       fetchUserLocation();
     }
   }, [location.state, isAuthenticated, accessToken, navigate]);
 
   const fetchUserLocation = async () => {
-    console.log("📡 [fetchUserLocation] 시작");
+    console.log("[fetchUserLocation] 시작");
     try {
       const dashboardResponse = await getHomeDashboard();
-      console.log("📡 [fetchUserLocation] API 응답:", dashboardResponse);
+      console.log("[fetchUserLocation] API 응답:", dashboardResponse);
 
       if (
         dashboardResponse.result === "SUCCESS" &&
         dashboardResponse.data?.location
       ) {
         const { latitude, longitude } = dashboardResponse.data.location;
-        console.log("✅ [fetchUserLocation] 위치 정보 설정:", {
+        console.log("[fetchUserLocation] 위치 정보 설정:", {
           latitude,
           longitude,
         });
         setUserLocation({ latitude, longitude });
       } else {
-        console.log("⚠️ [fetchUserLocation] 위치 정보 없음 - 기본 위치 사용");
+        console.log("[fetchUserLocation] 위치 정보 없음 - 기본 위치 사용");
         // 기본 위치 (서울시청)
         setUserLocation({
           latitude: 37.5665,
@@ -130,7 +134,7 @@ const RecommendationPage = () => {
         });
       }
     } catch (err) {
-      console.error("❌ [fetchUserLocation] 에러:", err);
+      console.error("[fetchUserLocation] 에러:", err);
       // 실패 시 기본 위치 사용
       setUserLocation({
         latitude: 37.5665,
@@ -140,7 +144,7 @@ const RecommendationPage = () => {
   };
 
   useEffect(() => {
-    console.log("🔄 [RecommendationPage] 검색 조건 변경:", {
+    console.log("[RecommendationPage] 검색 조건 변경:", {
       hasLocation: !!userLocation,
       userLocation,
       sortBy,
@@ -150,10 +154,10 @@ const RecommendationPage = () => {
     });
 
     if (userLocation) {
-      console.log("🔍 [RecommendationPage] searchStores 호출");
+      console.log("[RecommendationPage] searchStores 호출");
       searchStores();
     } else {
-      console.log("⏳ [RecommendationPage] 위치 정보 대기 중...");
+      console.log("[RecommendationPage] 위치 정보 대기 중...");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userLocation, sortBy, distance, isOpenOnly, excludeDislikes]);
@@ -176,14 +180,14 @@ const RecommendationPage = () => {
   };
 
   const searchStores = async (keywordOverride?: string) => {
-    console.log("🔍 [searchStores] 시작");
+    console.log("[searchStores] 시작");
 
     if (!userLocation) {
-      console.log("⚠️ [searchStores] 위치 정보 없음 - 중단");
+      console.log("[searchStores] 위치 정보 없음 - 중단");
       return;
     }
 
-    console.log("⏳ [searchStores] 로딩 시작");
+    console.log("[searchStores] 로딩 시작");
     setIsLoading(true);
 
     try {
@@ -207,14 +211,14 @@ const RecommendationPage = () => {
         params.keyword = keywordToUse;
       }
 
-      console.log("📤 [searchStores] API 호출 파라미터:", params);
+      console.log("[searchStores] API 호출 파라미터:", params);
       const response = await recommendationService.getRecommendations(params);
 
-      console.log("🔍 [RecommendationPage] API 응답 전체:", response);
-      console.log("🔍 [RecommendationPage] API 응답 result:", response.result);
-      console.log("🔍 [RecommendationPage] API 응답 data:", response.data);
+      console.log("[RecommendationPage] API 응답 전체:", response);
+      console.log("[RecommendationPage] API 응답 result:", response.result);
+      console.log("[RecommendationPage] API 응답 data:", response.data);
       console.log(
-        "🔍 [RecommendationPage] API 응답 data 타입:",
+        " [RecommendationPage] API 응답 data 타입:",
         typeof response.data,
         Array.isArray(response.data)
       );
@@ -223,28 +227,25 @@ const RecommendationPage = () => {
         // API 응답: { result: "SUCCESS", data: RecommendedStore[] }
         const storeList = Array.isArray(response.data) ? response.data : [];
         console.log(
-          "🔍 [RecommendationPage] 파싱된 storeList 길이:",
+          " [RecommendationPage] 파싱된 storeList 길이:",
           storeList.length
         );
-        console.log("🔍 [RecommendationPage] 파싱된 storeList:", storeList);
+        console.log("[RecommendationPage] 파싱된 storeList:", storeList);
+        console.log(" [RecommendationPage] 첫 번째 가게 데이터:", storeList[0]);
         console.log(
-          "🔍 [RecommendationPage] 첫 번째 가게 데이터:",
-          storeList[0]
-        );
-        console.log(
-          "🔍 [RecommendationPage] 첫 번째 가게의 isFavorite:",
+          " [RecommendationPage] 첫 번째 가게의 isFavorite:",
           storeList[0]?.isFavorite
         );
         console.log(
-          "🔍 [RecommendationPage] 첫 번째 가게의 favoriteId:",
+          " [RecommendationPage] 첫 번째 가게의 favoriteId:",
           storeList[0]?.favoriteId
         );
         console.log(
-          "🔍 [RecommendationPage] 첫 번째 가게의 categoryName:",
+          " [RecommendationPage] 첫 번째 가게의 categoryName:",
           storeList[0]?.categoryName
         );
         console.log(
-          "🔍 [RecommendationPage] 첫 번째 가게의 isOpen:",
+          " [RecommendationPage] 첫 번째 가게의 isOpen:",
           storeList[0]?.isOpen
         );
         setStores(storeList);
@@ -255,7 +256,7 @@ const RecommendationPage = () => {
 
         storeList.forEach((store, index) => {
           console.log(
-            `🔍 [RecommendationPage] 가게 #${index} (${
+            ` [RecommendationPage] 가게 #${index} (${
               store.name || store.storeName
             }):`,
             {
@@ -277,16 +278,16 @@ const RecommendationPage = () => {
         });
 
         console.log(
-          "⭐ [RecommendationPage] 즐겨찾기 상태 로드:",
+          "[RecommendationPage] 즐겨찾기 상태 로드:",
           favorites.size,
           "개"
         );
         console.log(
-          "⭐ [RecommendationPage] favoriteStores Set:",
+          "[RecommendationPage] favoriteStores Set:",
           Array.from(favorites)
         );
         console.log(
-          "⭐ [RecommendationPage] favoriteIdMap:",
+          "[RecommendationPage] favoriteIdMap:",
           Array.from(idMap.entries())
         );
 
@@ -336,13 +337,13 @@ const RecommendationPage = () => {
         storeShortcutsLimit: 5,
       });
 
-      console.log("🔍 [자동완성] API 응답:", response);
+      console.log("[자동완성] API 응답:", response);
 
       if (response.result === "SUCCESS" && response.data) {
         setAutocompleteSuggestions(response.data.suggestions || []);
         setAutocompleteShortcuts(response.data.storeShortcuts || []);
         setShowAutocomplete(true);
-        console.log("✅ [자동완성] 성공:", {
+        console.log("[자동완성] 성공:", {
           suggestions: response.data.suggestions?.length || 0,
           shortcuts: response.data.storeShortcuts?.length || 0,
         });
@@ -352,7 +353,7 @@ const RecommendationPage = () => {
         setShowAutocomplete(false);
       }
     } catch (err) {
-      console.error("❌ [자동완성] 에러:", err);
+      console.error("[자동완성] 에러:", err);
       setAutocompleteSuggestions([]);
       setAutocompleteShortcuts([]);
       setShowAutocomplete(false);
@@ -398,7 +399,7 @@ const RecommendationPage = () => {
         // favoriteId가 없으면 즐겨찾기 목록을 조회해서 찾기
         if (!favoriteId) {
           console.log(
-            "⚠️ [RecommendationPage] favoriteId가 없어서 즐겨찾기 목록 조회:",
+            "[RecommendationPage] favoriteId가 없어서 즐겨찾기 목록 조회:",
             storeId
           );
 
@@ -407,7 +408,7 @@ const RecommendationPage = () => {
             const favoritesResponse = await favoriteService.getFavorites();
 
             console.log(
-              "📋 [RecommendationPage] 즐겨찾기 응답:",
+              " [RecommendationPage] 즐겨찾기 응답:",
               favoritesResponse
             );
 
@@ -417,7 +418,7 @@ const RecommendationPage = () => {
             ) {
               const favoritesList = favoritesResponse.data.favorites;
               console.log(
-                "📋 [RecommendationPage] 즐겨찾기 목록:",
+                " [RecommendationPage] 즐겨찾기 목록:",
                 favoritesList
               );
 
@@ -428,7 +429,7 @@ const RecommendationPage = () => {
               if (favoriteItem) {
                 favoriteId = favoriteItem.favoriteId;
                 console.log(
-                  "✅ [RecommendationPage] favoriteId 찾음:",
+                  " [RecommendationPage] favoriteId 찾음:",
                   favoriteId
                 );
                 // 찾은 favoriteId를 맵에 저장
@@ -439,14 +440,14 @@ const RecommendationPage = () => {
                 });
               } else {
                 console.log(
-                  "⚠️ [RecommendationPage] 즐겨찾기 목록에서 storeId를 찾을 수 없음:",
+                  "[RecommendationPage] 즐겨찾기 목록에서 storeId를 찾을 수 없음:",
                   storeId
                 );
               }
             }
           } catch (err) {
             console.error(
-              "❌ [RecommendationPage] 즐겨찾기 목록 조회 실패:",
+              " [RecommendationPage] 즐겨찾기 목록 조회 실패:",
               err
             );
           }
@@ -454,7 +455,7 @@ const RecommendationPage = () => {
 
         if (!favoriteId) {
           console.error(
-            "❌ [RecommendationPage] favoriteId를 찾을 수 없습니다:",
+            " [RecommendationPage] favoriteId를 찾을 수 없습니다:",
             storeId
           );
           alert("즐겨찾기 정보를 찾을 수 없습니다. 다시 시도해주세요.");
@@ -478,7 +479,7 @@ const RecommendationPage = () => {
           return newMap;
         });
 
-        console.log("⭐ [RecommendationPage] 즐겨찾기 제거 완료:", storeId);
+        console.log("[RecommendationPage] 즐겨찾기 제거 완료:", storeId);
       } else {
         // 즐겨찾기 추가
         const response = await favoriteService.addFavorite(storeId);
@@ -500,7 +501,7 @@ const RecommendationPage = () => {
           });
 
           console.log(
-            "⭐ [RecommendationPage] 즐겨찾기 추가 완료:",
+            "[RecommendationPage] 즐겨찾기 추가 완료:",
             storeId,
             "favoriteId:",
             response.data.favoriteId
@@ -508,7 +509,7 @@ const RecommendationPage = () => {
         }
       }
     } catch (err: any) {
-      console.error("⭐ [RecommendationPage] 즐겨찾기 토글 실패:", err);
+      console.error("[RecommendationPage] 즐겨찾기 토글 실패:", err);
 
       // 409 에러 (이미 즐겨찾기에 있음)
       if (err.response?.status === 409) {
@@ -525,7 +526,7 @@ const RecommendationPage = () => {
     }
   };
 
-  console.log("🟢 [RecommendationPage] return문 직전 도달!");
+  console.log("[RecommendationPage] return문 직전 도달!");
   return (
     <PageContainer onClick={() => setShowAutocomplete(false)}>
       {/* 상단 검색바 */}
@@ -572,7 +573,9 @@ const RecommendationPage = () => {
                         key={`suggestion-${index}`}
                         onClick={() => handleSuggestionClick(suggestion)}
                       >
-                        <AutocompleteIcon>🔍</AutocompleteIcon>
+                        <AutocompleteIcon aria-hidden="true">
+                          <FiSearch />
+                        </AutocompleteIcon>
                         <AutocompleteContent>
                           <AutocompleteName>{suggestion}</AutocompleteName>
                         </AutocompleteContent>
@@ -623,22 +626,35 @@ const RecommendationPage = () => {
       <FilterBar>
         <FilterButton
           onClick={() => {
-            console.log("📍 거리 필터 클릭, 현재 상태:", showDistanceDropdown);
+            console.log("거리 필터 클릭, 현재 상태:", showDistanceDropdown);
             setShowDistanceDropdown(!showDistanceDropdown);
             setShowSortDropdown(false);
           }}
         >
-          <span>📍거리: {getDistanceLabel()}</span>
+          <FilterLabel>
+            <InlineIcon>
+              <FiMapPin />
+            </InlineIcon>
+            거리: {getDistanceLabel()}
+          </FilterLabel>
           <FiChevronDown size={14} />
         </FilterButton>
         <FilterButton
           onClick={() => {
-            console.log("↕️ 정렬 필터 클릭, 현재 상태:", showSortDropdown);
+            console.log(
+              "[RecommendationPage] 정렬 필터 클릭, 현재 상태:",
+              showSortDropdown
+            );
             setShowSortDropdown(!showSortDropdown);
             setShowDistanceDropdown(false);
           }}
         >
-          <span>↕️정렬: {getSortLabel()}</span>
+          <FilterLabel>
+            <InlineIcon>
+              <FiTrendingUp />
+            </InlineIcon>
+            정렬: {getSortLabel()}
+          </FilterLabel>
           <FiChevronDown size={14} />
         </FilterButton>
       </FilterBar>
@@ -788,9 +804,17 @@ const RecommendationPage = () => {
               {/* 상점 정보 */}
               <StoreInfoSection>
                 <InfoRow>
-                  <InfoItem>📍 {store.distance.toFixed(1)}km</InfoItem>
                   <InfoItem>
-                    💬 {store.reviewCount.toLocaleString()}개 리뷰
+                    <InlineIcon>
+                      <FiMapPin />
+                    </InlineIcon>
+                    {store.distance.toFixed(1)}km
+                  </InfoItem>
+                  <InfoItem>
+                    <InlineIcon>
+                      <FiMessageCircle />
+                    </InlineIcon>
+                    {store.reviewCount.toLocaleString()}개 리뷰
                   </InfoItem>
                 </InfoRow>
 
@@ -801,14 +825,20 @@ const RecommendationPage = () => {
                     <ClosedBadge>영업종료</ClosedBadge>
                   )}
                   <PriceInfo>
-                    💰 평균{" "}
+                    <InlineIcon>
+                      <FiDollarSign />
+                    </InlineIcon>
+                    평균{" "}
                     {store.averagePrice > 0
                       ? `${store.averagePrice.toLocaleString()}원`
                       : "정보없음"}
                   </PriceInfo>
                   {(store.score || store.recommendationScore || 0) >= 40000 && (
                     <PopularityBadge>
-                      ⚡ 추천점수{" "}
+                      <InlineIcon>
+                        <FiTrendingUp />
+                      </InlineIcon>
+                      추천점수{" "}
                       {(
                         (store.score || store.recommendationScore || 0) / 1000
                       ).toFixed(0)}
@@ -931,9 +961,17 @@ const AutocompleteItemStyled = styled.div`
   }
 `;
 
-const AutocompleteIcon = styled.div`
-  font-size: 24px;
+const AutocompleteIcon = styled.span`
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff6b35;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const AutocompleteContent = styled.div`
@@ -1029,6 +1067,12 @@ const FilterButton = styled.button`
   &:active {
     background-color: #f5f5f5;
   }
+`;
+
+const FilterLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 `;
 
 const TagBar = styled.div`
@@ -1214,6 +1258,9 @@ const InfoRow = styled.div`
 const InfoItem = styled.span`
   font-size: 13px;
   color: #666;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 `;
 
 const BadgeRow = styled.div`
@@ -1264,6 +1311,20 @@ const PopularityBadge = styled.span`
   font-weight: 600;
   background-color: #fff3e0;
   color: #f57c00;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const InlineIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
 `;
 
 export default RecommendationPage;

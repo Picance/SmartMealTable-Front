@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
+  FiAlertTriangle,
   FiArrowLeft,
+  FiChevronDown,
   FiMinus,
   FiPlus,
-  FiTrash2,
+  FiShoppingCart,
   FiTag,
-  FiChevronDown,
+  FiTrash2,
 } from "react-icons/fi";
 import { useCartStore } from "../../store/cartStore";
 import BottomNav from "../../components/layout/BottomNav";
@@ -65,7 +67,7 @@ const CartPage = () => {
         throw new Error(response.error?.message);
       }
     } catch (error: any) {
-      console.error("💰 [CartPage] 일별 예산 조회 실패:", error);
+      console.error("[CartPage] 일별 예산 조회 실패:", error);
       setDailyBudget(null);
       setDailyBudgetError(error?.message || "예산 정보를 불러올 수 없습니다.");
     } finally {
@@ -99,7 +101,7 @@ const CartPage = () => {
     change: number
   ) => {
     const newQuantity = currentQuantity + change;
-    console.log("📝 [CartPage] handleQuantityChange:", {
+    console.log("[CartPage] handleQuantityChange:", {
       cartItemId,
       currentQuantity,
       change,
@@ -113,7 +115,7 @@ const CartPage = () => {
         await removeItem(cartItemId);
       }
     } catch (error: any) {
-      console.error("📝 [CartPage] 수량 변경 에러:", error);
+      console.error("[CartPage] 수량 변경 에러:", error);
       alert(
         error.response?.data?.error?.message ||
           error.message ||
@@ -143,7 +145,7 @@ const CartPage = () => {
         `${expendedTime}:00`
       );
 
-      // 체크아웃 성공 → 지출 등록 완료 페이지로 이동
+      // 체크아웃 성공 시 지출 등록 완료 페이지로 이동
       navigate("/spending/success", {
         state: {
           expenditureData: {
@@ -222,7 +224,9 @@ const CartPage = () => {
         </Header>
 
         <EmptyContainer>
-          <EmptyIcon>🛒</EmptyIcon>
+          <EmptyIcon>
+            <FiShoppingCart />
+          </EmptyIcon>
           <EmptyText>장바구니가 비어있습니다</EmptyText>
           <EmptyButton onClick={() => navigate("/recommendation")}>
             메뉴 둘러보기
@@ -248,7 +252,7 @@ const CartPage = () => {
         {/* 장바구니 아이템 리스트 */}
         <CartItemList>
           {items.map((item) => {
-            console.log("🛒 [CartPage] 렌더링 중인 아이템:", {
+            console.log("[CartPage] 렌더링 중인 아이템:", {
               cartItemId: item.cartItemId,
               foodName: item.foodName,
               quantity: item.quantity,
@@ -404,7 +408,9 @@ const CartPage = () => {
                 </SummaryValue>
               </SummaryRow>
               {isOverBudget && (
-                <WarningMessage>⚠️ 예산을 초과했습니다!</WarningMessage>
+                <WarningMessage>
+                  <FiAlertTriangle /> 예산을 초과했습니다!
+                </WarningMessage>
               )}
             </>
           ) : (
@@ -736,7 +742,15 @@ const WarningMessage = styled.div`
   color: #ff6b35;
   font-size: 14px;
   font-weight: 600;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 const NoBudgetMessage = styled.div`
@@ -782,6 +796,12 @@ const EmptyContainer = styled.div`
 const EmptyIcon = styled.div`
   font-size: 64px;
   margin-bottom: 16px;
+
+  svg {
+    width: 64px;
+    height: 64px;
+    color: #ff6b35;
+  }
 `;
 
 const EmptyText = styled.p`

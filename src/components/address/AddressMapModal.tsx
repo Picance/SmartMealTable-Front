@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
+import { FiArrowLeft } from "react-icons/fi";
 import NaverMapPicker from "../map/NaverMapPicker";
 import { mapService } from "../../services/map.service";
 
@@ -77,7 +78,9 @@ const AddressMapModal = ({
     <ModalOverlay onClick={onClose}>
       <ModalContainer onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
-          <BackButton onClick={onClose}>←</BackButton>
+          <BackButton onClick={onClose} aria-label="뒤로 가기">
+            <FiArrowLeft />
+          </BackButton>
           <ModalTitle>{title}</ModalTitle>
           <Spacer />
         </ModalHeader>
@@ -163,7 +166,6 @@ const ModalHeader = styled.div`
 const BackButton = styled.button`
   background: transparent;
   border: none;
-  font-size: 1.5rem;
   color: #000000;
   cursor: pointer;
   display: flex;
@@ -173,6 +175,11 @@ const BackButton = styled.button`
 
   &:hover {
     opacity: 0.7;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { FiBell, FiUser } from "react-icons/fi";
 
 type AddressType = "home" | "work" | "school" | "etc";
 
@@ -35,8 +36,12 @@ const AddressSearchPage = () => {
         <Header>
           <Title>주소 검색</Title>
           <ProfileSection>
-            <NotificationIcon>🔔</NotificationIcon>
-            <ProfileImage>👤</ProfileImage>
+            <NotificationButton>
+              <FiBell />
+            </NotificationButton>
+            <ProfileImage>
+              <FiUser />
+            </ProfileImage>
           </ProfileSection>
         </Header>
 
@@ -170,9 +175,19 @@ const ProfileSection = styled.div`
   gap: 1rem;
 `;
 
-const NotificationIcon = styled.div`
-  font-size: 1.25rem;
+const NotificationButton = styled.button`
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const ProfileImage = styled.div`
@@ -183,8 +198,12 @@ const ProfileImage = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
   cursor: pointer;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const Form = styled.form`

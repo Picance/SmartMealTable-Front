@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { FiHeart, FiInfo } from "react-icons/fi";
+import {
+  FiCopy,
+  FiHeart,
+  FiInfo,
+  FiMapPin,
+  FiNavigation,
+  FiPhone,
+  FiTrendingUp,
+} from "react-icons/fi";
 import { IoHeartSharp } from "react-icons/io5";
+import { PiBowlFoodFill, PiStorefrontFill } from "react-icons/pi";
 import { storeService } from "../../services/store.service";
 import {
   budgetService,
@@ -33,7 +42,7 @@ const StoreDetailPage = () => {
 
   // 컴포넌트 마운트 및 페이지 재진입 시 장바구니 동기화
   useEffect(() => {
-    console.log("� [StoreDetailPage] 장바구니 상태 동기화");
+    console.log("[StoreDetailPage] 장바구니 상태 동기화");
     fetchCart();
     loadBudgetStatus(); // 예산 정보도 함께 로드
   }, []); // fetchCart는 stable하므로 deps에서 제외
@@ -267,7 +276,9 @@ const StoreDetailPage = () => {
               </StatusBadge>
             </StoreBadgeRow>
             <PopularityBadge>
-              <BadgeIcon>🔥</BadgeIcon>
+              <BadgeIcon aria-hidden="true">
+                <FiTrendingUp />
+              </BadgeIcon>
               <BadgeText>
                 배달 인기 맛집 ({store.reviewCount || 1250} 리뷰)
               </BadgeText>
@@ -329,7 +340,9 @@ const StoreDetailPage = () => {
           <AllMenuList>
             {allMenus.length === 0 ? (
               <NoMenuContainer>
-                <NoMenuIcon>🍽️</NoMenuIcon>
+                <NoMenuIcon aria-hidden="true">
+                  <PiBowlFoodFill />
+                </NoMenuIcon>
                 <NoMenuTitle>등록된 메뉴가 없습니다</NoMenuTitle>
                 <NoMenuDescription>
                   현재 이 가게의 메뉴 정보를 준비중입니다.
@@ -476,8 +489,12 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
 
           {/* 지도 영역 */}
           <MapPlaceholder>
-            <MapIcon>📍</MapIcon>
-            <MapShop>🏪</MapShop>
+            <MapIcon aria-hidden="true">
+              <FiMapPin />
+            </MapIcon>
+            <MapShop aria-hidden="true">
+              <PiStorefrontFill />
+            </MapShop>
           </MapPlaceholder>
 
           {/* 매장명 및 주소 */}
@@ -488,7 +505,9 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
             <AddressRow>
               <AddressText>{store.address}</AddressText>
               <CopyButton onClick={handleCopyAddress}>
-                <CopyIcon>📋</CopyIcon>
+                <CopyIcon aria-hidden="true">
+                  <FiCopy />
+                </CopyIcon>
                 <span>주소복사</span>
               </CopyButton>
             </AddressRow>
@@ -542,11 +561,15 @@ const StoreInfoModal = ({ store, onClose }: StoreInfoModalProps) => {
           {/* 액션 버튼 */}
           <ActionButtons>
             <CallButton onClick={handleCall}>
-              <ButtonIcon>📞</ButtonIcon>
+              <ButtonIcon aria-hidden="true">
+                <FiPhone />
+              </ButtonIcon>
               <span>전화 걸기</span>
             </CallButton>
             <DirectionsButton onClick={handleDirections}>
-              <ButtonIcon>🗺️</ButtonIcon>
+              <ButtonIcon aria-hidden="true">
+                <FiNavigation />
+              </ButtonIcon>
               <span>길찾기</span>
             </DirectionsButton>
           </ActionButtons>
@@ -754,7 +777,15 @@ const PopularityBadge = styled.div`
 `;
 
 const BadgeIcon = styled.span`
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: #ffeb3b;
+  }
 `;
 
 const BadgeText = styled.span`
@@ -891,6 +922,15 @@ const NoMenuIcon = styled.div`
   font-size: 64px;
   margin-bottom: 16px;
   opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 56px;
+    height: 56px;
+    color: #ff6b35;
+  }
 `;
 
 const NoMenuTitle = styled.h3`
@@ -1162,12 +1202,30 @@ const MapPlaceholder = styled.div`
 const MapIcon = styled.div`
   font-size: 48px;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 48px;
+    height: 48px;
+    color: #ff6b35;
+  }
 `;
 
 const MapShop = styled.div`
   font-size: 32px;
   position: absolute;
   bottom: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 32px;
+    height: 32px;
+    color: #333;
+  }
 `;
 
 const StoreInfoCard = styled.div`
@@ -1221,6 +1279,14 @@ const CopyButton = styled.button`
 
 const CopyIcon = styled.span`
   font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 const LocationTag = styled.div`
@@ -1320,6 +1386,14 @@ const DirectionsButton = styled.button`
 
 const ButtonIcon = styled.span`
   font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 export default StoreDetailPage;

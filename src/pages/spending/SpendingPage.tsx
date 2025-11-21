@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
+import type { IconType } from "react-icons";
 import {
   LineChart,
   Line,
@@ -11,6 +12,15 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import {
+  PiBowlFoodFill,
+  PiBentoBoxFill,
+  PiFishSimpleFill,
+  PiPizzaFill,
+  PiCoffeeFill,
+  PiHamburgerFill,
+  PiStorefrontFill,
+} from "react-icons/pi";
 import BottomNav from "../../components/layout/BottomNav";
 import {
   getExpenditures,
@@ -146,8 +156,8 @@ const SpendingPage = () => {
       }
 
       // 일별 통계 조회
-      console.log("📊 [1/5] 일별 통계 API 호출 시작...");
-      console.log("📊 [2/5] 요청 파라미터:", { startDate, endDate });
+      console.log("[1/5] 일별 통계 API 호출 시작...");
+      console.log("[2/5] 요청 파라미터:", { startDate, endDate });
 
       try {
         const statisticsResponse = await getDailyStatistics({
@@ -155,18 +165,18 @@ const SpendingPage = () => {
           endDate,
         });
 
-        console.log("📊 [3/5] API 호출 완료! 응답 확인 중...");
-        console.log("📊 [4/5] statisticsResponse:", statisticsResponse);
+        console.log("[3/5] API 호출 완료! 응답 확인 중...");
+        console.log("[4/5] statisticsResponse:", statisticsResponse);
         console.log(
-          "📊 [4-1/5] statisticsResponse.result:",
+          " [4-1/5] statisticsResponse.result:",
           statisticsResponse?.result
         );
         console.log(
-          "📊 [4-2/5] statisticsResponse.data:",
+          " [4-2/5] statisticsResponse.data:",
           statisticsResponse?.data
         );
         console.log(
-          "📊 [4-3/5] statisticsResponse.data.dailyStatistics:",
+          " [4-3/5] statisticsResponse.data.dailyStatistics:",
           statisticsResponse?.data?.dailyStatistics
         );
 
@@ -176,59 +186,59 @@ const SpendingPage = () => {
           statisticsResponse.data &&
           statisticsResponse.data.dailyStatistics
         ) {
-          console.log("📊 [5/5] ✅ dailyStatistics 발견! 설정 중...");
+          console.log("[5/5]  dailyStatistics 발견! 설정 중...");
           console.log(
-            "📊 dailyStatistics 배열 길이:",
+            " dailyStatistics 배열 길이:",
             statisticsResponse.data.dailyStatistics.length
           );
           console.log(
-            "📊 dailyStatistics 첫 번째 항목:",
+            " dailyStatistics 첫 번째 항목:",
             statisticsResponse.data.dailyStatistics[0]
           );
           setDailyStatistics(statisticsResponse.data.dailyStatistics);
-          console.log("📊 ✅ dailyStatistics 상태 업데이트 완료!");
+          console.log("dailyStatistics 상태 업데이트 완료!");
         } else {
           console.log(
-            "📊 [5/5] ⚠️ dailyStatistics를 찾을 수 없습니다. 대체 방법 사용..."
+            "[5/5] dailyStatistics를 찾을 수 없습니다. 대체 방법 사용..."
           );
 
           // 폴백: 지출 내역에서 직접 생성
           if (expenditureResponse.data?.expenditures?.content) {
-            console.log("📊 지출 내역에서 통계 생성 시작...");
+            console.log("지출 내역에서 통계 생성 시작...");
             const dailyStats = generateDailyStatisticsFromExpenditures(
               expenditureResponse.data.expenditures.content,
               startDate,
               endDate
             );
-            console.log("📊 생성된 통계:", dailyStats);
+            console.log("생성된 통계:", dailyStats);
             setDailyStatistics(dailyStats);
-            console.log("📊 ✅ 생성된 통계로 상태 업데이트 완료!");
+            console.log("생성된 통계로 상태 업데이트 완료!");
           } else {
-            console.log("📊 지출 내역도 없음. 빈 배열 설정.");
+            console.log("지출 내역도 없음. 빈 배열 설정.");
             setDailyStatistics([]);
           }
         }
       } catch (statsErr) {
-        console.log("📊 ❌ 통계 API 호출 실패!");
-        console.error("📊 에러 상세:", statsErr);
+        console.log("통계 API 호출 실패!");
+        console.error("에러 상세:", statsErr);
 
         // 폴백: 지출 내역에서 직접 생성
         if (expenditureResponse.data?.expenditures?.content) {
-          console.log("📊 에러 발생, 지출 내역에서 통계 생성...");
+          console.log("에러 발생, 지출 내역에서 통계 생성...");
           const dailyStats = generateDailyStatisticsFromExpenditures(
             expenditureResponse.data.expenditures.content,
             startDate,
             endDate
           );
-          console.log("📊 생성된 통계:", dailyStats);
+          console.log("생성된 통계:", dailyStats);
           setDailyStatistics(dailyStats);
         } else {
-          console.log("📊 지출 내역도 없음. 빈 배열 설정.");
+          console.log("지출 내역도 없음. 빈 배열 설정.");
           setDailyStatistics([]);
         }
       }
 
-      console.log("📊 통계 처리 완료, 다음 단계로...");
+      console.log("통계 처리 완료, 다음 단계로...");
     } catch (err: any) {
       console.error("지출 데이터 로드 실패:", err);
       setError(
@@ -254,9 +264,9 @@ const SpendingPage = () => {
     };
   });
 
-  console.log("📊 최종 차트 데이터:", chartData);
-  console.log("📊 일별 통계 원본:", dailyStatistics);
-  console.log("📊 기본 일일 예산:", dailyBudget);
+  console.log("최종 차트 데이터:", chartData);
+  console.log("일별 통계 원본:", dailyStatistics);
+  console.log("기본 일일 예산:", dailyBudget);
 
   // 식사 유형 표시
   const getMealTypeLabel = (mealType: string) => {
@@ -271,17 +281,19 @@ const SpendingPage = () => {
 
   // 카테고리 아이콘
   const getCategoryIcon = (category?: string) => {
-    if (!category) return "🍽️";
-    const icons: Record<string, string> = {
-      KOREAN: "🍚",
-      CHINESE: "🥢",
-      JAPANESE: "🍣",
-      WESTERN: "🍝",
-      CAFE: "☕",
-      SNACK: "🍪",
-      CONVENIENCE: "🏪",
+    const iconMap: Record<string, IconType> = {
+      KOREAN: PiBowlFoodFill,
+      CHINESE: PiBentoBoxFill,
+      JAPANESE: PiFishSimpleFill,
+      WESTERN: PiPizzaFill,
+      CAFE: PiCoffeeFill,
+      SNACK: PiHamburgerFill,
+      CONVENIENCE: PiStorefrontFill,
+      DEFAULT: PiBowlFoodFill,
     };
-    return icons[category] || "🍽️";
+
+    const IconComponent = iconMap[category ?? "DEFAULT"] || PiBowlFoodFill;
+    return <IconComponent />;
   };
 
   // 카테고리 배경색
@@ -648,11 +660,16 @@ const IconWrapper = styled.div<{ $bgColor?: string }>`
   height: 40px;
   border-radius: 50%;
   background-color: ${(props) => props.$bgColor || "#FFF3E0"};
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  color: ${theme.colors.accent};
   margin-right: ${theme.spacing.md};
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const ExpenditureInfo = styled.div`

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
-import { FiMoreVertical, FiFilter } from "react-icons/fi";
+import { FiFilter, FiMoreVertical, FiStar, FiTrash2 } from "react-icons/fi";
 import BottomNavigation from "../../components/layout/BottomNav";
 import {
   favoriteService,
@@ -83,7 +83,9 @@ const FavoritesPage = () => {
         </LoadingContainer>
       ) : favorites.length === 0 ? (
         <EmptyContainer>
-          <EmptyIcon>⭐</EmptyIcon>
+          <EmptyIcon>
+            <FiStar />
+          </EmptyIcon>
           <EmptyTitle>즐겨찾기가 비어있습니다</EmptyTitle>
           <EmptyDescription>
             마음에 드는 가게를 즐겨찾기에 추가해보세요!
@@ -115,7 +117,7 @@ const FavoritesPage = () => {
                   <DeleteButton
                     onClick={() => handleDelete(favorite.favoriteId)}
                   >
-                    🗑️
+                    <FiTrash2 />
                   </DeleteButton>
                 </CardHeader>
 
@@ -130,7 +132,7 @@ const FavoritesPage = () => {
 
                   <MetaRow>
                     <Rating>
-                      ⭐ {favorite.reviewCount.toLocaleString()} 리뷰
+                      <FiStar /> {favorite.reviewCount.toLocaleString()} 리뷰
                     </Rating>
                     <Price>
                       평균 ₩{favorite.averagePrice.toLocaleString()}
@@ -253,6 +255,11 @@ const EmptyIcon = styled.div`
   font-size: 64px;
   margin-bottom: ${theme.spacing.lg};
   opacity: 0.5;
+
+  svg {
+    width: 64px;
+    height: 64px;
+  }
 `;
 
 const EmptyTitle = styled.h2`
@@ -366,6 +373,11 @@ const DeleteButton = styled.button`
   font-size: ${theme.typography.fontSize.lg};
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
   &:hover {
     background-color: #ffebee;
   }
@@ -411,6 +423,12 @@ const Rating = styled.span`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.xs};
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: ${theme.colors.secondary};
+  }
 `;
 
 const Price = styled.span`

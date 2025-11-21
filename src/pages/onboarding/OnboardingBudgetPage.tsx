@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import {
+  FiBell,
+  FiCoffee,
+  FiSun,
+  FiMoon,
+  FiDollarSign,
+  FiCheckCircle,
+} from "react-icons/fi";
+import { PiBowlFoodFill } from "react-icons/pi";
 import { theme } from "../../styles/theme";
 import { budgetService } from "../../services/budget.service";
 
@@ -92,7 +101,9 @@ const OnboardingBudgetPage = () => {
         <Header>
           <Title>신규 회원 목표 예산 등록</Title>
           <ProfileSection>
-            <NotificationIcon>🔔</NotificationIcon>
+            <NotificationIcon aria-label="알림">
+              <FiBell />
+            </NotificationIcon>
             <ProfileAvatar />
           </ProfileSection>
         </Header>
@@ -101,7 +112,9 @@ const OnboardingBudgetPage = () => {
 
         <MealSection>
           <MealRow>
-            <MealIcon>☕</MealIcon>
+            <MealIcon>
+              <FiCoffee />
+            </MealIcon>
             <MealLabel>아침</MealLabel>
             <BudgetInputWrapper>
               <CurrencySymbol>₩</CurrencySymbol>
@@ -117,7 +130,9 @@ const OnboardingBudgetPage = () => {
           </MealRow>
 
           <MealRow>
-            <MealIcon>☀️</MealIcon>
+            <MealIcon>
+              <FiSun />
+            </MealIcon>
             <MealLabel>점심</MealLabel>
             <BudgetInputWrapper>
               <CurrencySymbol>₩</CurrencySymbol>
@@ -133,7 +148,9 @@ const OnboardingBudgetPage = () => {
           </MealRow>
 
           <MealRow>
-            <MealIcon>🌙</MealIcon>
+            <MealIcon>
+              <FiMoon />
+            </MealIcon>
             <MealLabel>저녁</MealLabel>
             <BudgetInputWrapper>
               <CurrencySymbol>₩</CurrencySymbol>
@@ -149,7 +166,9 @@ const OnboardingBudgetPage = () => {
           </MealRow>
 
           <MealRow>
-            <MealIcon>🍽️</MealIcon>
+            <MealIcon>
+              <PiBowlFoodFill />
+            </MealIcon>
             <MealLabel>기타</MealLabel>
             <BudgetInputWrapper>
               <CurrencySymbol>₩</CurrencySymbol>
@@ -175,7 +194,12 @@ const OnboardingBudgetPage = () => {
         <SectionTitle>목표하는 월 식비 예산을 알려주세요!</SectionTitle>
 
         <MonthlySection>
-          <MonthlyLabel>💵 월간 예산</MonthlyLabel>
+          <MonthlyLabel>
+            <MonthlyLabelIcon>
+              <FiDollarSign />
+            </MonthlyLabelIcon>
+            월간 예산
+          </MonthlyLabel>
           <MonthlyDescription>
             매월 지출할 식비 한도를 설정하세요.
           </MonthlyDescription>
@@ -197,7 +221,9 @@ const OnboardingBudgetPage = () => {
         {showSuccessModal && (
           <ModalOverlay onClick={() => setShowSuccessModal(false)}>
             <ModalContent onClick={(e) => e.stopPropagation()}>
-              <ModalIcon>💰</ModalIcon>
+              <ModalIcon>
+                <FiCheckCircle />
+              </ModalIcon>
               <ModalTitle>예산 저장 완료!</ModalTitle>
               <ModalDescription>
                 입력하신 예산이 기본 예산으로 설정되었습니다.
@@ -262,8 +288,20 @@ const ProfileSection = styled.div`
 `;
 
 const NotificationIcon = styled.div`
-  font-size: ${theme.typography.fontSize.xl};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
   cursor: pointer;
+  color: #212121;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const ProfileAvatar = styled.div`
@@ -305,10 +343,20 @@ const MealRow = styled.div`
 `;
 
 const MealIcon = styled.span`
-  font-size: ${theme.typography.fontSize.xl};
   width: 32px;
+  height: 32px;
   flex-shrink: 0;
-  text-align: center;
+  border-radius: 50%;
+  background-color: #fff5f0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.colors.accent};
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 `;
 
 const MealLabel = styled.span`
@@ -394,6 +442,25 @@ const MonthlyLabel = styled.h3`
   font-weight: ${theme.typography.fontWeight.semibold};
   color: #212121;
   margin-bottom: ${theme.spacing.xs};
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
+`;
+
+const MonthlyLabelIcon = styled.span`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #fff5f0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.colors.accent};
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 `;
 
 const MonthlyDescription = styled.p`
@@ -504,8 +571,20 @@ const ModalContent = styled.div`
 `;
 
 const ModalIcon = styled.div`
-  font-size: 64px;
-  margin-bottom: ${theme.spacing.lg};
+  width: 80px;
+  height: 80px;
+  margin: 0 auto ${theme.spacing.lg};
+  border-radius: 50%;
+  background-color: #fff5f0;
+  color: ${theme.colors.accent};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 40px;
+    height: 40px;
+  }
 `;
 
 const ModalTitle = styled.h3`

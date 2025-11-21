@@ -110,7 +110,7 @@ export const useCartStore = create<CartStore>()(
             );
             console.log("- isOverBudget:", cart.budgetInfo.isOverBudget);
           } else {
-            console.warn("⚠️ budgetInfo가 응답에 없습니다!");
+            console.warn("[CartStore] budgetInfo가 응답에 없습니다.");
           }
 
           set({
@@ -224,7 +224,7 @@ export const useCartStore = create<CartStore>()(
 
       // 수량 변경
       updateQuantity: async (cartItemId, quantity) => {
-        console.log("🔄 [CartStore] updateQuantity 호출:", {
+        console.log("[CartStore] updateQuantity 호출:", {
           cartItemId,
           quantity,
         });
@@ -234,12 +234,12 @@ export const useCartStore = create<CartStore>()(
             cartItemId,
             quantity
           );
-          console.log("🔄 [CartStore] updateQuantity 성공:", response);
-          console.log("🔄 [CartStore] 장바구니 재조회 시작");
+          console.log("[CartStore] updateQuantity 성공:", response);
+          console.log("[CartStore] 장바구니 재조회 시작");
           await get().fetchCart();
           set({ isLoading: false });
         } catch (error: any) {
-          console.error("🔄 [CartStore] updateQuantity 실패:", {
+          console.error("[CartStore] updateQuantity 실패:", {
             error,
             message: error.message,
             response: error.response?.data,
@@ -256,26 +256,26 @@ export const useCartStore = create<CartStore>()(
 
       // 상품 삭제
       removeItem: async (cartItemId) => {
-        console.log("🗑️ [CartStore] removeItem 호출:", { cartItemId });
+        console.log("[CartStore] removeItem 호출:", { cartItemId });
         set({ isLoading: true, error: null });
         try {
           await cartService.removeCartItem(cartItemId);
-          console.log("🗑️ [CartStore] removeItem 성공, 장바구니 재조회");
+          console.log("[CartStore] removeItem 성공, 장바구니 재조회");
           await get().fetchCart();
           set({ isLoading: false });
         } catch (error: any) {
-          console.error("🗑️ [CartStore] removeItem 실패:", error);
+          console.error("[CartStore] removeItem 실패:", error);
           set({ error: error.message || "상품 삭제 실패", isLoading: false });
         }
       },
 
       // 장바구니 비우기
       clearCart: async () => {
-        console.log("🧹 [CartStore] clearCart 호출");
+        console.log("[CartStore] clearCart 호출");
         set({ isLoading: true, error: null });
         try {
           await cartService.clearCart();
-          console.log("🧹 [CartStore] clearCart 성공");
+          console.log("[CartStore] clearCart 성공");
           set({
             items: [],
             storeId: null,
@@ -284,7 +284,7 @@ export const useCartStore = create<CartStore>()(
             isLoading: false,
           });
         } catch (error: any) {
-          console.error("🧹 [CartStore] clearCart 실패:", error);
+          console.error("[CartStore] clearCart 실패:", error);
           set({
             error: error.message || "장바구니 비우기 실패",
             isLoading: false,
@@ -294,7 +294,7 @@ export const useCartStore = create<CartStore>()(
 
       // 체크아웃
       checkout: async (mealType, discount = 0, expendedDate, expendedTime) => {
-        console.log("💳 [CartStore] checkout 호출:", {
+        console.log("[CartStore] checkout 호출:", {
           mealType,
           discount,
           expendedDate,
@@ -327,7 +327,7 @@ export const useCartStore = create<CartStore>()(
               now.getMinutes()
             ).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
 
-          console.log("💳 [CartStore] checkout 파라미터:", {
+          console.log("[CartStore] checkout 파라미터:", {
             storeId,
             mealType,
             discount,
@@ -343,7 +343,7 @@ export const useCartStore = create<CartStore>()(
             expendedTime: timeStr,
           });
 
-          console.log("💳 [CartStore] checkout 성공:", {
+          console.log("[CartStore] checkout 성공:", {
             expenditureId: response.expenditureId,
             finalAmount: response.finalAmount,
             storeName: response.storeName,
@@ -360,7 +360,7 @@ export const useCartStore = create<CartStore>()(
 
           return response;
         } catch (error: any) {
-          console.error("💳 [CartStore] checkout 실패:", error);
+          console.error("[CartStore] checkout 실패:", error);
           set({ error: error.message || "체크아웃 실패", isLoading: false });
           throw error;
         }
