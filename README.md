@@ -1,156 +1,83 @@
-# 🍚 SmartMealTable (알뜰식탁) - Frontend
+# 알뜰식탁 (SmartMealTable) Frontend
 
-대학생 및 1인 가구를 위한 개인 맞춤형 식비 예산 관리 및 혜택 기반 메뉴/가게 추천 PWA 웹 서비스 **알뜰식탁(SmartMealTable)**의 프론트엔드 저장소입니다.
+알뜰식탁은 대학생과 1인 가구를 위한 개인 맞춤형 식비 예산 관리 및 혜택 기반 메뉴·가게 추천 PWA 웹 서비스입니다. 이 저장소는 해당 서비스의 프론트엔드 애플리케이션을 담고 있습니다.
 
-사용자의 일간/월간 식비 예산, 개인 음식 취향, 위치, 소속(학생/기업 등) 혜택 정보를 종합하여 최적의 식단과 가게를 추천하고, 드래그 앤 드롭 장바구니 및 지출 분석 기능을 제공합니다.
+사용자는 온보딩에서 프로필, 주소, 예산, 음식 취향, 약관 동의를 설정할 수 있으며, 이후 예산·지출·추천·장바구니·즐겨찾기 기능을 이용할 수 있습니다.
 
----
+## 링크
 
-## 🔗 주요 링크
+- [서비스](https://smartmealtable.netlify.app)
+- [회원가입 프로세스 시연](https://drive.google.com/file/d/1sTLYnne4dDMCAZ8pLzUhc__oUtmpEb-D/view?usp=drive_link)
+- [전체 기능 시연](https://drive.google.com/file/d/17b0PxYFIEindIAHc7txl80GP7VTkQl-W/view?usp=drive_link)
 
-- **🌐 웹 서비스 배포**: [https://smartmealtable.netlify.app](https://smartmealtable.netlify.app)
-- **🎥 회원가입 프로세스 시연**: [Google Drive 시연 영상 1](https://drive.google.com/file/d/1sTLYnne4dDMCAZ8pLzUhc__oUtmpEb-D/view?usp=drive_link)
-- **🎥 전체 시스템 기능 시연**: [Google Drive 시연 영상 2](https://drive.google.com/file/d/17b0PxYFIEindIAHc7txl80GP7VTkQl-W/view?usp=drive_link)
+## 주요 기능
 
----
+- 이메일과 Google·Kakao OAuth 콜백을 통한 인증, 인증 후 온보딩 흐름
+- 월간·일간 예산 조회 및 수정, 지출 내역의 등록·조회·수정·삭제와 일별 통계
+- 조건에 따른 메뉴·가게 추천, 가게 및 메뉴 상세 화면
+- 장바구니 항목 관리와 장바구니 기반 지출 등록
+- 주소 관리와 네이버 지도·Geocoder를 활용한 주소 선택
+- 음식 취향, 소속, 프로필, 즐겨찾기, 설정 관리
 
-## 🛠 기술 스택
+## 기술 구성
 
-### Framework & Core
-- **React 19**
-- **TypeScript**
-- **Vite 6**
+| 구분 | 사용 기술 |
+| --- | --- |
+| UI | React 19, TypeScript, Styled Components, React Icons |
+| 빌드 | Vite 6 |
+| 라우팅 | React Router 7 |
+| 상태 관리 | Zustand |
+| API 통신 | Axios |
+| 지도 | React Naver Maps |
+| 시각화·상호작용 | Recharts, dnd-kit, React DnD |
+| PWA | vite-plugin-pwa |
+| 배포 설정 | Netlify |
 
-### State Management & Styling
-- **Zustand** (전역 상태 관리: 인증, 장바구니)
-- **Styled-Components** (CSS-in-JS, Design System Token & GlobalStyle)
+## 프로젝트 구조
 
-### Routing & Network
-- **React Router v7**
-- **Axios** (JWT Interceptor, Token Auto Refresh)
-
-### Interactive UI & Visualization
-- **@dnd-kit** (`core`, `sortable`, `utilities`) - 드래그 앤 드롭 장바구니 UI
-- **Recharts** - 예산 대비 지출 통계 차트 시각화
-- **React Naver Maps** & Geocoder - 위치 기반 식당 검색 및 주소 변환
-- **React Icons**
-
-### PWA & Deployment
-- **Vite Plugin PWA** (Service Worker, Offline Caching, Web App Manifest)
-- **Netlify**
-
----
-
-## 💡 주요 기능
-
-### 1. 회원가입 및 맞춤 온보딩 (Auth & Onboarding)
-- 이메일 회원가입/로그인 및 **Kakao / Google OAuth 2.0** 소셜 로그인 지원
-- 단계별 온보딩 프로세스:
-  1. 프로필 입력 및 소속(학교/회사 등) 선택
-  2. 위치/주소 설정 (네이버 지도 Geocoder 연동)
-  3. 월별 / 일별 식비 목표 예산 설정
-  4. 음식 선호도 (카테고리, 매운맛 레벨, 선호 태그) 및 알레르기 정보 등록
-  5. 약관 동의
-
-### 2. 예산 기반 가성비 메뉴 & 가게 추천 (Recommendation Engine)
-- 설정한 남은 예산과 거리 범위 내에서 이용 가능한 메뉴 추천
-- 소속(학생 할인, 제휴 혜택 등)에 따른 맞춤형 혜택 정보 적용
-- 카테고리별 / 거리별 / 가격대별 식당 및 메뉴 필터링
-
-### 3. 드래그 앤 드롭 장바구니 & 식단 조합 (DnD Cart)
-- `@dnd-kit` 기반의 직관적인 메뉴 조합 및 배치 기능
-- 장바구니 담기 시 실시간 예산 차감 계산 및 과소비 경고 UI 제공
-
-### 4. 지출 내역 및 예산 분석 (Budget & Expenditure Analytics)
-- 일간/월간 잔여 예산 자동 계산 및 소비 상태 리포트
-- Recharts를 활용한 카테고리별 지출 분포 시각화
-- 결제 내역 직접 등록, 수정, 상세 보기 기능
-
-### 5. 위치 기반 식당 조회 & 마이페이지
-- 네이버 지도 연동으로 내 위치 주변 식당 탐색 및 경로 파악
-- 자주 찾는 단골 식당/메뉴 즐겨찾기 관리
-- 소속 변경, 취향 갱신, 예산 재설정 기능
-
----
-
-## 📁 프로젝트 구조
-
+```mermaid
+flowchart TD
+    app["src/App.tsx"] --> pages["pages\n라우트별 화면"]
+    app --> layout["components/layout\n공통 레이아웃과 하단 내비게이션"]
+    pages --> featureComponents["components\n주소·홈·공통 UI·지도"]
+    pages --> services["services\n도메인별 API 호출"]
+    services --> api["services/api.ts\nAxios 인스턴스와 인증 인터셉터"]
+    pages --> stores["store\n인증·장바구니 상태"]
+    app --> styles["styles\n테마와 전역 스타일"]
+    services --> types["types\nAPI 타입"]
+    pages --> utils["utils\nOAuth·온보딩 보조 로직"]
 ```
+
+```text
 src/
-├── assets/             # 정적 리소스 (이미지, 아이콘 등)
-├── components/         # 재사용 가능한 공통 UI 컴포넌트
-│   ├── address/        # 주소 검색, 지도 연동 컴포넌트
-│   └── ...
-├── pages/              # 라우트별 페이지 컴포넌트
-│   ├── auth/           # 로그인, 회원가입, OAuth 콜백
-│   ├── onboarding/     # 6단계 온보딩 플로우
-│   ├── home/           # 홈 메인 대시보드
-│   ├── recommendation/ # 맞춤 메뉴/식당 추천
-│   ├── store/          # 가게 상세 정보
-│   ├── menu/           # 메뉴 상세 정보
-│   ├── cart/           # DnD 장바구니 및 식단 구성
-│   ├── spending/       # 지출 내역 및 지출 등록/상세
-│   ├── favorites/      # 즐겨찾기 목록
-│   ├── budget/         # 예산 관리
-│   ├── preference/     # 음식 취향 관리
-│   └── profile/        # 마이페이지 및 소속 관리
-├── services/           # REST API 연동 모듈 (Axios 인스턴스, 서비스별 API)
-├── store/              # Zustand 전역 상태 (authStore, cartStore)
-├── styles/             # GlobalStyle, Theme 디자인 토큰
-├── types/              # TypeScript 인터페이스 및 타입 정의
-└── utils/              # OAuth 헬퍼, 포맷터, 공통 유틸 함수
+├── components/  공통 UI, 레이아웃, 주소·지도, 홈 화면 컴포넌트
+├── pages/       인증, 온보딩, 홈, 추천, 장바구니, 지출 등 화면
+├── services/    인증·예산·지출·추천·가게 등 API 모듈
+├── store/       Zustand 기반 인증 및 장바구니 상태
+├── styles/      테마와 전역 스타일
+├── types/       API 응답과 도메인 타입
+└── utils/       OAuth 및 온보딩 관련 유틸리티
 ```
 
----
+## 라우팅과 접근 제어
 
-## 🔍 주요 기술적 구현 포인트
+`src/App.tsx`에서 브라우저 라우터를 구성합니다. 인증이 필요한 화면은 `ProtectedRoute`로 감싸며, 인증되지 않은 사용자는 로그인 선택 화면으로 이동합니다. 온보딩이 완료되지 않은 사용자는 온보딩 프로필 화면으로 안내됩니다.
 
-1. **JWT 토큰 기반 인증 및 자동 갱신**
-   - `Axios Interceptor`를 활용하여 요청 시 `Authorization: Bearer` 헤더를 자동 주입하며, Access Token 만료 시 Refresh Token을 통한 자동 재발급을 처리하여 매끄러운 로그인 세션을 유지합니다.
+## API 통신
 
-2. **`@dnd-kit`을 활용한 예산 반응형 장바구니**
-   - 터치 및 마우스 이벤트를 지원하는 드래그 앤 드롭 인터페이스로 식단 메뉴 순서를 변경하거나 장바구니 항목을 직관적으로 관리할 수 있습니다.
+`src/services/api.ts`는 Axios 인스턴스를 제공합니다. 요청 시 로컬 스토리지의 액세스 토큰을 `Authorization` 헤더에 추가하고, 401 응답에서는 리프레시 토큰으로 토큰 갱신을 시도합니다. API 기본 주소는 `VITE_API_BASE_URL` 환경 변수로 설정하며, 개발 환경에서 이 값이 없으면 `http://localhost:8080`을 사용합니다.
 
-3. **네이버 지도 Geocoder 연동 위치 탐색**
-   - `react-naver-maps`와 submodules(`geocoder`)를 활용해 사용자 현재 위치 좌표를 도로명 주소로 변환하고 주변 가성비 식당을 위치 기반으로 렌더링합니다.
+도메인별 요청 형식과 응답은 [API_SPECIFICATION.md](./API_SPECIFICATION.md)에서 확인할 수 있습니다.
 
-4. **PWA (Progressive Web App) 최적화**
-   - `vite-plugin-pwa`를 도입하여 오프라인 캐싱 및 모바일 홈 화면 추가(Add to Home Screen)를 지원하며 모바일 앱과 유사한 사용성을 제공합니다.
+## PWA와 배포
 
----
+Vite PWA 플러그인으로 서비스 워커와 웹 앱 매니페스트를 구성합니다. 아이콘은 `public/` 디렉터리에 두며, PWA 설정은 `vite.config.ts`에 있습니다. Netlify 배포 시에는 `netlify.toml`에서 `npm run build`로 빌드한 `dist` 디렉터리를 배포하도록 설정되어 있습니다.
 
-## 🚀 시작 가이드
-
-### 1. Repository Clone & Dependency Install
+## 스크립트
 
 ```bash
-git clone https://github.com/Picance/SmartMealTable-Front.git
-cd SmartMealTable-Front
-npm install
-```
-
-### 2. Environment Variables (.env) 설정
-
-루트 디렉토리에 `.env` 파일을 생성하고 필요한 환경 변수를 설정합니다.
-
-```env
-VITE_API_BASE_URL=https://your-api-server.com/api/v1
-VITE_NAVER_MAP_CLIENT_ID=your_naver_map_client_id
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
-VITE_GOOGLE_REDIRECT_URI=http://localhost:5173/oauth/google/callback
-VITE_KAKAO_CLIENT_ID=your_kakao_client_id
-VITE_KAKAO_REDIRECT_URI=http://localhost:5173/oauth/kakao/callback
-```
-
-### 3. 개발 서버 실행
-
-```bash
-npm run dev
-```
-
-### 4. 프로덕션 빌드 및 미리보기
-
-```bash
-npm run build
-npm run preview
+npm run dev      # 개발 서버 실행
+npm run build    # 프로덕션 빌드
+npm run preview  # 빌드 결과 미리보기
+npm run lint     # ESLint 검사
 ```
