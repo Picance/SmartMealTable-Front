@@ -284,7 +284,7 @@ const OnboardingAddressPage = () => {
     switch (type) {
       case "HOME":
         return <FiHome />;
-      case "WORK":
+      case "OFFICE":
         return <FiBriefcase />;
       case "SCHOOL":
         return <FiBook />;
@@ -298,7 +298,7 @@ const OnboardingAddressPage = () => {
     switch (type) {
       case "HOME":
         return "집";
-      case "WORK":
+      case "OFFICE":
         return "직장";
       case "SCHOOL":
         return "학교";

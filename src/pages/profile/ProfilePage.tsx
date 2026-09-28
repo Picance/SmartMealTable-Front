@@ -22,11 +22,23 @@ import {
   PiScalesFill,
 } from "react-icons/pi";
 import BottomNavigation from "../../components/layout/BottomNav";
-import { getMyProfile, updateNickname } from "../../services/profile.service";
+import {
+  changePassword,
+  getMyProfile,
+  updateNickname,
+  updateRecommendationType,
+} from "../../services/profile.service";
 import { authService } from "../../services/auth.service";
 import { useAuthStore } from "../../store/authStore";
 import { useCartStore } from "../../store/cartStore";
-import type { ProfileResponse } from "../../services/profile.service";
+import type {
+  ProfileResponse,
+  RecommendationType,
+} from "../../services/profile.service";
+
+// 백엔드 ChangePasswordRequest와 같은 규칙: 8-20자, 영문·숫자·특수문자 포함
+const PASSWORD_PATTERN =
+  /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,20}$/;
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -50,9 +62,8 @@ const ProfilePage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   // 음식 추천 유형
-  const [recommendationType, setRecommendationType] = useState<
-    "SAVING" | "ADVENTURE" | "BALANCED"
-  >("BALANCED");
+  const [recommendationType, setRecommendationType] =
+    useState<RecommendationType>("BALANCED");
 
   // 프로필 조회
   useEffect(() => {
@@ -93,19 +104,58 @@ const ProfilePage = () => {
     }
   };
 
-  const handlePasswordChange = () => {
-    if (currentPassword && newPassword && confirmPassword) {
-      if (newPassword === confirmPassword) {
-        // TODO: API 호출
-        setShowPasswordModal(false);
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        alert("비밀번호가 변경되었습니다.");
-      } else {
-        alert("새 비밀번호가 일치하지 않습니다.");
-      }
+  const handlePasswordChange = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert("비밀번호를 모두 입력해주세요.");
+      return;
     }
+    if (newPassword !== confirmPassword) {
+      alert("새 비밀번호가 일치하지 않습니다.");
+      return;
+    }
+    if (!PASSWORD_PATTERN.test(newPassword)) {
+      alert("비밀번호는 8-20자이며 영문, 숫자, 특수문자를 포함해야 합니다.");
+      return;
+    }
+
+    try {
+      await changePassword(currentPassword, newPassword);
+      setShowPasswordModal(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      alert("비밀번호가 변경되었습니다.");
+    } catch (error: any) {
+      alert(
+        error.response?.data?.error?.message || "비밀번호 변경에 실패했습니다."
+      );
+    }
+  };
+
+  const handleRecommendationTypeSave = async () => {
+    try {
+      await updateRecommendationType(recommendationType);
+      if (user) {
+        setUser({ ...user, recommendationType });
+      }
+      setShowRecommendationModal(false);
+      alert(
+        `${getRecommendationTypeKorean(recommendationType)} 유형이 저장되었습니다.`
+      );
+    } catch (error: any) {
+      alert(
+        error.response?.data?.error?.message ||
+          "추천 유형을 저장하지 못했습니다."
+      );
+    }
+  };
+
+  // 저장하지 않고 닫으면 서버에 저장된 유형으로 되돌린다
+  const closeRecommendationModal = () => {
+    if (user) {
+      setRecommendationType(user.recommendationType);
+    }
+    setShowRecommendationModal(false);
   };
 
   const clearLocalUserData = () => {
@@ -166,9 +216,9 @@ const ProfilePage = () => {
   // 추천 타입 한글 변환
   const getRecommendationTypeKorean = (type: string) => {
     switch (type) {
-      case "SAVING":
+      case "SAVER":
         return "절약형";
-      case "ADVENTURE":
+      case "ADVENTURER":
         return "모험형";
       case "BALANCED":
         return "균형형";
@@ -443,9 +493,7 @@ const ProfilePage = () => {
 
       {/* 음식 추천 시스템 선택 모달 */}
       {showRecommendationModal && (
-        <RecommendationModalOverlay
-          onClick={() => setShowRecommendationModal(false)}
-        >
+        <RecommendationModalOverlay onClick={closeRecommendationModal}>
           <RecommendationModalContent onClick={(e) => e.stopPropagation()}>
             {/* 상단 텍스트 */}
             <TopSection>
@@ -468,8 +516,8 @@ const ProfilePage = () => {
               {/* 옵션들 */}
               <OptionsList>
                 <OptionCard
-                  $selected={recommendationType === "SAVING"}
-                  onClick={() => setRecommendationType("SAVING")}
+                  $selected={recommendationType === "SAVER"}
+                  onClick={() => setRecommendationType("SAVER")}
                 >
                   <OptionIcon>
                     <PiPiggyBankFill />
@@ -483,8 +531,8 @@ const ProfilePage = () => {
                 </OptionCard>
 
                 <OptionCard
-                  $selected={recommendationType === "ADVENTURE"}
-                  onClick={() => setRecommendationType("ADVENTURE")}
+                  $selected={recommendationType === "ADVENTURER"}
+                  onClick={() => setRecommendationType("ADVENTURER")}
                 >
                   <OptionIcon>
                     <FiCompass />
@@ -513,17 +561,7 @@ const ProfilePage = () => {
                 </OptionCard>
               </OptionsList>
 
-              <SaveRecommendationButton
-                onClick={() => {
-                  // TODO: 추천 타입 변경 API 추가 필요
-                  setShowRecommendationModal(false);
-                  alert(
-                    `${getRecommendationTypeKorean(
-                      recommendationType
-                    )} 유형이 저장되었습니다.`
-                  );
-                }}
-              >
+              <SaveRecommendationButton onClick={handleRecommendationTypeSave}>
                 저장하기
               </SaveRecommendationButton>
             </MainSection>

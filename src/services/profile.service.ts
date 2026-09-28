@@ -1,5 +1,8 @@
 import apiClient from "./api";
 
+// 추천 유형 (백엔드 RecommendationType enum과 동일)
+export type RecommendationType = "SAVER" | "ADVENTURER" | "BALANCED";
+
 // 프로필 타입 정의
 export interface ProfileResponse {
   result: string;
@@ -8,7 +11,7 @@ export interface ProfileResponse {
     nickname: string;
     email: string;
     name: string;
-    recommendationType: "SAVING" | "ADVENTURE" | "BALANCED";
+    recommendationType: RecommendationType;
     group: {
       groupId: number;
       name: string;
@@ -79,5 +82,27 @@ export const updateProfile = async (
     "/api/v1/members/me",
     { groupId }
   );
+  return response.data;
+};
+
+// 추천 유형 변경
+export const updateRecommendationType = async (
+  recommendationType: RecommendationType
+) => {
+  const response = await apiClient.put("/api/v1/recommendations/type", {
+    recommendationType,
+  });
+  return response.data;
+};
+
+// 비밀번호 변경
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+) => {
+  const response = await apiClient.put("/api/v1/members/me/password", {
+    currentPassword,
+    newPassword,
+  });
   return response.data;
 };

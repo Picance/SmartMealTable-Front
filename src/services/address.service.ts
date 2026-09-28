@@ -1,7 +1,7 @@
 import { api } from "./api";
 
-// 주소 유형
-export type AddressType = "HOME" | "WORK" | "SCHOOL" | "ETC";
+// 주소 유형 (백엔드 AddressType enum과 동일)
+export type AddressType = "HOME" | "OFFICE" | "SCHOOL" | "ETC";
 
 // 주소 정보 타입
 export interface Address {

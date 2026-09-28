@@ -3,6 +3,18 @@ import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiBell, FiChevronLeft } from "react-icons/fi";
+import {
+  addressService,
+  type AddressType,
+} from "../../services/address.service";
+
+const ADDRESS_TYPE_VALUE: Record<"집" | "직장" | "학교" | "기타", AddressType> =
+  {
+    집: "HOME",
+    직장: "OFFICE",
+    학교: "SCHOOL",
+    기타: "ETC",
+  };
 
 const AddressDetailPage = () => {
   const navigate = useNavigate();
@@ -22,15 +34,39 @@ const AddressDetailPage = () => {
   const [roadAddress] = useState(state?.roadAddress || "");
   const [jibunAddress] = useState(state?.jibunAddress || "");
   const [detailAddress, setDetailAddress] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!nickname.trim()) {
       alert("주소 별칭을 입력해주세요.");
       return;
     }
-    // TODO: API 호출
-    alert("주소가 저장되었습니다.");
-    navigate("/address/management");
+    if (!roadAddress || state?.lat === undefined || state?.lng === undefined) {
+      alert("지도에서 위치를 먼저 선택해주세요.");
+      navigate("/address/map");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await addressService.createAddress({
+        addressAlias: nickname.trim(),
+        addressType: ADDRESS_TYPE_VALUE[addressType],
+        streetNameAddress: roadAddress,
+        lotNumberAddress: jibunAddress,
+        detailedAddress: detailAddress.trim() || undefined,
+        latitude: state.lat,
+        longitude: state.lng,
+      });
+      alert("주소가 저장되었습니다.");
+      navigate("/address/management");
+    } catch (error: any) {
+      alert(
+        error.response?.data?.error?.message || "주소를 저장하지 못했습니다."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -118,7 +154,9 @@ const AddressDetailPage = () => {
         </FormGroup>
 
         {/* 저장 버튼 */}
-        <SaveButton onClick={handleSave}>저장하기</SaveButton>
+        <SaveButton onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "저장 중..." : "저장하기"}
+        </SaveButton>
       </Content>
     </Container>
   );

@@ -34,8 +34,8 @@ const AddressMapPage = () => {
     // 선택된 위치 정보 전달
     navigate("/address/detail", {
       state: {
-        roadAddress: selectedLocation.address,
-        jibunAddress: selectedLocation.address,
+        roadAddress: selectedLocation.roadAddress || selectedLocation.address,
+        jibunAddress: selectedLocation.jibunAddress || selectedLocation.address,
         lat: selectedLocation.lat,
         lng: selectedLocation.lng,
       },

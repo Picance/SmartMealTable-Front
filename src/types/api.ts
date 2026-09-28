@@ -93,7 +93,7 @@ export interface OnboardingProfileResponse {
 
 export interface AddressRequest {
   addressAlias: string;
-  addressType: "HOME" | "WORK" | "ETC";
+  addressType: "HOME" | "OFFICE" | "SCHOOL" | "ETC";
   streetNameAddress: string;
   lotNumberAddress?: string;
   detailedAddress?: string;

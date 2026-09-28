@@ -17,10 +17,25 @@ export interface CategoryPreferenceResponse {
   updatedAt: string;
 }
 
+// 내 선호도 조회 응답 (카테고리 선호만 사용)
+export interface MyPreferencesResponse {
+  categoryPreferences: Array<{
+    categoryId: number;
+    categoryName: string;
+    weight: number;
+  }>;
+}
+
 export const categoryService = {
   // 카테고리 목록 조회
   async getCategories(): Promise<ApiResponse<CategoryListResponse>> {
     const response = await api.get("/api/v1/categories");
+    return response.data;
+  },
+
+  // 내 카테고리 선호도 조회
+  async getMyPreferences(): Promise<ApiResponse<MyPreferencesResponse>> {
+    const response = await api.get("/api/v1/members/me/preferences");
     return response.data;
   },
 

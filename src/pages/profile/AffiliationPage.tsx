@@ -1,97 +1,131 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiChevronLeft, FiX } from "react-icons/fi";
+import { onboardingService } from "../../services/onboarding.service";
+import { getMyProfile, updateProfile } from "../../services/profile.service";
+import type { Group } from "../../types/api";
 
-// 임시 학교 데이터
-const SCHOOLS = [
-  {
-    id: 1,
-    address: "서울특별시 공릉동 어쩌구",
-    name: "서울과학기술대학교",
-    type: "대학교(4년제)",
-  },
-  {
-    id: 2,
-    address: "서울특별시 화랑로 어쩌구",
-    name: "삼육대학교",
-    type: "대학교(4년제)",
-  },
-  {
-    id: 3,
-    address: "서울특별시 노원로 어쩌구",
-    name: "서울여자대학교",
-    type: "대학교(4년제)",
-  },
-  {
-    id: 4,
-    address: "서울특별시 화랑미석로 어쩌구",
-    name: "광운대학교",
-    type: "대학교(4년제)",
-  },
-  {
-    id: 5,
-    address: "서울특별시 성북구 어쩌구",
-    name: "고려대학교",
-    type: "대학교(4년제)",
-  },
-];
+// 소속 변경 API는 groupId가 필수라서 '해당없음'은 선택지에 두지 않는다
+type AffiliationType = "학생" | "직장인";
+
+const GROUP_TYPE: Record<AffiliationType, Group["type"]> = {
+  학생: "UNIVERSITY",
+  직장인: "COMPANY",
+};
+
+const GROUP_TYPE_LABEL: Record<Group["type"], string> = {
+  UNIVERSITY: "대학교",
+  COMPANY: "회사",
+  OTHER: "기타",
+};
 
 const AffiliationPage = () => {
   const navigate = useNavigate();
 
   // 소속 집단
-  const [affiliationType, setAffiliationType] = useState<
-    "학생" | "직장인" | "해당없음"
-  >("학생");
+  const [affiliationType, setAffiliationType] =
+    useState<AffiliationType>("학생");
+  const targetLabel = affiliationType === "학생" ? "학교" : "회사";
 
-  // 학교 검색
-  const [schoolSearchQuery, setSchoolSearchQuery] = useState("");
-  const [selectedSchool, setSelectedSchool] =
-    useState<string>("서울과학기술대학교");
-  const [selectedSchoolAddress, setSelectedSchoolAddress] =
-    useState<string>("서울특별시 노원구 공릉동 어쩌구");
+  // 선택한 소속
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // 모달
-  const [showSchoolModal, setShowSchoolModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [modalSearchQuery, setModalSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<typeof SCHOOLS>([]);
+  const [searchResults, setSearchResults] = useState<Group[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // 학교 검색 (페이지 내)
-  const handleSchoolSearch = () => {
-    if (schoolSearchQuery.trim()) {
-      setShowSchoolModal(true);
-      setModalSearchQuery(schoolSearchQuery);
-      // 검색 수행
-      const results = SCHOOLS.filter((school) =>
-        school.name.includes(schoolSearchQuery)
+  // 현재 소속 불러오기
+  useEffect(() => {
+    const fetchCurrentGroup = async () => {
+      try {
+        const response = await getMyProfile();
+        const group = response.data.group;
+        if (!group) return;
+
+        const type = group.type as Group["type"];
+        setSelectedGroup({ ...group, type, address: "" });
+        setSearchQuery(group.name);
+        if (type === "COMPANY") {
+          setAffiliationType("직장인");
+        }
+      } catch (error) {
+        alert("소속 정보를 불러오지 못했습니다.");
+      }
+    };
+
+    fetchCurrentGroup();
+  }, []);
+
+  const searchGroups = async (keyword: string) => {
+    if (!keyword.trim()) return;
+
+    setIsSearching(true);
+    try {
+      const response = await onboardingService.searchGroups(
+        keyword.trim(),
+        GROUP_TYPE[affiliationType]
       );
-      setSearchResults(results);
+      setSearchResults(response.data?.content ?? []);
+    } catch (error) {
+      setSearchResults([]);
+      alert(`${targetLabel} 검색에 실패했습니다.`);
+    } finally {
+      setIsSearching(false);
     }
   };
 
-  // 모달 내 검색
-  const handleModalSearch = () => {
-    const results = SCHOOLS.filter((school) =>
-      school.name.includes(modalSearchQuery)
-    );
-    setSearchResults(results);
+  // 페이지 내 검색
+  const handleSearch = () => {
+    if (!searchQuery.trim()) return;
+
+    setModalSearchQuery(searchQuery);
+    setShowSearchModal(true);
+    searchGroups(searchQuery);
   };
 
-  // 학교 선택
-  const handleSelectSchool = (school: (typeof SCHOOLS)[0]) => {
-    setSelectedSchool(school.name);
-    setSelectedSchoolAddress(school.address);
-    setSchoolSearchQuery(school.name);
-    setShowSchoolModal(false);
+  // 유형을 바꾸면 이전 선택은 비운다
+  const handleTypeChange = (type: AffiliationType) => {
+    if (type === affiliationType) return;
+
+    setAffiliationType(type);
+    setSelectedGroup(null);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  // 소속 선택
+  const handleSelectGroup = (group: Group) => {
+    setSelectedGroup(group);
+    setSearchQuery(group.name);
+    setShowSearchModal(false);
   };
 
   // 저장
-  const handleSave = () => {
-    // TODO: API 호출
-    alert("소속 정보가 저장되었습니다.");
-    navigate(-1);
+  const handleSave = async () => {
+    if (!selectedGroup) {
+      alert(`소속 ${targetLabel}를 검색해서 선택해주세요.`);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updateProfile(selectedGroup.groupId);
+      alert("소속 정보가 저장되었습니다.");
+      navigate(-1);
+    } catch (error: any) {
+      alert(
+        error.response?.data?.error?.message ||
+          "소속 정보를 저장하지 못했습니다."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -111,63 +145,62 @@ const AffiliationPage = () => {
           <ButtonGroup>
             <TypeButton
               $active={affiliationType === "학생"}
-              onClick={() => setAffiliationType("학생")}
+              onClick={() => handleTypeChange("학생")}
             >
               학생
             </TypeButton>
             <TypeButton
               $active={affiliationType === "직장인"}
-              onClick={() => setAffiliationType("직장인")}
+              onClick={() => handleTypeChange("직장인")}
             >
               직장인
-            </TypeButton>
-            <TypeButton
-              $active={affiliationType === "해당없음"}
-              onClick={() => setAffiliationType("해당없음")}
-            >
-              해당없음
             </TypeButton>
           </ButtonGroup>
         </Section>
 
-        {/* 소속 학교 검색 */}
-        {affiliationType === "학생" && (
-          <Section>
-            <SectionTitle>소속 학교 검색</SectionTitle>
-            <SearchRow>
-              <SearchInput
-                type="text"
-                placeholder="서울과학기술대학교"
-                value={schoolSearchQuery}
-                onChange={(e) => setSchoolSearchQuery(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleSchoolSearch();
-                  }
-                }}
-              />
-              <SearchButton onClick={handleSchoolSearch}>검색</SearchButton>
-            </SearchRow>
-            {selectedSchool && (
-              <SelectedSchoolInfo>{selectedSchoolAddress}</SelectedSchoolInfo>
-            )}
-          </Section>
-        )}
+        {/* 소속 학교/회사 검색 */}
+        <Section>
+          <SectionTitle>소속 {targetLabel} 검색</SectionTitle>
+          <SearchRow>
+            <SearchInput
+              type="text"
+              placeholder={
+                affiliationType === "학생" ? "서울과학기술대학교" : "회사명"
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
+            />
+            <SearchButton onClick={handleSearch}>검색</SearchButton>
+          </SearchRow>
+          {selectedGroup && (
+            <SelectedSchoolInfo>
+              선택한 소속: {selectedGroup.name}
+              {selectedGroup.address && ` (${selectedGroup.address})`}
+            </SelectedSchoolInfo>
+          )}
+        </Section>
 
         {/* 저장 버튼 */}
-        <SaveButton onClick={handleSave}>저장</SaveButton>
+        <SaveButton onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "저장 중..." : "저장"}
+        </SaveButton>
       </Content>
 
-      {/* 학교 찾기 모달 */}
-      {showSchoolModal && (
-        <ModalOverlay onClick={() => setShowSchoolModal(false)}>
+      {/* 학교/회사 찾기 모달 */}
+      {showSearchModal && (
+        <ModalOverlay onClick={() => setShowSearchModal(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <BackButtonModal onClick={() => setShowSchoolModal(false)}>
+              <BackButtonModal onClick={() => setShowSearchModal(false)}>
                 <FiChevronLeft />
               </BackButtonModal>
-              <ModalTitle>학교 찾기</ModalTitle>
-              <CloseButton onClick={() => setShowSchoolModal(false)}>
+              <ModalTitle>{targetLabel} 찾기</ModalTitle>
+              <CloseButton onClick={() => setShowSearchModal(false)}>
                 <FiX />
               </CloseButton>
             </ModalHeader>
@@ -175,33 +208,47 @@ const AffiliationPage = () => {
             <ModalSearchRow>
               <ModalSearchInput
                 type="text"
-                placeholder="서울과학기술대학교"
+                placeholder={
+                  affiliationType === "학생" ? "서울과학기술대학교" : "회사명"
+                }
                 value={modalSearchQuery}
                 onChange={(e) => setModalSearchQuery(e.target.value)}
                 onKeyPress={(e) => {
                   if (e.key === "Enter") {
-                    handleModalSearch();
+                    searchGroups(modalSearchQuery);
                   }
                 }}
               />
-              <ModalSearchButton onClick={handleModalSearch}>
+              <ModalSearchButton
+                onClick={() => searchGroups(modalSearchQuery)}
+              >
                 검색
               </ModalSearchButton>
             </ModalSearchRow>
 
             <SchoolList>
-              {searchResults.map((school) => (
-                <SchoolItem key={school.id}>
-                  <SchoolInfo>
-                    <SchoolAddress>지번 주소 : {school.address}</SchoolAddress>
-                    <SchoolName>학교명 : {school.name}</SchoolName>
-                    <SchoolType>학교 유형 : {school.type}</SchoolType>
-                  </SchoolInfo>
-                  <SelectButton onClick={() => handleSelectSchool(school)}>
-                    선택
-                  </SelectButton>
-                </SchoolItem>
-              ))}
+              {isSearching ? (
+                <EmptyResult>검색 중...</EmptyResult>
+              ) : searchResults.length === 0 ? (
+                <EmptyResult>검색 결과가 없습니다.</EmptyResult>
+              ) : (
+                searchResults.map((group) => (
+                  <SchoolItem key={group.groupId}>
+                    <SchoolInfo>
+                      {group.address && (
+                        <SchoolAddress>주소 : {group.address}</SchoolAddress>
+                      )}
+                      <SchoolName>이름 : {group.name}</SchoolName>
+                      <SchoolType>
+                        유형 : {GROUP_TYPE_LABEL[group.type] ?? group.type}
+                      </SchoolType>
+                    </SchoolInfo>
+                    <SelectButton onClick={() => handleSelectGroup(group)}>
+                      선택
+                    </SelectButton>
+                  </SchoolItem>
+                ))
+              )}
             </SchoolList>
           </ModalContent>
         </ModalOverlay>
@@ -495,6 +542,14 @@ const SchoolList = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.lg};
+`;
+
+const EmptyResult = styled.p`
+  margin: 0;
+  padding: ${theme.spacing.xl} 0;
+  text-align: center;
+  font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
 `;
 
 const SchoolItem = styled.div`

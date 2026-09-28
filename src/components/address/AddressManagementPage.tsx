@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
@@ -7,87 +7,80 @@ import {
   FiBook,
   FiBriefcase,
   FiChevronLeft,
-  FiEdit2,
   FiHome,
   FiMapPin,
   FiNavigation,
-  FiSearch,
   FiStar,
+  FiTrash2,
 } from "react-icons/fi";
+import {
+  addressService,
+  type Address,
+  type AddressType,
+} from "../../services/address.service";
 
-interface Address {
-  id: number;
-  type: "집" | "직장" | "학교";
-  nickname: string;
-  roadAddress: string;
-  jibunAddress: string;
-  detailAddress: string;
-  isDefault: boolean;
-}
+const ADDRESS_TYPE_LABEL: Record<AddressType, string> = {
+  HOME: "집",
+  OFFICE: "직장",
+  SCHOOL: "학교",
+  ETC: "기타",
+};
+
+const getErrorMessage = (error: any, fallback: string): string =>
+  error?.response?.data?.error?.message || fallback;
 
 const AddressManagementPage = () => {
   const navigate = useNavigate();
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // 임시 주소 데이터
-  const [addresses, setAddresses] = useState<Address[]>([
-    {
-      id: 1,
-      type: "집",
-      nickname: "우리집",
-      roadAddress: "서울시 강남구 테헤란로 123, 스마트빌딩 5층",
-      jibunAddress: "서울시 강남구 역삼동 123-45",
-      detailAddress: "5층 501호",
-      isDefault: true,
-    },
-    {
-      id: 2,
-      type: "직장",
-      nickname: "회사",
-      roadAddress: "부산시 해운대구 마린시티2로 38, 오션타워 15층",
-      jibunAddress: "부산시 해운대구 우동 456-78",
-      detailAddress: "15층",
-      isDefault: false,
-    },
-    {
-      id: 3,
-      type: "학교",
-      nickname: "학교",
-      roadAddress: "대구시 북구 대학로 80, 대구대학교 공학관",
-      jibunAddress: "대구시 북구 산격동 890-12",
-      detailAddress: "공학관 3층",
-      isDefault: false,
-    },
-  ]);
+  const fetchAddresses = useCallback(async () => {
+    try {
+      setLoadError(null);
+      setAddresses(await addressService.getAddresses());
+    } catch (error) {
+      setLoadError(getErrorMessage(error, "주소 목록을 불러오지 못했습니다."));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // 주소 삭제
-  const handleDelete = (id: number) => {
-    if (window.confirm("이 주소를 삭제하시겠습니까?")) {
-      setAddresses(addresses.filter((addr) => addr.id !== id));
+  useEffect(() => {
+    fetchAddresses();
+  }, [fetchAddresses]);
+
+  // 주소 삭제 (대표 주소를 지우면 서버가 대표 주소를 다시 정하므로 목록을 새로 받는다)
+  const handleDelete = async (addressHistoryId: number) => {
+    if (!window.confirm("이 주소를 삭제하시겠습니까?")) return;
+
+    try {
+      await addressService.deleteAddress(addressHistoryId);
+      await fetchAddresses();
+    } catch (error) {
+      alert(getErrorMessage(error, "주소를 삭제하지 못했습니다."));
     }
   };
 
-  // 주소 수정
-  const handleEdit = (id: number) => {
-    navigate(`/address/edit/${id}`);
-  };
-
   // 대표 주소 설정
-  const handleSetDefault = (id: number) => {
-    setAddresses(
-      addresses.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === id,
-      }))
-    );
+  const handleSetPrimary = async (address: Address) => {
+    if (address.isPrimary) return;
+
+    try {
+      await addressService.setPrimaryAddress(address.addressHistoryId);
+      await fetchAddresses();
+    } catch (error) {
+      alert(getErrorMessage(error, "대표 주소를 변경하지 못했습니다."));
+    }
   };
 
-  const getAddressIcon = (type: string) => {
+  const getAddressIcon = (type: AddressType) => {
     switch (type) {
-      case "집":
+      case "HOME":
         return <FiHome />;
-      case "직장":
+      case "OFFICE":
         return <FiBriefcase />;
-      case "학교":
+      case "SCHOOL":
         return <FiBook />;
       default:
         return <FiMapPin />;
@@ -110,15 +103,11 @@ const AddressManagementPage = () => {
       </Header>
 
       <Content>
-        <Description>저장 받문하는 곳의 주소를 등록해보세요</Description>
+        <Description>자주 방문하는 곳의 주소를 등록해 보세요</Description>
 
         {/* 주소 추가 */}
         <Section>
           <SectionTitle>주소 추가</SectionTitle>
-          <SearchButton onClick={() => navigate("/address/search")}>
-            <FiSearch />
-            주소 검색...
-          </SearchButton>
           <LocationButton onClick={() => navigate("/address/map")}>
             <FiNavigation /> 현재 위치로 찾기
           </LocationButton>
@@ -127,41 +116,57 @@ const AddressManagementPage = () => {
         {/* 저장된 주소 */}
         <Section>
           <SectionTitle>저장된 주소</SectionTitle>
-          <AddressList>
-            {addresses.map((address) => (
-              <AddressCard key={address.id}>
-                <AddressHeader>
-                  <AddressTypeRow>
-                    <AddressIcon>{getAddressIcon(address.type)}</AddressIcon>
-                    <AddressType>{address.type}</AddressType>
-                    {address.isDefault && (
-                      <DefaultBadge>
-                        <FiStar />
-                      </DefaultBadge>
-                    )}
-                  </AddressTypeRow>
-                  <RadioButton
-                    checked={address.isDefault}
-                    onClick={() => handleSetDefault(address.id)}
-                  />
-                </AddressHeader>
+          {isLoading ? (
+            <StatusText>주소를 불러오는 중...</StatusText>
+          ) : loadError ? (
+            <StatusText>{loadError}</StatusText>
+          ) : addresses.length === 0 ? (
+            <StatusText>저장된 주소가 없습니다.</StatusText>
+          ) : (
+            <AddressList>
+              {addresses.map((address) => (
+                <AddressCard key={address.addressHistoryId}>
+                  <AddressHeader>
+                    <AddressTypeRow>
+                      <AddressIcon>
+                        {getAddressIcon(address.addressType)}
+                      </AddressIcon>
+                      <AddressName>
+                        {address.addressAlias ||
+                          ADDRESS_TYPE_LABEL[address.addressType] ||
+                          "기타"}
+                      </AddressName>
+                      {address.isPrimary && (
+                        <DefaultBadge>
+                          <FiStar />
+                        </DefaultBadge>
+                      )}
+                    </AddressTypeRow>
+                    <RadioButton
+                      checked={address.isPrimary}
+                      onClick={() => handleSetPrimary(address)}
+                    />
+                  </AddressHeader>
 
-                <AddressInfo>
-                  <AddressText>{address.roadAddress}</AddressText>
-                  <ActionButtons>
-                    <EditButton onClick={() => handleEdit(address.id)}>
-                      <FiEdit2 />
-                      수정
-                    </EditButton>
-                    <DeleteButton onClick={() => handleDelete(address.id)}>
-                      <FiTrash2 />
-                      삭제
-                    </DeleteButton>
-                  </ActionButtons>
-                </AddressInfo>
-              </AddressCard>
-            ))}
-          </AddressList>
+                  <AddressInfo>
+                    <AddressText>
+                      {address.streetNameAddress}
+                      {address.detailedAddress &&
+                        ` ${address.detailedAddress}`}
+                    </AddressText>
+                    <ActionButtons>
+                      <DeleteButton
+                        onClick={() => handleDelete(address.addressHistoryId)}
+                      >
+                        <FiTrash2 />
+                        삭제
+                      </DeleteButton>
+                    </ActionButtons>
+                  </AddressInfo>
+                </AddressCard>
+              ))}
+            </AddressList>
+          )}
         </Section>
       </Content>
     </Container>
@@ -263,30 +268,6 @@ const SectionTitle = styled.h2`
   margin: 0 0 ${theme.spacing.md} 0;
 `;
 
-const SearchButton = styled.button`
-  width: 100%;
-  padding: ${theme.spacing.md};
-  background-color: white;
-  color: #9e9e9e;
-  border: 1px solid #e0e0e0;
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.base};
-  display: flex;
-  align-items: center;
-  gap: ${theme.spacing.sm};
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: ${theme.spacing.md};
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-
-  svg {
-    font-size: ${theme.typography.fontSize.lg};
-  }
-`;
-
 const LocationButton = styled.button`
   width: 100%;
   padding: ${theme.spacing.md};
@@ -311,6 +292,14 @@ const LocationButton = styled.button`
     width: 20px;
     height: 20px;
   }
+`;
+
+const StatusText = styled.p`
+  font-size: ${theme.typography.fontSize.sm};
+  color: #757575;
+  text-align: center;
+  margin: 0;
+  padding: ${theme.spacing.xl} 0;
 `;
 
 const AddressList = styled.div`
@@ -348,7 +337,7 @@ const AddressIcon = styled.div`
   }
 `;
 
-const AddressType = styled.span`
+const AddressName = styled.span`
   font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.semibold};
   color: #212121;
@@ -412,30 +401,6 @@ const AddressText = styled.div`
 const ActionButtons = styled.div`
   display: flex;
   gap: ${theme.spacing.sm};
-`;
-
-const EditButton = styled.button`
-  padding: ${theme.spacing.xs} ${theme.spacing.sm};
-  background-color: transparent;
-  color: #424242;
-  border: 1px solid #e0e0e0;
-  border-radius: ${theme.borderRadius.sm};
-  font-size: ${theme.typography.fontSize.xs};
-  font-weight: ${theme.typography.fontWeight.medium};
-  display: flex;
-  align-items: center;
-  gap: ${theme.spacing.xs};
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-
-  svg {
-    font-size: ${theme.typography.fontSize.sm};
-  }
 `;
 
 const DeleteButton = styled.button`

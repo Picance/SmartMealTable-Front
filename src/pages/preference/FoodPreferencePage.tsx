@@ -1,89 +1,112 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { theme } from "../../styles/theme";
 import { FiChevronLeft, FiSearch, FiMenu } from "react-icons/fi";
+import { categoryService } from "../../services/category.service";
+import type { Category } from "../../types/api";
 
 const FoodPreferencePage = () => {
   const navigate = useNavigate();
 
-  // 선호 카테고리
-  const [likedCategories, setLikedCategories] = useState<string[]>([
-    "한식",
-    "중식",
-    "양식",
-  ]);
-
-  // 불호 카테고리
-  const [dislikedCategories, setDislikedCategories] = useState<string[]>([
-    "해산물",
-    "매운 음식",
-    "달콤한 음식",
-  ]);
-
-  // 사용 가능한 카테고리 목록
-  const availableCategories = [
-    "일식",
-    "이탈리안",
-    "베트남",
-    "인도",
-    "멕시칸",
-    "태국",
-    "퓨전",
-    "프랑스",
-    "치킨",
-    "지중해",
-    "건강식",
-    "스낵",
-    "디저트",
-    "중동",
-    "뷔페",
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [likedIds, setLikedIds] = useState<number[]>([]);
+  const [dislikedIds, setDislikedIds] = useState<number[]>([]);
+  // 불러올 때 선호도가 있던 카테고리. 선택을 해제한 항목은 가중치 0으로 보내야 서버에서도 해제된다
+  const [savedIds, setSavedIds] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // 검색어
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const [categoryResponse, preferenceResponse] = await Promise.all([
+          categoryService.getCategories(),
+          categoryService.getMyPreferences(),
+        ]);
+        const preferences = preferenceResponse.data?.categoryPreferences ?? [];
+
+        setCategories(categoryResponse.data?.categories ?? []);
+        setLikedIds(
+          preferences.filter((p) => p.weight > 0).map((p) => p.categoryId)
+        );
+        setDislikedIds(
+          preferences.filter((p) => p.weight < 0).map((p) => p.categoryId)
+        );
+        setSavedIds(
+          preferences.filter((p) => p.weight !== 0).map((p) => p.categoryId)
+        );
+      } catch (error) {
+        alert("음식 취향을 불러오지 못했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPreferences();
+  }, []);
+
+  const getCategoryName = (categoryId: number) =>
+    categories.find((c) => c.categoryId === categoryId)?.name ?? "";
+
   // 필터링된 카테고리
-  const filteredCategories = availableCategories.filter((category) =>
-    category.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // 카테고리 추가/제거
-  const toggleLikedCategory = (category: string) => {
-    if (likedCategories.includes(category)) {
-      setLikedCategories(likedCategories.filter((c) => c !== category));
-    } else {
-      setLikedCategories([...likedCategories, category]);
-      // 불호에서 제거
-      setDislikedCategories(dislikedCategories.filter((c) => c !== category));
-    }
+  // 선택 해제
+  const removeCategory = (categoryId: number) => {
+    setLikedIds(likedIds.filter((id) => id !== categoryId));
+    setDislikedIds(dislikedIds.filter((id) => id !== categoryId));
   };
 
-  const toggleDislikedCategory = (category: string) => {
-    if (dislikedCategories.includes(category)) {
-      setDislikedCategories(dislikedCategories.filter((c) => c !== category));
+  // 누를 때마다 선호 → 불호 → 선택 해제 순으로 바뀐다
+  const handleCategoryClick = (categoryId: number) => {
+    if (likedIds.includes(categoryId)) {
+      setLikedIds(likedIds.filter((id) => id !== categoryId));
+      setDislikedIds([...dislikedIds, categoryId]);
+    } else if (dislikedIds.includes(categoryId)) {
+      setDislikedIds(dislikedIds.filter((id) => id !== categoryId));
     } else {
-      setDislikedCategories([...dislikedCategories, category]);
-      // 선호에서 제거
-      setLikedCategories(likedCategories.filter((c) => c !== category));
-    }
-  };
-
-  const handleAvailableCategoryClick = (category: string) => {
-    // 기본적으로 선호에 추가
-    if (
-      !likedCategories.includes(category) &&
-      !dislikedCategories.includes(category)
-    ) {
-      setLikedCategories([...likedCategories, category]);
+      setLikedIds([...likedIds, categoryId]);
     }
   };
 
   // 저장
-  const handleSave = () => {
-    // TODO: API 호출
-    alert("음식 취향이 저장되었습니다.");
-    navigate("/profile");
+  const handleSave = async () => {
+    const targetIds = Array.from(
+      new Set([...savedIds, ...likedIds, ...dislikedIds])
+    );
+    if (targetIds.length === 0) {
+      alert("선호하거나 싫어하는 카테고리를 1개 이상 선택해주세요.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await categoryService.updateCategoryPreferences({
+        preferences: targetIds.map((categoryId) => ({
+          categoryId,
+          weight: likedIds.includes(categoryId)
+            ? 100
+            : dislikedIds.includes(categoryId)
+            ? -100
+            : 0,
+        })),
+      });
+      alert("음식 취향이 저장되었습니다.");
+      navigate("/profile");
+    } catch (error: any) {
+      alert(
+        error.response?.data?.error?.message ||
+          "음식 취향을 저장하지 못했습니다."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -102,17 +125,19 @@ const FoodPreferencePage = () => {
           원활한 서비스 제공을 위해 음식 취향을 설정해주세요.
         </Description>
 
+        {isLoading && <Description>음식 취향을 불러오는 중...</Description>}
+
         {/* 선호하는 음식 카테고리 */}
         <Section>
-          <SectionTitle>선호하는 음식 카테고리 (무선순위 순서)</SectionTitle>
+          <SectionTitle>선호하는 음식 카테고리</SectionTitle>
           <CategoryList>
-            {likedCategories.map((category) => (
+            {likedIds.map((categoryId) => (
               <CategoryChip
-                key={category}
+                key={categoryId}
                 color="orange"
-                onClick={() => toggleLikedCategory(category)}
+                onClick={() => removeCategory(categoryId)}
               >
-                {category}
+                {getCategoryName(categoryId)}
               </CategoryChip>
             ))}
           </CategoryList>
@@ -120,23 +145,23 @@ const FoodPreferencePage = () => {
 
         {/* 불호하는 음식 카테고리 */}
         <Section>
-          <SectionTitle>불호하는 음식 카테고리 (무선순위 순서)</SectionTitle>
+          <SectionTitle>불호하는 음식 카테고리</SectionTitle>
           <CategoryList>
-            {dislikedCategories.map((category) => (
+            {dislikedIds.map((categoryId) => (
               <CategoryChip
-                key={category}
+                key={categoryId}
                 color="yellow"
-                onClick={() => toggleDislikedCategory(category)}
+                onClick={() => removeCategory(categoryId)}
               >
-                {category}
+                {getCategoryName(categoryId)}
               </CategoryChip>
             ))}
           </CategoryList>
         </Section>
 
-        {/* 드래그 앤 드롭 섹션 */}
+        {/* 카테고리 선택 */}
         <Section>
-          <SectionTitle>드래그 앤 드롭으로 지정해주세요</SectionTitle>
+          <SectionTitle>카테고리를 눌러 지정해주세요 (선호 → 불호 → 해제)</SectionTitle>
 
           {/* 검색창 */}
           <SearchBox>
@@ -154,19 +179,19 @@ const FoodPreferencePage = () => {
           {/* 카테고리 그리드 */}
           <CategoryGrid>
             {filteredCategories.map((category) => {
-              const isLiked = likedCategories.includes(category);
-              const isDisliked = dislikedCategories.includes(category);
+              const isLiked = likedIds.includes(category.categoryId);
+              const isDisliked = dislikedIds.includes(category.categoryId);
 
               return (
                 <CategoryButton
-                  key={category}
+                  key={category.categoryId}
                   $selected={isLiked || isDisliked}
-                  onClick={() => handleAvailableCategoryClick(category)}
+                  onClick={() => handleCategoryClick(category.categoryId)}
                 >
                   <CategoryButtonIcon aria-hidden="true">
                     <FiMenu />
                   </CategoryButtonIcon>
-                  {category}
+                  {category.name}
                 </CategoryButton>
               );
             })}
@@ -174,7 +199,9 @@ const FoodPreferencePage = () => {
         </Section>
 
         {/* 저장 버튼 */}
-        <SaveButton onClick={handleSave}>저장하기</SaveButton>
+        <SaveButton onClick={handleSave} disabled={isLoading || isSaving}>
+          {isSaving ? "저장 중..." : "저장하기"}
+        </SaveButton>
       </Content>
     </Container>
   );
