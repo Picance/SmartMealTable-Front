@@ -47,9 +47,6 @@ import AddressManagementPage from "./components/address/AddressManagementPage";
 import AddressMapPage from "./components/address/AddressMapPage";
 import AddressDetailPage from "./components/address/AddressDetailPage";
 
-// Debug Page
-import DebugAuthPage from "./pages/test/DebugAuthPage";
-
 // Protected Route Component
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -305,9 +302,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* Debug Route */}
-            <Route path="/debug/auth" element={<DebugAuthPage />} />
 
             {/* Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />

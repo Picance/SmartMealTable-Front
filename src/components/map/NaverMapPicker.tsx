@@ -30,7 +30,7 @@ function MapContent({
       : new navermaps.LatLng(37.5665, 126.978)
   );
   const isUpdatingRef = useRef(false);
-  const reverseGeocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reverseGeocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 현재 위치 가져오기
   useEffect(() => {

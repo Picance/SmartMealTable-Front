@@ -57,10 +57,8 @@ const CreateExpenditurePage = () => {
       }
 
       setLoading(true);
-      console.log("[SMS Parse] SMS 파싱 요청:", messageText);
 
       const parseResponse = await parseSms({ smsMessage: messageText });
-      console.log("[SMS Parse] 파싱 결과:", parseResponse);
 
       if (parseResponse.result === "SUCCESS" && parseResponse.data) {
         const parsed = parseResponse.data;
@@ -77,7 +75,11 @@ const CreateExpenditurePage = () => {
         alert(parseResponse.error?.message || "SMS 파싱에 실패했습니다.");
       }
     } catch (error: any) {
-      console.error("[SMS Parse] SMS 파싱 오류:", error);
+      // 요청 본문(문자 원문)이 담긴 error 객체 대신 상태 코드만 남긴다
+      console.error(
+        "[SMS Parse] SMS 파싱 오류:",
+        error.response?.status ?? error.message
+      );
       alert(
         error.response?.data?.error?.message ||
           "SMS 파싱 중 오류가 발생했습니다."
@@ -109,28 +111,6 @@ const CreateExpenditurePage = () => {
         items: null,
       };
 
-      console.log("[CreateExpenditure] 지출 등록 요청:");
-      console.log("- storeName:", createRequest.storeName);
-      console.log(
-        "  - amount:",
-        createRequest.amount,
-        typeof createRequest.amount
-      );
-      console.log("- expendedDate:", createRequest.expendedDate);
-      console.log("- expendedTime:", createRequest.expendedTime);
-      console.log(
-        "  - categoryId:",
-        createRequest.categoryId,
-        typeof createRequest.categoryId
-      );
-      console.log("- mealType:", createRequest.mealType);
-      console.log("- memo:", createRequest.memo);
-      console.log("- items:", createRequest.items);
-      console.log(
-        " [Full Request Object]:",
-        JSON.stringify(createRequest, null, 2)
-      );
-
       const response = await createExpenditure(createRequest);
 
       if (response.result === "SUCCESS") {
@@ -140,8 +120,7 @@ const CreateExpenditurePage = () => {
         alert(response.error?.message || "지출 등록에 실패했습니다.");
       }
     } catch (error: any) {
-      console.error("[CreateExpenditure] 지출 등록 오류:", error);
-      console.error("[Error Details]", {
+      console.error("[CreateExpenditure] 지출 등록 오류", {
         status: error.response?.status,
         statusText: error.response?.statusText,
         errorData: error.response?.data,
@@ -150,35 +129,17 @@ const CreateExpenditurePage = () => {
         requestMethod: error.config?.method,
       });
 
-      // 404 에러인 경우
       if (error.response?.status === 404) {
-        alert(
-          "[CreateExpenditure] 백엔드 API가 구현되지 않았습니다.\n\n" +
-            "체크리스트:\n" +
-            "- 프론트엔드: API 명세 준수 완료\n" +
-            "- 요청 데이터: 모든 필수 필드 포함\n" +
-            "- GET 엔드포인트: 정상 작동\n" +
-            "- POST /api/v1/expenditures: 404\n\n" +
-            "백엔드 팀에 POST 엔드포인트 구현 요청이 필요합니다."
-        );
+        alert("지출을 저장하지 못했습니다. 잠시 후 다시 시도해주세요.");
       } else if (error.response?.status === 422) {
-        // 유효성 검증 실패
-        const errorMsg =
-          error.response?.data?.error?.message || "입력값을 확인해주세요.";
-        const errorField = error.response?.data?.error?.data?.field;
-        const errorReason = error.response?.data?.error?.data?.reason;
-
-        if (errorField && errorReason) {
-          alert(
-            `[CreateExpenditure] 유효성 검증 실패\n\n필드: ${errorField}\n사유: ${errorReason}`
-          );
-        } else {
-          alert(`[CreateExpenditure] ${errorMsg}`);
-        }
-      } else if (error.response?.status === 401) {
+        // 유효성 검증 실패: 필드명 대신 서버가 알려준 사유만 보여준다
         alert(
-          "[CreateExpenditure] 인증이 필요합니다.\n\n로그인 후 다시 시도해주세요."
+          error.response?.data?.error?.data?.reason ||
+            error.response?.data?.error?.message ||
+            "입력값을 확인해주세요."
         );
+      } else if (error.response?.status === 401) {
+        alert("로그인이 필요합니다. 다시 로그인한 뒤 시도해주세요.");
       } else {
         alert(error.response?.data?.error?.message || "오류가 발생했습니다.");
       }

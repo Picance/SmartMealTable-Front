@@ -32,7 +32,6 @@ const StoreDetailPage = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (storeId) {

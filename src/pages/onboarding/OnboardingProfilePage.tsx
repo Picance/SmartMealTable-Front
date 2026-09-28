@@ -14,7 +14,7 @@ const OnboardingProfilePage = () => {
   const [isSearchingGroups, setIsSearchingGroups] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 닉네임 유효성 검사
   const validateNickname = (value: string): boolean => {

@@ -14,7 +14,7 @@ const FavoritesPage = () => {
   const navigate = useNavigate();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortBy>("priority");
+  const [sortBy] = useState<SortBy>("priority");
   const [isOpenOnly, setIsOpenOnly] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [openCount, setOpenCount] = useState(0);
@@ -237,7 +237,7 @@ const LoadingSpinner = styled.div`
 `;
 
 const LoadingText = styled.p`
-  font-size: ${theme.typography.fontSize.md};
+  font-size: ${theme.typography.fontSize.base};
   color: #666;
 `;
 
@@ -270,7 +270,7 @@ const EmptyTitle = styled.h2`
 `;
 
 const EmptyDescription = styled.p`
-  font-size: ${theme.typography.fontSize.md};
+  font-size: ${theme.typography.fontSize.base};
   color: #757575;
   line-height: 1.6;
   margin: 0 0 ${theme.spacing.xl} 0;
@@ -283,7 +283,7 @@ const EmptyButton = styled.button`
   color: white;
   border: none;
   border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.md};
+  font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.semibold};
   cursor: pointer;
   transition: all 0.2s;
